@@ -4,41 +4,41 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/eltonciatto/veloflux/internal/tenant"
-	"go.uber.org/zap"
 )
 
 // Config for authentication
 type Config struct {
-	JWTSecret      string        `yaml:"jwt_secret"`
-	JWTIssuer      string        `yaml:"jwt_issuer"`
-	JWTAudience    string        `yaml:"jwt_audience"`
-	TokenValidity  time.Duration `yaml:"token_validity"`
-	OIDCEnabled    bool          `yaml:"oidc_enabled"`
-	OIDCIssuerURL  string        `yaml:"oidc_issuer_url"`
-	OIDCClientID   string        `yaml:"oidc_client_id"`
+	JWTSecret       string        `yaml:"jwt_secret"`
+	JWTIssuer       string        `yaml:"jwt_issuer"`
+	JWTAudience     string        `yaml:"jwt_audience"`
+	TokenValidity   time.Duration `yaml:"token_validity"`
+	OIDCEnabled     bool          `yaml:"oidc_enabled"`
+	OIDCIssuerURL   string        `yaml:"oidc_issuer_url"`
+	OIDCClientID    string        `yaml:"oidc_client_id"`
 	OIDCRedirectURI string        `yaml:"oidc_redirect_uri"`
 }
 
 // Claims represents the JWT claims
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID    string        `json:"user_id"`
-	Email     string        `json:"email"`
-	TenantID  string        `json:"tenant_id"`
-	Role      tenant.Role   `json:"role"`
-	FirstName string        `json:"first_name,omitempty"`
-	LastName  string        `json:"last_name,omitempty"`
+	UserID    string      `json:"user_id"`
+	Email     string      `json:"email"`
+	TenantID  string      `json:"tenant_id"`
+	Role      tenant.Role `json:"role"`
+	FirstName string      `json:"first_name,omitempty"`
+	LastName  string      `json:"last_name,omitempty"`
 }
 
 // Authenticator handles authentication
 type Authenticator struct {
-	config       *Config
-	logger       *zap.Logger
+	config        *Config
+	logger        *zap.Logger
 	tenantManager *tenant.Manager
 }
 
@@ -87,13 +87,19 @@ func (a *Authenticator) GenerateToken(user *tenant.UserInfo) (string, error) {
 func (a *Authenticator) VerifyToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		// Validate the signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(a.config.JWTSecret), nil
-	})
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (interface{}, error) {
+			// Validate the signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(a.config.JWTSecret), nil
+		},
+		jwt.WithAudience(a.config.JWTAudience),
+		jwt.WithIssuer(a.config.JWTIssuer),
+	)
 
 	if err != nil {
 		return nil, err
@@ -101,16 +107,6 @@ func (a *Authenticator) VerifyToken(tokenString string) (*Claims, error) {
 
 	if !token.Valid {
 		return nil, errors.New("invalid token")
-	}
-
-	// Verify audience
-	if !claims.VerifyAudience(a.config.JWTAudience, true) {
-		return nil, errors.New("invalid audience")
-	}
-
-	// Verify issuer
-	if !claims.VerifyIssuer(a.config.JWTIssuer, true) {
-		return nil, errors.New("invalid issuer")
 	}
 
 	return claims, nil

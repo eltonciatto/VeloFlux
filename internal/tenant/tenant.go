@@ -44,14 +44,14 @@ type LimitConfig struct {
 
 // Tenant represents a customer organization
 type Tenant struct {
-	ID           string     `json:"id"`
-	Name         string     `json:"name"`
-	Plan         PlanType   `json:"plan"`
-	Active       bool       `json:"active"`
-	CreatedAt    time.Time  `json:"created_at"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	Plan         PlanType    `json:"plan"`
+	Active       bool        `json:"active"`
+	CreatedAt    time.Time   `json:"created_at"`
 	Limits       LimitConfig `json:"limits"`
-	ContactEmail string     `json:"contact_email"`
-	CustomDomain string     `json:"custom_domain,omitempty"`
+	ContactEmail string      `json:"contact_email"`
+	CustomDomain string      `json:"custom_domain,omitempty"`
 }
 
 // UserInfo represents a user associated with a tenant
@@ -168,7 +168,7 @@ func (m *Manager) CreateTenant(ctx context.Context, tenant *Tenant) error {
 	}
 
 	// Default limits based on plan
-	tenant.Limits = m.getDefaultLimits(tenant.Plan)
+	tenant.Limits = m.GetDefaultLimits(tenant.Plan)
 
 	// Save to Redis
 	data, err := json.Marshal(tenant)
@@ -366,7 +366,7 @@ func (m *Manager) GetConfigPrefix(tenantID string) string {
 }
 
 // getDefaultLimits returns the default limits based on the plan
-func (m *Manager) getDefaultLimits(plan PlanType) LimitConfig {
+func (m *Manager) GetDefaultLimits(plan PlanType) LimitConfig {
 	switch plan {
 	case PlanFree:
 		return LimitConfig{

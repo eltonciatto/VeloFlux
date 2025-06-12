@@ -32,7 +32,7 @@ type Router struct {
 }
 
 func New(cfg *config.Config, bal *balancer.Balancer, nodeID string, logger *zap.Logger) *Router {
-	wf, err := waf.New(cfg.Global.WAF.RulesPath)
+	wf, err := waf.New(cfg.Global.WAF.RulesetPath)
 	if err != nil {
 		logger.Error("failed to load WAF rules", zap.Error(err))
 	}

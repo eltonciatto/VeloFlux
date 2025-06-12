@@ -1,19 +1,18 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-	"github.com/gorilla/mux"
 	"github.com/eltonciatto/veloflux/internal/auth"
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/clustering"
 	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+	"net/http"
+	"strings"
+	"time"
 )
 
 // TenantAPI handles tenant management endpoints
@@ -121,7 +120,7 @@ func (api *TenantAPI) Handler() http.Handler {
 
 func (api *TenantAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]string{
-		"status": "ok",
+		"status":  "ok",
 		"version": "1.1.0",
 	})
 }
@@ -139,7 +138,7 @@ func (api *TenantAPI) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// In a real implementation, you would validate credentials against a database
 	// For this example, we'll just simulate a successful login
-	
+
 	// In a real system, fetch the user from a database
 	userInfo := &tenant.UserInfo{
 		UserID:    "user123",
@@ -159,10 +158,10 @@ func (api *TenantAPI) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, map[string]string{
-		"token": token,
+		"token":      token,
 		"expires_in": api.config.Auth.TokenValidity.String(),
-		"user_id": userInfo.UserID,
-		"tenant_id": userInfo.TenantID,
+		"user_id":    userInfo.UserID,
+		"tenant_id":  userInfo.TenantID,
 	})
 }
 
@@ -233,11 +232,11 @@ func (api *TenantAPI) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, map[string]interface{}{
-		"token": token,
+		"token":      token,
 		"expires_in": api.config.Auth.TokenValidity.String(),
-		"user_id": userID,
-		"tenant_id": tenantID,
-		"tenant": t,
+		"user_id":    userID,
+		"tenant_id":  tenantID,
+		"tenant":     t,
 	})
 }
 
@@ -277,7 +276,7 @@ func (api *TenantAPI) handleRefreshToken(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, map[string]string{
-		"token": newToken,
+		"token":      newToken,
 		"expires_in": api.config.Auth.TokenValidity.String(),
 	})
 }
@@ -337,11 +336,11 @@ func (api *TenantAPI) handleListTenants(w http.ResponseWriter, r *http.Request) 
 
 func (api *TenantAPI) handleCreateTenant(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		ID           string            `json:"id"`
-		Name         string            `json:"name"`
-		Plan         tenant.PlanType   `json:"plan"`
-		ContactEmail string            `json:"contact_email"`
-		CustomDomain string            `json:"custom_domain,omitempty"`
+		ID           string          `json:"id"`
+		Name         string          `json:"name"`
+		Plan         tenant.PlanType `json:"plan"`
+		ContactEmail string          `json:"contact_email"`
+		CustomDomain string          `json:"custom_domain,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -391,11 +390,11 @@ func (api *TenantAPI) handleUpdateTenant(w http.ResponseWriter, r *http.Request)
 	tenantID := vars["tenant_id"]
 
 	var req struct {
-		Name         string            `json:"name"`
-		Plan         tenant.PlanType   `json:"plan"`
-		Active       bool              `json:"active"`
-		ContactEmail string            `json:"contact_email"`
-		CustomDomain string            `json:"custom_domain,omitempty"`
+		Name         string             `json:"name"`
+		Plan         tenant.PlanType    `json:"plan"`
+		Active       bool               `json:"active"`
+		ContactEmail string             `json:"contact_email"`
+		CustomDomain string             `json:"custom_domain,omitempty"`
 		Limits       tenant.LimitConfig `json:"limits,omitempty"`
 	}
 
@@ -571,13 +570,13 @@ func (api *TenantAPI) handleListTenantRoutes(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	tenantID := vars["tenant_id"]
 
-	// Get tenant configuration from Redis using tenant prefix
-	ctx := r.Context()
-	configKey := fmt.Sprintf("%s:routes", api.tenantManager.GetConfigPrefix(tenantID))
-	
+	// Get tenant configuration from Redis using tenant prefix (future implementation)
+	_ = r.Context()
+	_ = fmt.Sprintf("%s:routes", api.tenantManager.GetConfigPrefix(tenantID))
+
 	var routes []config.Route
 	// In a real implementation, you would fetch tenant-specific routes from Redis
-	
+
 	// For now, we'll return empty routes
 	writeJSON(w, routes)
 }
@@ -600,7 +599,7 @@ func (api *TenantAPI) handleCreateTenantRoute(w http.ResponseWriter, r *http.Req
 
 	// Store in Redis with tenant prefix
 	// In a real implementation, you would add the route to Redis
-	
+
 	// If cluster is enabled, publish state change
 	if api.cluster != nil && api.cluster.IsLeader() {
 		routeKey := fmt.Sprintf("%s:route:%s", tenantID, route.Host)
@@ -628,7 +627,7 @@ func (api *TenantAPI) handleUpdateTenantRoute(w http.ResponseWriter, r *http.Req
 
 	// Update in Redis with tenant prefix
 	// In a real implementation, you would update the route in Redis
-	
+
 	// If cluster is enabled, publish state change
 	if api.cluster != nil && api.cluster.IsLeader() {
 		routeKey := fmt.Sprintf("%s:route:%s", tenantID, routeID)
@@ -646,7 +645,7 @@ func (api *TenantAPI) handleDeleteTenantRoute(w http.ResponseWriter, r *http.Req
 
 	// Delete from Redis with tenant prefix
 	// In a real implementation, you would delete the route from Redis
-	
+
 	// If cluster is enabled, publish state change
 	if api.cluster != nil && api.cluster.IsLeader() {
 		routeKey := fmt.Sprintf("%s:route:%s", tenantID, routeID)
@@ -661,10 +660,11 @@ func (api *TenantAPI) handleDeleteTenantRoute(w http.ResponseWriter, r *http.Req
 func (api *TenantAPI) handleListTenantPools(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tenantID := vars["tenant_id"]
+	_ = tenantID
 
 	// Get tenant pools from balancer
 	// In a real implementation, you would fetch pools with tenant prefix
-	
+
 	// For now, we'll return empty pools
 	writeJSON(w, []config.Pool{})
 }
@@ -859,7 +859,7 @@ func (api *TenantAPI) handleGetTenantWAFConfig(w http.ResponseWriter, r *http.Re
 	// Return WAF configuration
 	wafConfig := map[string]interface{}{
 		"enabled": true,
-		"level": t.Limits.WAFLevel,
+		"level":   t.Limits.WAFLevel,
 	}
 
 	writeJSON(w, wafConfig)
@@ -898,7 +898,7 @@ func (api *TenantAPI) handleUpdateTenantWAFConfig(w http.ResponseWriter, r *http
 
 	writeJSON(w, map[string]interface{}{
 		"enabled": wafReq.Enabled,
-		"level": wafReq.Level,
+		"level":   wafReq.Level,
 	})
 }
 
@@ -917,7 +917,7 @@ func (api *TenantAPI) handleGetTenantRateLimit(w http.ResponseWriter, r *http.Re
 	// Return rate limit configuration
 	rateLimitConfig := map[string]interface{}{
 		"requests_per_second": t.Limits.MaxRequestsPerSecond,
-		"burst_size": t.Limits.MaxBurstSize,
+		"burst_size":          t.Limits.MaxBurstSize,
 	}
 
 	writeJSON(w, rateLimitConfig)
@@ -946,7 +946,7 @@ func (api *TenantAPI) handleUpdateTenantRateLimit(w http.ResponseWriter, r *http
 	}
 
 	// Check if the rate limit exceeds the plan limits
-	planLimit := api.tenantManager.getDefaultLimits(t.Plan).MaxRequestsPerSecond
+	planLimit := api.tenantManager.GetDefaultLimits(t.Plan).MaxRequestsPerSecond
 	if rateLimitReq.RequestsPerSecond > planLimit {
 		writeError(w, fmt.Sprintf("Rate limit exceeds plan limit of %d requests per second", planLimit), http.StatusBadRequest)
 		return
@@ -964,7 +964,7 @@ func (api *TenantAPI) handleUpdateTenantRateLimit(w http.ResponseWriter, r *http
 
 	writeJSON(w, map[string]interface{}{
 		"requests_per_second": rateLimitReq.RequestsPerSecond,
-		"burst_size": rateLimitReq.BurstSize,
+		"burst_size":          rateLimitReq.BurstSize,
 	})
 }
 
@@ -976,12 +976,12 @@ func (api *TenantAPI) handleTenantMetrics(w http.ResponseWriter, r *http.Request
 
 	// In a real implementation, you would fetch metrics with tenant labels
 	metrics := map[string]interface{}{
-		"total_requests": 1000,
-		"error_rate": 0.01,
+		"total_requests":           1000,
+		"error_rate":               0.01,
 		"average_response_time_ms": 120,
-		"requests_per_second": 10,
-		"bandwidth_mb": 150,
-		"tenant_id": tenantID,
+		"requests_per_second":      10,
+		"bandwidth_mb":             150,
+		"tenant_id":                tenantID,
 	}
 
 	writeJSON(w, metrics)
@@ -999,12 +999,12 @@ func (api *TenantAPI) handleTenantUsage(w http.ResponseWriter, r *http.Request) 
 
 	// In a real implementation, you would fetch usage data from a database
 	usage := map[string]interface{}{
-		"period": period,
-		"tenant_id": tenantID,
-		"total_requests": 45000,
-		"total_bandwidth_mb": 1500,
+		"period":                   period,
+		"tenant_id":                tenantID,
+		"total_requests":           45000,
+		"total_bandwidth_mb":       1500,
 		"average_response_time_ms": 120,
-		"error_rate": 0.01,
+		"error_rate":               0.01,
 	}
 
 	writeJSON(w, usage)
@@ -1025,45 +1025,34 @@ func (api *TenantAPI) handleTenantLogs(w http.ResponseWriter, r *http.Request) {
 	// In a real implementation, you would fetch logs with tenant filters
 	logs := []map[string]interface{}{
 		{
-			"timestamp": time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
-			"level": "info",
-			"message": "Request processed successfully",
-			"tenant_id": tenantID,
-			"route": "api.example.com",
-			"method": "GET",
-			"path": "/users",
-			"status_code": 200,
+			"timestamp":        time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
+			"level":            "info",
+			"message":          "Request processed successfully",
+			"tenant_id":        tenantID,
+			"route":            "api.example.com",
+			"method":           "GET",
+			"path":             "/users",
+			"status_code":      200,
 			"response_time_ms": 120,
 		},
 		{
-			"timestamp": time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
-			"level": "error",
-			"message": "Backend connection failed",
-			"tenant_id": tenantID,
-			"route": "api.example.com",
-			"method": "POST",
-			"path": "/orders",
-			"status_code": 502,
+			"timestamp":        time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
+			"level":            "error",
+			"message":          "Backend connection failed",
+			"tenant_id":        tenantID,
+			"route":            "api.example.com",
+			"method":           "POST",
+			"path":             "/orders",
+			"status_code":      502,
 			"response_time_ms": 5000,
 		},
 	}
 
 	writeJSON(w, map[string]interface{}{
-		"logs": logs,
+		"logs":  logs,
 		"total": len(logs),
 		"limit": limit,
 	})
 }
 
 // Utility functions
-
-func writeJSON(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
-
-func writeError(w http.ResponseWriter, message string, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{"error": message})
-}
