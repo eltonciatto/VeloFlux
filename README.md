@@ -17,6 +17,8 @@ git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 docker-compose up -d
 # Admin API: http://localhost:9000 (set VF_ADMIN_USER and VF_ADMIN_PASS)
+# Trigger draining before updates:
+# curl -X POST http://localhost:9090/admin/drain
 ```
 ### Multi-Region Example
 Deploy VeloFlux in multiple regions while sharing a Redis cluster:

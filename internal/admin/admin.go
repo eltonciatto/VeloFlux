@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/clustering"
@@ -53,6 +55,7 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, log
 func (a *Server) registerRoutes() {
 	a.router.HandleFunc("/admin/backends", a.handleAddBackend).Methods("POST")
 	a.router.HandleFunc("/admin/backends/{id}", a.handleDeleteBackend).Methods("DELETE")
+	a.router.HandleFunc("/admin/drain", a.handleDrain).Methods("POST")
 }
 
 // Start begins listening on the configured port.
@@ -145,4 +148,40 @@ func (a *Server) handleDeleteBackend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleDrain marks this node for draining and exits when connections drop.
+func (a *Server) handleDrain(w http.ResponseWriter, r *http.Request) {
+	nodeID := "standalone"
+	if a.cluster != nil {
+		nodeID = a.cluster.NodeID()
+	}
+	ttl := 5 * time.Minute
+	if err := a.redis.Set(a.ctx, "vf:drain:"+nodeID, 1, ttl).Err(); err != nil {
+		a.logger.Error("redis", zap.Error(err))
+		http.Error(w, "redis error", http.StatusInternalServerError)
+		return
+	}
+
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		key := "vf:active:" + nodeID
+		for {
+			n, err := a.redis.Get(a.ctx, key).Int()
+			if err == redis.Nil {
+				n = 0
+			} else if err != nil {
+				a.logger.Error("redis", zap.Error(err))
+				return
+			}
+			if n == 0 {
+				a.logger.Info("drained, shutting down")
+				os.Exit(0)
+			}
+			<-ticker.C
+		}
+	}()
+
+	w.Write([]byte("draining"))
 }

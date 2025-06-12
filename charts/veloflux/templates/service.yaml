@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: veloflux
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: veloflux
+  ports:
+    - name: http
+      port: {{ .Values.service.ports.http }}
+      targetPort: http
+    - name: https
+      port: {{ .Values.service.ports.https }}
+      targetPort: https

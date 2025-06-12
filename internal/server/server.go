@@ -65,8 +65,12 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		bal.SetGeoManager(geoManager)
 	}
 
+	nodeID := "standalone"
+	if clusterManager != nil {
+		nodeID = clusterManager.NodeID()
+	}
 	// Create router
-	rtr := router.New(cfg, bal, logger)
+	rtr := router.New(cfg, bal, nodeID, logger)
 
 	// Create health checker
 	healthChecker := health.New(cfg, logger, bal)

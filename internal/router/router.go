@@ -11,8 +11,10 @@ import (
 
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/drain"
 	"github.com/eltonciatto/veloflux/internal/ratelimit"
 	"github.com/eltonciatto/veloflux/internal/waf"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -22,14 +24,26 @@ type Router struct {
 	balancer    *balancer.Balancer
 	rateLimiter *ratelimit.Limiter
 	waf         *waf.WAF
+	drain       *drain.Manager
+	redis       *redis.Client
+	nodeID      string
 	logger      *zap.Logger
 	router      *mux.Router
 }
 
-func New(cfg *config.Config, bal *balancer.Balancer, logger *zap.Logger) *Router {
+func New(cfg *config.Config, bal *balancer.Balancer, nodeID string, logger *zap.Logger) *Router {
 	wf, err := waf.New(cfg.Global.WAF.RulesPath)
 	if err != nil {
 		logger.Error("failed to load WAF rules", zap.Error(err))
+	}
+
+	var rc *redis.Client
+	if cfg.Cluster.RedisAddress != "" {
+		rc = redis.NewClient(&redis.Options{
+			Addr:     cfg.Cluster.RedisAddress,
+			Password: cfg.Cluster.RedisPassword,
+			DB:       cfg.Cluster.RedisDB,
+		})
 	}
 
 	r := &Router{
@@ -37,8 +51,14 @@ func New(cfg *config.Config, bal *balancer.Balancer, logger *zap.Logger) *Router
 		balancer:    bal,
 		rateLimiter: ratelimit.New(cfg.Global.RateLimit),
 		waf:         wf,
+		redis:       rc,
+		nodeID:      nodeID,
 		logger:      logger,
 		router:      mux.NewRouter(),
+	}
+
+	if rc != nil {
+		r.drain = drain.New(rc, nodeID)
 	}
 
 	r.setupRoutes()
@@ -85,7 +105,11 @@ func (r *Router) middleware(next http.Handler) http.Handler {
 
 		handler := next
 		if r.waf != nil {
-			handler = r.waf.Middleware(next)
+			handler = r.waf.Middleware(handler)
+		}
+		if r.drain != nil {
+			handler = r.drain.RefuseIfDraining(handler)
+			handler = r.drain.Track(handler)
 		}
 
 		handler.ServeHTTP(wrapped, req)
