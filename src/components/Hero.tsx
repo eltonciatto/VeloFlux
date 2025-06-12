@@ -9,7 +9,7 @@ export const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;utf8,<svg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" fill-rule=\"evenodd\"><g fill=\"%23ffffff\" fill-opacity=\"0.05\"><circle cx=\"30\" cy=\"30\" r=\"2\"/></g></g></svg>')] opacity-20"></div>
       
       <div className="max-w-7xl mx-auto text-center relative z-10">
         <div className="mb-8">
@@ -49,7 +49,7 @@ export const Hero = () => {
           
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
             <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">≤50MB</div>
+            <div className="text-2xl font-bold text-white">50MB</div>
             <div className="text-sm text-blue-200">Container Size</div>
           </Card>
           

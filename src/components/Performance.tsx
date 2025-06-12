@@ -85,7 +85,7 @@ export const Performance = () => {
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Response Latency</h3>
-              <Badge className="bg-blue-100/10 text-blue-300">P99 < 10ms</Badge>
+              <Badge className="bg-blue-100/10 text-blue-300">P99 under 10ms</Badge>
             </div>
             
             <div className="h-64 mb-4">
@@ -121,7 +121,7 @@ export const Performance = () => {
             <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">99.99%</div>
             <div className="text-sm text-blue-200">Uptime SLA</div>
-            <div className="text-xs text-green-300 mt-1">< 53 min/year downtime</div>
+            <div className="text-xs text-green-300 mt-1">Under 53 min/year downtime</div>
           </Card>
 
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
@@ -140,7 +140,7 @@ export const Performance = () => {
 
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
             <Clock className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-white mb-1">< 1s</div>
+            <div className="text-2xl font-bold text-white mb-1">Under 1s</div>
             <div className="text-sm text-blue-200">Startup Time</div>
             <div className="text-xs text-green-300 mt-1">Cold start to ready</div>
           </Card>
