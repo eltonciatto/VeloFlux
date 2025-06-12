@@ -21,6 +21,7 @@ type GlobalConfig struct {
 	TLS            TLSConfig       `yaml:"tls"`
 	HealthCheck    HealthConfig    `yaml:"health_check"`
 	RateLimit      RateLimitConfig `yaml:"rate_limit"`
+	WAF            WAFConfig       `yaml:"waf"`
 	GeoIP          GeoIPConfig     `yaml:"geoip"`
 }
 
@@ -40,6 +41,12 @@ type RateLimitConfig struct {
 	RequestsPerSecond int           `yaml:"requests_per_second"`
 	BurstSize         int           `yaml:"burst_size"`
 	CleanupInterval   time.Duration `yaml:"cleanup_interval"`
+	RedisAddress      string        `yaml:"redis_address"`
+}
+
+type WAFConfig struct {
+	Enabled   bool   `yaml:"enabled"`
+	RulesPath string `yaml:"rules_path"`
 }
 
 type GeoIPConfig struct {
@@ -112,6 +119,10 @@ func Load(path string) (*Config, error) {
 	}
 	if cfg.Global.HealthCheck.Retries == 0 {
 		cfg.Global.HealthCheck.Retries = 3
+	}
+
+	if cfg.Global.WAF.RulesPath == "" {
+		cfg.Global.WAF.Enabled = false
 	}
 
 	// Set cluster defaults
