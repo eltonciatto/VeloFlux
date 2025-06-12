@@ -1,0 +1,265 @@
+
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Copy, Check, Play, Download, Terminal, FileText } from 'lucide-react';
+
+export const QuickStart = () => {
+  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, commandId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCommand(commandId);
+    setTimeout(() => setCopiedCommand(null), 2000);
+  };
+
+  const dockerCommand = `docker run -d \\
+  --name skypilot-lb \\
+  -p 80:80 -p 443:443 \\
+  -e SKY_CONFIG=/etc/skypilot/config.yaml \\
+  -v $(pwd)/config:/etc/skypilot \\
+  ghcr.io/skypilot/lb:latest`;
+
+  const composeFile = `version: '3.8'
+services:
+  skypilot-lb:
+    image: ghcr.io/skypilot/lb:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # metrics
+    environment:
+      - SKY_CONFIG=/etc/skypilot/config.yaml
+      - SKY_LOG_LEVEL=info
+    volumes:
+      - ./config:/etc/skypilot
+      - ./certs:/etc/ssl/certs
+    restart: unless-stopped
+
+  backend-1:
+    image: nginx:alpine
+    ports:
+      - "8001:80"
+    
+  backend-2:
+    image: nginx:alpine
+    ports:
+      - "8002:80"`;
+
+  const configExample = `# SkyPilot LB Configuration
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8080"
+  
+  # TLS Configuration
+  tls:
+    auto_cert: true
+    acme_email: "admin@example.com"
+    cert_dir: "/etc/ssl/certs"
+
+  # Health Check Defaults
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+# Backend Pools
+pools:
+  - name: "web-servers"
+    algorithm: "round_robin"
+    sticky_sessions: true
+    
+    backends:
+      - address: "backend-1:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          
+      - address: "backend-2:80"
+        weight: 100
+        health_check:
+          path: "/health"
+
+# Routing Rules
+routes:
+  - host: "example.com"
+    pool: "web-servers"
+    
+  - host: "api.example.com"
+    pool: "api-servers"
+    path_prefix: "/api"`;
+
+  return (
+    <section className="py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Quick Start Guide
+          </h2>
+          <p className="text-xl text-blue-200 max-w-3xl mx-auto">
+            Get SkyPilot LB running in under 5 minutes with Docker
+          </p>
+        </div>
+
+        <Tabs defaultValue="docker" className="w-full">
+          <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-12 bg-white/5 border-white/10">
+            <TabsTrigger value="docker" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <Terminal className="w-4 h-4 mr-2" />
+              Docker
+            </TabsTrigger>
+            <TabsTrigger value="compose" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <Play className="w-4 h-4 mr-2" />
+              Compose
+            </TabsTrigger>
+            <TabsTrigger value="config" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <FileText className="w-4 h-4 mr-2" />
+              Config
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="docker" className="space-y-8">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Single Container Deployment</h3>
+                <Badge className="bg-green-100/10 text-green-300">Recommended</Badge>
+              </div>
+              
+              <p className="text-blue-200 mb-6">
+                Run SkyPilot LB with a simple Docker command. Perfect for development and small deployments.
+              </p>
+
+              <div className="space-y-4">
+                <div className="bg-black/50 rounded-lg p-4 relative">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="absolute top-2 right-2 text-blue-300 hover:text-white"
+                    onClick={() => copyToClipboard(dockerCommand, 'docker')}
+                  >
+                    {copiedCommand === 'docker' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <pre className="text-sm text-blue-100 overflow-x-auto pr-12">
+                    <code>{dockerCommand}</code>
+                  </pre>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-blue-400 font-semibold mb-2">Port 80/443</div>
+                    <div className="text-sm text-blue-200">HTTP/HTTPS traffic</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-green-400 font-semibold mb-2">Config Volume</div>
+                    <div className="text-sm text-blue-200">Mount your config.yaml</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-purple-400 font-semibold mb-2">Auto Start</div>
+                    <div className="text-sm text-blue-200">Runs in background</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="compose" className="space-y-8">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Docker Compose Stack</h3>
+                <Badge className="bg-blue-100/10 text-blue-300">Full Stack</Badge>
+              </div>
+              
+              <p className="text-blue-200 mb-6">
+                Complete setup with load balancer and sample backend services for testing.
+              </p>
+
+              <div className="space-y-4">
+                <div className="bg-black/50 rounded-lg p-4 relative">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="absolute top-2 right-2 text-blue-300 hover:text-white"
+                    onClick={() => copyToClipboard(composeFile, 'compose')}
+                  >
+                    {copiedCommand === 'compose' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <pre className="text-sm text-blue-100 overflow-x-auto pr-12">
+                    <code>{composeFile}</code>
+                  </pre>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download docker-compose.yml
+                  </Button>
+                  <Button variant="outline" className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20">
+                    <Play className="w-4 h-4 mr-2" />
+                    docker-compose up -d
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="config" className="space-y-8">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Configuration Example</h3>
+                <Badge className="bg-yellow-100/10 text-yellow-300">YAML</Badge>
+              </div>
+              
+              <p className="text-blue-200 mb-6">
+                Complete configuration example with TLS, health checks, and routing rules.
+              </p>
+
+              <div className="space-y-4">
+                <div className="bg-black/50 rounded-lg p-4 relative">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="absolute top-2 right-2 text-blue-300 hover:text-white"
+                    onClick={() => copyToClipboard(configExample, 'config')}
+                  >
+                    {copiedCommand === 'config' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <pre className="text-sm text-blue-100 overflow-x-auto pr-12">
+                    <code>{configExample}</code>
+                  </pre>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-green-400 font-semibold mb-2">✓ Auto HTTPS</div>
+                    <div className="text-sm text-blue-200">Let's Encrypt certificates</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-blue-400 font-semibold mb-2">✓ Health Monitoring</div>
+                    <div className="text-sm text-blue-200">Automatic backend checks</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-purple-400 font-semibold mb-2">✓ Load Balancing</div>
+                    <div className="text-sm text-blue-200">Round robin with weights</div>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-yellow-400 font-semibold mb-2">✓ Sticky Sessions</div>
+                    <div className="text-sm text-blue-200">Cookie-based persistence</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-12 text-center">
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg">
+            <Download className="w-5 h-5 mr-2" />
+            Download Complete Examples
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
