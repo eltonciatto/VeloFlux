@@ -16,4 +16,11 @@ Example request:
 
 ```bash
 curl -H "Authorization: Bearer <token>" http://localhost:8080/api/pools
+=======
+The admin API exposes endpoints for managing pools, backends and routes.
+
+Example request:
+```bash
+curl http://localhost:8080/api/pools
+>>>>>>> main
 ```
