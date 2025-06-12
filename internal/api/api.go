@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+        "strconv"
 	"sync"
 	"time"
 
@@ -119,9 +120,10 @@ func (a *API) Start() error {
 	// Use a different port for API
 	parts := strings.Split(address, ":")
 	if len(parts) > 1 {
-		port := parts[len(parts)-1]
-		apiPort := fmt.Sprintf("%d", 8000+port)
-		address = strings.Join(append(parts[:len(parts)-1], apiPort), ":")
+                portStr := parts[len(parts)-1]
+                portInt, _ := strconv.Atoi(portStr)
+                apiPort := fmt.Sprintf("%d", 8000+portInt)
+                address = strings.Join(append(parts[:len(parts)-1], apiPort), ":")
 	} else {
 		address = "0.0.0.0:8000"
 	}
@@ -392,7 +394,6 @@ func (a *API) handleListBackends(w http.ResponseWriter, r *http.Request) {
 				"pool":    pool,
 				"address": b.Address,
 				"weight":  b.Weight,
-				"health":  b.Healthy,
 			})
 		}
 	} else {
@@ -403,15 +404,13 @@ func (a *API) handleListBackends(w http.ResponseWriter, r *http.Request) {
 					"pool":    p.Name,
 					"address": b.Address,
 					"weight":  b.Weight,
-					"health":  b.Healthy,
-				})
-			}
+                                })
 		}
+                }
 	}
 	
 	writeJSON(w, backends)
 }
-
 func (a *API) handleListRoutes(w http.ResponseWriter, r *http.Request) {
 	a.configMu.RLock()
 	routes := a.config.Routes
@@ -602,13 +601,17 @@ func (a *API) handleClusterInfo(w http.ResponseWriter, r *http.Request) {
 			Enabled:  false,
 		}
 	} else {
-		nodes := a.cluster.GetNodes()
-		response = ClusterResponse{
-			Nodes:     nodes,
-			IsLeader:  a.cluster.IsLeader(),
-			LocalNode: a.cluster.NodeID(),
-			Enabled:   true,
-		}
+                nodesPtr := a.cluster.GetNodes()
+                nodes := make([]clustering.ClusterNode, len(nodesPtr))
+                for i, n := range nodesPtr {
+                        nodes[i] = *n
+                }
+                response = ClusterResponse{
+                        Nodes:     nodes,
+                        IsLeader:  a.cluster.IsLeader(),
+                        LocalNode: a.cluster.NodeID(),
+                        Enabled:   true,
+                }
 	}
 	
 	writeJSON(w, response)

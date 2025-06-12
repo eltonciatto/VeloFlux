@@ -20,6 +20,7 @@ const (
 	StateBackend     StateType = "backend"
 	StateRoute       StateType = "route"
 	StateConfig      StateType = "config"
+        StatePool        StateType = "pool"
 )
 
 // ClusterRole represents the role of a node in the cluster
