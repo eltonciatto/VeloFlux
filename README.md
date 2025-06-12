@@ -259,6 +259,7 @@ go run -race ./cmd/velofluxlb
 - [Deployment Guide](docs/deployment.md)
 - [Security Hardening](docs/security.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Multitenant Roadmap](docs/multitenant.md)
 
 ## 🤝 Community
 
