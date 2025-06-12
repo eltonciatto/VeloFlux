@@ -5,7 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"context"
 	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/time/rate"
 )
 
@@ -15,6 +17,7 @@ type Limiter struct {
 	rps      int
 	burst    int
 	cleanup  time.Duration
+	redis    *redis.Client
 }
 
 func New(config config.RateLimitConfig) *Limiter {
@@ -23,6 +26,10 @@ func New(config config.RateLimitConfig) *Limiter {
 		rps:      config.RequestsPerSecond,
 		burst:    config.BurstSize,
 		cleanup:  config.CleanupInterval,
+	}
+
+	if config.RedisAddress != "" {
+		l.redis = redis.NewClient(&redis.Options{Addr: config.RedisAddress})
 	}
 
 	if l.rps <= 0 {
@@ -46,6 +53,18 @@ func (l *Limiter) Allow(ip net.IP) bool {
 		return true // rate limiting disabled
 	}
 
+	if l.redis != nil {
+		key := "veloflux:rl:" + ip.String()
+		count, err := l.redis.Incr(context.Background(), key).Result()
+		if err != nil {
+			return true
+		}
+		if count == 1 {
+			l.redis.Expire(context.Background(), key, time.Second)
+		}
+		return int(count) <= l.rps
+	}
+
 	key := ip.String()
 
 	l.mu.RLock()
@@ -66,6 +85,10 @@ func (l *Limiter) Allow(ip net.IP) bool {
 }
 
 func (l *Limiter) cleanupRoutine() {
+	if l.redis != nil {
+		return
+	}
+
 	ticker := time.NewTicker(l.cleanup)
 	defer ticker.Stop()
 

@@ -12,6 +12,7 @@ import (
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/eltonciatto/veloflux/internal/ratelimit"
+	"github.com/eltonciatto/veloflux/internal/waf"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -20,15 +21,22 @@ type Router struct {
 	config      *config.Config
 	balancer    *balancer.Balancer
 	rateLimiter *ratelimit.Limiter
+	waf         *waf.WAF
 	logger      *zap.Logger
 	router      *mux.Router
 }
 
 func New(cfg *config.Config, bal *balancer.Balancer, logger *zap.Logger) *Router {
+	wf, err := waf.New(cfg.Global.WAF.RulesPath)
+	if err != nil {
+		logger.Error("failed to load WAF rules", zap.Error(err))
+	}
+
 	r := &Router{
 		config:      cfg,
 		balancer:    bal,
 		rateLimiter: ratelimit.New(cfg.Global.RateLimit),
+		waf:         wf,
 		logger:      logger,
 		router:      mux.NewRouter(),
 	}
@@ -75,8 +83,12 @@ func (r *Router) middleware(next http.Handler) http.Handler {
 		// Wrap response writer to capture status code
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: 200}
 
-		// Call next handler
-		next.ServeHTTP(wrapped, req)
+		handler := next
+		if r.waf != nil {
+			handler = r.waf.Middleware(next)
+		}
+
+		handler.ServeHTTP(wrapped, req)
 
 		// Log request
 		duration := time.Since(start)

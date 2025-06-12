@@ -21,6 +21,11 @@ global:
     requests_per_second: 100
     burst_size: 200
     cleanup_interval: "5m"
+    redis_address: "redis:6379"
+
+  waf:
+    enabled: false
+    rules_path: "/etc/veloflux/waf.conf"
 
   # GeoIP Configuration
   geoip:
