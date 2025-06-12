@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Server 1</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #e3f2fd; }
+        .server { background: #1976d2; color: white; padding: 20px; border-radius: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>🚀 Backend Server 1</h1>
+        <p>Served by: SkyPilot LB</p>
+        <p>Timestamp: <span id="time"></span></p>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+
+version: '3.8'
+
+services:
+  skypilot-lb:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # metrics
+    environment:
+      - SKY_CONFIG=/etc/skypilot/config.yaml
+      - SKY_LOG_LEVEL=info
+    volumes:
+      - ./config:/etc/skypilot
+      - ./certs:/etc/ssl/certs/skypilot
+    depends_on:
+      - backend-1
+      - backend-2
+    restart: unless-stopped
+
+  backend-1:
+    image: nginx:alpine
+    ports:
+      - "8001:80"
+    volumes:
+      - ./test/backend1.html:/usr/share/nginx/html/index.html:ro
+      - ./test/health.html:/usr/share/nginx/html/health:ro
+    
+  backend-2:
+    image: nginx:alpine
+    ports:
+      - "8002:80"
+    volumes:
+      - ./test/backend2.html:/usr/share/nginx/html/index.html:ro
+      - ./test/health.html:/usr/share/nginx/html/health:ro
+
+  # Optional: Redis for state storage (future enhancement)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
