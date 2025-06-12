@@ -9,7 +9,7 @@ export const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;utf8,<svg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" fill-rule=\"evenodd\"><g fill=\"%23ffffff\" fill-opacity=\"0.05\"><circle cx=\"30\" cy=\"30\" r=\"2\"/></g></g></svg>')] opacity-20"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-blue-900/30 to-indigo-900/50 opacity-20"></div>
       
       <div className="max-w-7xl mx-auto text-center relative z-10">
         <div className="mb-8">
