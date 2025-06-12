@@ -35,7 +35,7 @@ services:
       - ./test/backend2.html:/usr/share/nginx/html/index.html:ro
       - ./test/health.html:/usr/share/nginx/html/health:ro
 
-  # Optional: Redis for state storage (future enhancement)
+  # Redis for cluster state storage and coordination
   redis:
     image: redis:alpine
     ports:
@@ -43,6 +43,23 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
+    restart: unless-stopped
+
+  # Prometheus metrics exporter for system monitoring
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)($$|/)'
 
 volumes:
   redis-data:

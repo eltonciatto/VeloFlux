@@ -1,4 +1,3 @@
-
 package balancer
 
 import (
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"github.com/skypilot/lb/internal/config"
+	"github.com/skypilot/lb/internal/geo"
+	"net/http"
 )
 
 type Algorithm string
@@ -31,6 +32,7 @@ type Backend struct {
 	Connections atomic.Int64
 	LastUsed    atomic.Int64
 	Config      config.Backend
+	Region      string // Region for geo-routing
 }
 
 type Pool struct {
@@ -39,17 +41,24 @@ type Pool struct {
 	Backends  []*Backend
 	mu        sync.RWMutex
 	counter   atomic.Uint64
+	StickySessions bool
 }
 
 type Balancer struct {
 	pools map[string]*Pool
 	mu    sync.RWMutex
+	geoManager *geo.Manager
 }
 
 func New() *Balancer {
 	return &Balancer{
 		pools: make(map[string]*Pool),
 	}
+}
+
+// SetGeoManager sets the geo routing manager
+func (b *Balancer) SetGeoManager(gm *geo.Manager) {
+	b.geoManager = gm
 }
 
 func (b *Balancer) AddPool(poolConfig config.Pool) {
@@ -71,21 +80,74 @@ func (b *Balancer) AddPool(poolConfig config.Pool) {
 		Name:      poolConfig.Name,
 		Algorithm: Algorithm(poolConfig.Algorithm),
 		Backends:  backends,
+		StickySessions: poolConfig.StickySessions,
 	}
 
 	b.pools[poolConfig.Name] = pool
 }
 
-func (b *Balancer) GetBackend(poolName string, clientIP net.IP, sessionID string) (*Backend, error) {
+func (b *Balancer) GetBackend(poolName string, clientIP net.IP, sessionID string, r *http.Request) (*Backend, error) {
 	b.mu.RLock()
-	pool, exists := b.pools[poolName]
-	b.mu.RUnlock()
+	defer b.mu.RUnlock()
 
+	pool, exists := b.pools[poolName]
 	if !exists {
-		return nil, fmt.Errorf("pool %s not found", poolName)
+		return nil, fmt.Errorf("pool not found: %s", poolName)
 	}
 
-	return pool.selectBackend(clientIP, sessionID)
+	pool.mu.RLock()
+	defer pool.mu.RUnlock()
+
+	// Check if there are any backends
+	if len(pool.Backends) == 0 {
+		return nil, fmt.Errorf("no backends available in pool: %s", poolName)
+	}
+
+	// Get only healthy backends
+	var healthyBackends []*Backend
+	for _, backend := range pool.Backends {
+		if backend.Healthy.Load() {
+			healthyBackends = append(healthyBackends, backend)
+		}
+	}
+
+	// If no healthy backends, return error
+	if len(healthyBackends) == 0 {
+		return nil, fmt.Errorf("no healthy backends in pool: %s", poolName)
+	}
+
+	// Handle sticky sessions if enabled
+	if pool.StickySessions && sessionID != "" {
+		backend := b.getStickyBackend(pool, sessionID, healthyBackends)
+		if backend != nil {
+			return backend, nil
+		}
+	}
+
+	// Select backend based on algorithm
+	var backend *Backend
+
+	switch pool.Algorithm {
+	case RoundRobin:
+		backend = b.getRoundRobinBackend(pool, healthyBackends)
+	case LeastConn:
+		backend = b.getLeastConnBackend(healthyBackends)
+	case IPHash:
+		backend = b.getIPHashBackend(clientIP, healthyBackends)
+	case WeightedRoundRobin:
+		backend = b.getWeightedRoundRobinBackend(pool, healthyBackends)
+	case GeoProximity:
+		backend = b.getGeoProximityBackend(r, healthyBackends)
+	default:
+		// Default to round robin
+		backend = b.getRoundRobinBackend(pool, healthyBackends)
+	}
+
+	// Increment connections count
+	backend.Connections.Add(1)
+	backend.LastUsed.Store(time.Now().UnixNano())
+
+	return backend, nil
 }
 
 func (p *Pool) selectBackend(clientIP net.IP, sessionID string) (*Backend, error) {
@@ -236,4 +298,226 @@ func (b *Balancer) DecrementConnections(poolName, backendAddress string) {
 			break
 		}
 	}
+}
+
+func (b *Balancer) getStickyBackend(pool *Pool, sessionID string, healthyBackends []*Backend) *Backend {
+	// Implement sticky session logic here
+	// For example, you can use a map to store backend references by session ID
+	return nil
+}
+
+func (b *Balancer) getRoundRobinBackend(pool *Pool, healthyBackends []*Backend) *Backend {
+	index := pool.counter.Add(1) % uint64(len(healthyBackends))
+	backend := healthyBackends[index]
+	backend.LastUsed.Store(time.Now().UnixNano())
+	return backend
+}
+
+func (b *Balancer) getLeastConnBackend(healthyBackends []*Backend) *Backend {
+	var selected *Backend
+	minConns := int64(^uint64(0) >> 1) // max int64
+
+	for _, backend := range healthyBackends {
+		conns := backend.Connections.Load()
+		if conns < minConns {
+			minConns = conns
+			selected = backend
+		}
+	}
+
+	selected.LastUsed.Store(time.Now().UnixNano())
+	return selected
+}
+
+func (b *Balancer) getIPHashBackend(clientIP net.IP, healthyBackends []*Backend) *Backend {
+	hash := md5.Sum(clientIP)
+	index := uint64(hash[0]) % uint64(len(healthyBackends))
+	backend := healthyBackends[index]
+	backend.LastUsed.Store(time.Now().UnixNano())
+	return backend
+}
+
+func (b *Balancer) getWeightedRoundRobinBackend(pool *Pool, healthyBackends []*Backend) *Backend {
+	totalWeight := 0
+	for _, backend := range healthyBackends {
+		if backend.Weight > 0 {
+			totalWeight += backend.Weight
+		} else {
+			totalWeight += 1
+		}
+	}
+
+	if totalWeight == 0 {
+		return b.getRoundRobinBackend(pool, healthyBackends)
+	}
+
+	r := rand.Intn(totalWeight)
+	for _, backend := range healthyBackends {
+		weight := backend.Weight
+		if weight <= 0 {
+			weight = 1
+		}
+		r -= weight
+		if r < 0 {
+			backend.LastUsed.Store(time.Now().UnixNano())
+			return backend
+		}
+	}
+
+	return healthyBackends[0]
+}
+
+func (b *Balancer) getGeoProximityBackend(r *http.Request, healthyBackends []*Backend) *Backend {
+	// If geo manager isn't available, fall back to round robin
+	if b.geoManager == nil || r == nil {
+		return healthyBackends[rand.Intn(len(healthyBackends))]
+	}
+
+	// Get backend addresses
+	var addresses []string
+	addrToBackend := make(map[string]*Backend)
+	
+	for _, backend := range healthyBackends {
+		addresses = append(addresses, backend.Address)
+		addrToBackend[backend.Address] = backend
+	}
+
+	// Try to find closest backend
+	closestAddr, err := b.geoManager.FindClosestBackend(r, addresses)
+	if err != nil || closestAddr == "" {
+		// Fall back to random selection on error
+		return healthyBackends[rand.Intn(len(healthyBackends))]
+	}
+
+	// Return the closest backend
+	if backend, ok := addrToBackend[closestAddr]; ok {
+		return backend
+	}
+
+	// Fall back to random if something went wrong
+	return healthyBackends[rand.Intn(len(healthyBackends))]
+}
+
+// GetPools returns all pools
+func (b *Balancer) GetPools() []config.Pool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	
+	pools := make([]config.Pool, 0, len(b.pools))
+	for _, pool := range b.pools {
+		var backends []config.Backend
+		for _, backend := range pool.Backends {
+			backends = append(backends, backend.Config)
+		}
+		
+		pools = append(pools, config.Pool{
+			Name:           pool.Name,
+			Algorithm:      string(pool.Algorithm),
+			StickySessions: false, // Fill from config
+			Backends:       backends,
+		})
+	}
+	
+	return pools
+}
+
+// GetPool returns a specific pool by name
+func (b *Balancer) GetPool(name string) *config.Pool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	
+	pool, exists := b.pools[name]
+	if !exists {
+		return nil
+	}
+	
+	var backends []config.Backend
+	for _, backend := range pool.Backends {
+		backends = append(backends, backend.Config)
+	}
+	
+	return &config.Pool{
+		Name:           pool.Name,
+		Algorithm:      string(pool.Algorithm),
+		StickySessions: false, // Fill from config
+		Backends:       backends,
+	}
+}
+
+// UpdatePool updates a pool's configuration
+func (b *Balancer) UpdatePool(cfg config.Pool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	
+	pool, exists := b.pools[cfg.Name]
+	if !exists {
+		return
+	}
+	
+	// Update properties that can change
+	pool.Algorithm = Algorithm(cfg.Algorithm)
+	// StickySessions would be updated here
+}
+
+// RemovePool removes a pool
+func (b *Balancer) RemovePool(name string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	
+	delete(b.pools, name)
+}
+
+// AddBackend adds a backend to a pool
+func (b *Balancer) AddBackend(poolName string, cfg config.Backend) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	
+	pool, exists := b.pools[poolName]
+	if !exists {
+		return
+	}
+	
+	// Check if backend already exists
+	for _, backend := range pool.Backends {
+		if backend.Address == cfg.Address {
+			// Update existing backend
+			backend.Weight = cfg.Weight
+			backend.Config = cfg
+			return
+		}
+	}
+	
+	// Add new backend
+	backend := &Backend{
+		Address: cfg.Address,
+		Weight:  cfg.Weight,
+		Config:  cfg,
+	}
+	
+	// Set as healthy by default
+	backend.Healthy.Store(true)
+	
+	pool.Backends = append(pool.Backends, backend)
+}
+
+// RemoveBackend removes a backend from a pool
+func (b *Balancer) RemoveBackend(poolName, address string) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	
+	pool, exists := b.pools[poolName]
+	if !exists {
+		return fmt.Errorf("pool not found: %s", poolName)
+	}
+	
+	// Find and remove backend
+	for i, backend := range pool.Backends {
+		if backend.Address == address {
+			// Remove this backend
+			pool.Backends = append(pool.Backends[:i], pool.Backends[i+1:]...)
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("backend not found: %s", address)
 }

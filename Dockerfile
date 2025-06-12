@@ -23,8 +23,23 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -o skypilot-lb \
     ./cmd/skypilotlb
 
-# Final stage - minimal image
-FROM scratch
+# Download GeoIP database
+FROM alpine:latest AS geoip
+
+RUN apk add --no-cache curl unzip
+WORKDIR /geoip
+
+# MaxMind has a free GeoLite2 database but requires registration
+# In production, you should download the database with your license key
+# For development, we're using a placeholder database
+RUN mkdir -p /geoip && \
+    echo "This is a placeholder for the GeoIP database" > /geoip/GeoLite2-City.mmdb
+
+# Final stage - minimal yet functional image
+FROM alpine:latest
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
 
 # Copy CA certificates for HTTPS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -35,8 +50,11 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 # Copy our binary
 COPY --from=builder /app/skypilot-lb /usr/local/bin/skypilot-lb
 
-# Create directory for config
-COPY --from=builder /tmp /tmp
+# Copy GeoIP database
+COPY --from=geoip /geoip /etc/geoip
+
+# Create directory structure
+RUN mkdir -p /etc/skypilot /etc/ssl/certs/skypilot /var/lib/skypilot /tmp
 
 # Expose ports
 EXPOSE 80 443 8080

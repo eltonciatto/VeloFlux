@@ -54,9 +54,11 @@ func main() {
 	}()
 
 	logger.Info("SkyPilot LB started successfully",
-		zap.String("version", "1.0.0"),
+		zap.String("version", "1.1.0"),
 		zap.String("bind_address", cfg.Global.BindAddress),
-		zap.String("tls_bind_address", cfg.Global.TLSBindAddress))
+		zap.String("tls_bind_address", cfg.Global.TLSBindAddress),
+		zap.Bool("clustering_enabled", cfg.Cluster.Enabled),
+		zap.Bool("geo_routing_enabled", cfg.Global.GeoIP.Enabled))
 
 	// Wait for shutdown signal
 	sigChan := make(chan os.Signal, 1)

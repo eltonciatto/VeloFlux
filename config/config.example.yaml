@@ -1,4 +1,3 @@
-
 # SkyPilot LB Configuration Example
 global:
   bind_address: "0.0.0.0:80"
@@ -25,8 +24,18 @@ global:
 
   # GeoIP Configuration
   geoip:
-    enabled: false
+    enabled: true
     database_path: "/etc/geoip/GeoLite2-City.mmdb"
+
+# Clustering Configuration
+cluster:
+  enabled: true
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
+  node_id: ""  # Auto-generated if empty
+  heartbeat_interval: "5s"
+  leader_timeout: "15s"
 
 # Backend Pools
 pools:

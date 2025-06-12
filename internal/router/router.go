@@ -97,7 +97,7 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 		clientIP := r.getClientIP(req)
 		sessionID := r.getSessionID(req)
 
-		backend, err := r.balancer.GetBackend(poolName, clientIP, sessionID)
+		backend, err := r.balancer.GetBackend(poolName, clientIP, sessionID, req)
 		if err != nil {
 			r.logger.Error("Failed to get backend", zap.Error(err))
 			http.Error(w, "Service unavailable", http.StatusServiceUnavailable)

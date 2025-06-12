@@ -1,4 +1,3 @@
-
 package config
 
 import (
@@ -9,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Global GlobalConfig `yaml:"global"`
-	Pools  []Pool       `yaml:"pools"`
-	Routes []Route      `yaml:"routes"`
+	Global  GlobalConfig  `yaml:"global"`
+	Pools   []Pool        `yaml:"pools"`
+	Routes  []Route       `yaml:"routes"`
+	Cluster ClusterConfig  `yaml:"cluster"` // Added cluster config
 }
 
 type GlobalConfig struct {
@@ -45,6 +45,16 @@ type RateLimitConfig struct {
 type GeoIPConfig struct {
 	Enabled    bool   `yaml:"enabled"`
 	DatabasePath string `yaml:"database_path"`
+}
+
+type ClusterConfig struct {
+	Enabled           bool          `yaml:"enabled"`
+	RedisAddress      string        `yaml:"redis_address"`
+	RedisPassword     string        `yaml:"redis_password"`
+	RedisDB           int           `yaml:"redis_db"`
+	NodeID            string        `yaml:"node_id"`
+	HeartbeatInterval time.Duration `yaml:"heartbeat_interval"`
+	LeaderTimeout     time.Duration `yaml:"leader_timeout"`
 }
 
 type Pool struct {
@@ -102,6 +112,14 @@ func Load(path string) (*Config, error) {
 	}
 	if cfg.Global.HealthCheck.Retries == 0 {
 		cfg.Global.HealthCheck.Retries = 3
+	}
+
+	// Set cluster defaults
+	if cfg.Cluster.HeartbeatInterval == 0 {
+		cfg.Cluster.HeartbeatInterval = 5 * time.Second
+	}
+	if cfg.Cluster.LeaderTimeout == 0 {
+		cfg.Cluster.LeaderTimeout = 15 * time.Second
 	}
 
 	return &cfg, nil
