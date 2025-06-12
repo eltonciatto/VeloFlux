@@ -37,7 +37,8 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	var clusterManager *clustering.Cluster
 	if cfg.Cluster.Enabled {
 		var err error
-		clusterManager, err = clustering.New(&cfg.Cluster, logger)
+                clusterCfg := (*clustering.ClusterConfig)(&cfg.Cluster)
+                clusterManager, err = clustering.New(clusterCfg, logger)
 		if err != nil {
 			logger.Error("Failed to initialize clustering", zap.Error(err))
 			// Don't return error, continue without clustering
