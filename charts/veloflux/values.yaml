@@ -1,0 +1,34 @@
+image:
+  repository: eltonciatto/veloflux
+  tag: "0.0.2"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+redis:
+  enabled: true
+  auth: false
+
+service:
+  type: LoadBalancer
+  ports:
+    http: 80
+    https: 443
+
+config:
+  sticky: true
+  lbAlgorithm: weighted_round_robin
+  backends:
+    - name: viewer-01
+      address: 181.41.201.102
+      region: br-sp
+    - name: viewer-02
+      address: 89.117.74.241
+      region: br-sp
+
+waf:
+  enabled: true
+
+ratelimit:
+  enabled: true
+  rpm: 800
