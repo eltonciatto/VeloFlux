@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/skypilot/lb/internal/config"
-	"github.com/skypilot/lb/internal/geo"
+	"github.com/veloflux/lb/internal/config"
+	"github.com/veloflux/lb/internal/geo"
 	"net/http"
 )
 

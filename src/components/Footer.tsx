@@ -21,7 +21,7 @@ export const Footer = () => {
         <div className="text-center mb-12">
           <div className="mb-6">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Deploy SkyPilot LB?
+              Ready to Deploy VeloFlux LB?
             </h2>
             <p className="text-xl text-blue-200 max-w-2xl mx-auto">
               Join thousands of developers building reliable, scalable infrastructure
@@ -113,7 +113,7 @@ export const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                SkyPilot LB
+                VeloFlux LB
               </div>
               <Badge className="bg-blue-100/10 text-blue-300">v1.0.0</Badge>
             </div>
@@ -125,7 +125,7 @@ export const Footer = () => {
             </div>
             
             <div className="text-blue-200 text-sm">
-              © 2024 SkyPilot LB. MIT License.
+              © 2024 VeloFlux LB. MIT License.
             </div>
           </div>
         </div>

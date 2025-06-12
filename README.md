@@ -1,5 +1,5 @@
 
-# SkyPilot LB - Container-Native Global Load Balancer
+# VeloFlux LB - Container-Native Global Load Balancer
 
 A production-grade, container-native load balancer built in Go with SSL termination, HTTP/3 support, automatic health checks, and geo-aware routing.
 
@@ -14,7 +14,7 @@ A production-grade, container-native load balancer built in Go with SSL terminat
 1. **Clone and start the stack:**
 ```bash
 git clone <repository-url>
-cd skypilot-lb
+cd veloflux-lb
 docker-compose up -d
 ```
 
@@ -27,22 +27,22 @@ curl http://localhost
 curl http://localhost:8080/metrics
 
 # View logs
-docker-compose logs -f skypilot-lb
+docker-compose logs -f veloflux-lb
 ```
 
 ### Build from Source
 
 ```bash
 # Build the binary
-go build -o skypilot-lb ./cmd/skypilotlb
+go build -o veloflux-lb ./cmd/velofluxlb
 
 # Run with custom config
-SKY_CONFIG=./config/config.example.yaml ./skypilot-lb
+VFX_CONFIG=./config/config.example.yaml ./veloflux-lb
 ```
 
 ## 🏗️ Architecture
 
-SkyPilot LB is designed as a single-binary, stateless load balancer with the following components:
+VeloFlux LB is designed as a single-binary, stateless load balancer with the following components:
 
 - **Router**: HTTP/HTTPS request routing with TLS termination
 - **Balancer**: Multiple load balancing algorithms (round-robin, least-conn, IP-hash, weighted)
@@ -85,7 +85,7 @@ global:
   tls:
     auto_cert: true
     acme_email: "admin@example.com"
-    cert_dir: "/etc/ssl/certs/skypilot"
+    cert_dir: "/etc/ssl/certs/veloflux"
 
   health_check:
     interval: "30s"
@@ -109,8 +109,8 @@ routes:
 
 ### Environment Variables
 
-- `SKY_CONFIG` - Path to configuration file (default: `/etc/skypilot/config.yaml`)
-- `SKY_LOG_LEVEL` - Log level: debug, info, warn, error
+- `VFX_CONFIG` - Path to configuration file (default: `/etc/veloflux/config.yaml`)
+- `VFX_LOG_LEVEL` - Log level: debug, info, warn, error
 
 ## 🚀 Deployment
 
@@ -118,15 +118,15 @@ routes:
 
 ```bash
 # Build image
-docker build -t skypilot-lb .
+docker build -t veloflux-lb .
 
 # Run container
 docker run -d \
-  --name skypilot-lb \
+  --name veloflux-lb \
   -p 80:80 -p 443:443 -p 8080:8080 \
-  -e SKY_CONFIG=/etc/skypilot/config.yaml \
-  -v $(pwd)/config:/etc/skypilot \
-  skypilot-lb
+  -e VFX_CONFIG=/etc/veloflux/config.yaml \
+  -v $(pwd)/config:/etc/veloflux \
+  veloflux-lb
 ```
 
 ### Zero-Downtime Deployment
@@ -148,10 +148,10 @@ DEPLOYMENT_MODE=nomad ./scripts/deploy.sh
 
 Access Prometheus metrics at `http://localhost:8080/metrics`:
 
-- `skypilot_requests_total` - Total requests by method, status, pool
-- `skypilot_request_duration_seconds` - Request latency histogram
-- `skypilot_active_connections` - Active connections per backend
-- `skypilot_backend_health` - Backend health status
+- `veloflux_requests_total` - Total requests by method, status, pool
+- `veloflux_request_duration_seconds` - Request latency histogram
+- `veloflux_active_connections` - Active connections per backend
+- `veloflux_backend_health` - Backend health status
 
 ### Health Checks
 
@@ -215,13 +215,13 @@ See `docs/security.md` for:
 go mod download
 
 # Build binary
-go build -o skypilot-lb ./cmd/skypilotlb
+go build -o veloflux-lb ./cmd/velofluxlb
 
 # Run tests
 go test ./...
 
 # Run with race detection
-go run -race ./cmd/skypilotlb
+go run -race ./cmd/velofluxlb
 ```
 
 ### Contributing
@@ -261,4 +261,4 @@ Built with:
 
 ---
 
-**SkyPilot LB** - Built for the cloud-native era 🚀
+**VeloFlux LB** - Built for the cloud-native era 🚀

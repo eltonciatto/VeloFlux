@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/skypilot/lb/internal/balancer"
-	"github.com/skypilot/lb/internal/config"
-	"github.com/skypilot/lb/internal/ratelimit"
+	"github.com/veloflux/lb/internal/balancer"
+	"github.com/veloflux/lb/internal/config"
+	"github.com/veloflux/lb/internal/ratelimit"
 	"go.uber.org/zap"
 )
 
@@ -123,7 +123,7 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 			// Set sticky session cookie if enabled
 			if r.isStickySessions(poolName) {
 				cookie := &http.Cookie{
-					Name:     "skypilot",
+					Name:     "veloflux",
 					Value:    backend.Address,
 					Path:     "/",
 					MaxAge:   3600, // 1 hour
@@ -177,7 +177,7 @@ func (r *Router) getClientIP(req *http.Request) net.IP {
 }
 
 func (r *Router) getSessionID(req *http.Request) string {
-	if cookie, err := req.Cookie("skypilot"); err == nil {
+	if cookie, err := req.Cookie("veloflux"); err == nil {
 		return cookie.Value
 	}
 	return ""

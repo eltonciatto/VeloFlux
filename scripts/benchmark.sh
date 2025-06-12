@@ -2,7 +2,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# SkyPilot LB Performance Benchmark Script
+# VeloFlux LB Performance Benchmark Script
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -63,7 +63,7 @@ check_tools() {
 }
 
 wait_for_service() {
-    log "Waiting for SkyPilot LB to be ready..."
+    log "Waiting for VeloFlux LB to be ready..."
     
     for i in {1..30}; do
         if curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL" | grep -q "200\|404"; then
@@ -134,7 +134,7 @@ run_memory_test() {
     # Start monitoring in background
     (
         while true; do
-            docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" | grep skypilot
+            docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" | grep veloflux
             sleep 5
         done
     ) &
@@ -167,10 +167,10 @@ run_stress_test() {
 generate_report() {
     log "Generating performance report..."
     
-    REPORT_FILE="/tmp/skypilot-lb-benchmark-$(date +%Y%m%d-%H%M%S).txt"
+    REPORT_FILE="/tmp/veloflux-lb-benchmark-$(date +%Y%m%d-%H%M%S).txt"
     
     cat > "$REPORT_FILE" <<EOF
-SkyPilot LB Performance Benchmark Report
+VeloFlux LB Performance Benchmark Report
 =======================================
 Date: $(date)
 Target: $TARGET_URL
@@ -197,7 +197,7 @@ EOF
 }
 
 main() {
-    log "Starting SkyPilot LB performance benchmark..."
+    log "Starting VeloFlux LB performance benchmark..."
     log "Target URL: $TARGET_URL"
     
     check_tools

@@ -146,7 +146,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	}
 
 	// Subscribe to cluster events
-	c.pubsub = c.client.Subscribe(ctx, "skypilot:events")
+	c.pubsub = c.client.Subscribe(ctx, "veloflux:events")
 	
 	// Start background goroutines
 	go c.heartbeatLoop()
@@ -172,7 +172,7 @@ func (c *Cluster) Stop() error {
 	c.cancel()
 	
 	// Unregister from cluster
-	c.client.HDel(c.ctx, "skypilot:nodes", c.nodeID)
+	c.client.HDel(c.ctx, "veloflux:nodes", c.nodeID)
 	
 	// Publish leave event
 	event := ClusterEvent{
@@ -182,7 +182,7 @@ func (c *Cluster) Stop() error {
 	}
 	
 	data, _ := json.Marshal(event)
-	c.client.Publish(c.ctx, "skypilot:events", data)
+	c.client.Publish(c.ctx, "veloflux:events", data)
 	
 	// Close connections
 	if c.pubsub != nil {
@@ -220,7 +220,7 @@ func (c *Cluster) PublishState(stateType StateType, key string, value []byte) er
 	}
 
 	// Store in Redis
-	err := c.client.HSet(c.ctx, fmt.Sprintf("skypilot:state:%s", stateType), key, value).Err()
+	err := c.client.HSet(c.ctx, fmt.Sprintf("veloflux:state:%s", stateType), key, value).Err()
 	if err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ func (c *Cluster) PublishState(stateType StateType, key string, value []byte) er
 	}
 
 	data, _ := json.Marshal(event)
-	return c.client.Publish(c.ctx, "skypilot:events", data).Err()
+	return c.client.Publish(c.ctx, "veloflux:events", data).Err()
 }
 
 // GetState retrieves a state value from the cluster
@@ -246,7 +246,7 @@ func (c *Cluster) GetState(stateType StateType, key string) ([]byte, error) {
 		return nil, fmt.Errorf("clustering disabled")
 	}
 
-	return c.client.HGet(c.ctx, fmt.Sprintf("skypilot:state:%s", stateType), key).Bytes()
+	return c.client.HGet(c.ctx, fmt.Sprintf("veloflux:state:%s", stateType), key).Bytes()
 }
 
 // GetAllState retrieves all state values of a given type
@@ -255,7 +255,7 @@ func (c *Cluster) GetAllState(stateType StateType) (map[string][]byte, error) {
 		return nil, fmt.Errorf("clustering disabled")
 	}
 
-	result, err := c.client.HGetAll(c.ctx, fmt.Sprintf("skypilot:state:%s", stateType)).Result()
+	result, err := c.client.HGetAll(c.ctx, fmt.Sprintf("veloflux:state:%s", stateType)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func (c *Cluster) SetNodeAddress(address string) {
 
 	// Update node in Redis
 	nodeData, _ := json.Marshal(c.nodes[c.nodeID])
-	c.client.HSet(c.ctx, "skypilot:nodes", c.nodeID, nodeData)
+	c.client.HSet(c.ctx, "veloflux:nodes", c.nodeID, nodeData)
 }
 
 // NodeID returns this node's ID
@@ -388,7 +388,7 @@ func (c *Cluster) sendHeartbeat() {
 
 	// Save to Redis
 	nodeData, _ := json.Marshal(node)
-	c.client.HSet(c.ctx, "skypilot:nodes", c.nodeID, nodeData)
+	c.client.HSet(c.ctx, "veloflux:nodes", c.nodeID, nodeData)
 
 	// Publish heartbeat event
 	event := ClusterEvent{
@@ -398,12 +398,12 @@ func (c *Cluster) sendHeartbeat() {
 	}
 
 	data, _ := json.Marshal(event)
-	c.client.Publish(c.ctx, "skypilot:events", data)
+	c.client.Publish(c.ctx, "veloflux:events", data)
 }
 
 func (c *Cluster) checkNodes() {
 	// Get all nodes from Redis
-	nodesMap, err := c.client.HGetAll(c.ctx, "skypilot:nodes").Result()
+	nodesMap, err := c.client.HGetAll(c.ctx, "veloflux:nodes").Result()
 	if err != nil {
 		c.logger.Error("Failed to get nodes", zap.Error(err))
 		return
@@ -437,12 +437,12 @@ func (c *Cluster) performLeaderElection() {
 	// Skip if already leader
 	if c.role == RoleLeader {
 		// Extend leadership
-		c.client.SetEX(c.ctx, "skypilot:leader", c.nodeID, c.config.LeaderTimeout*2)
+		c.client.SetEX(c.ctx, "veloflux:leader", c.nodeID, c.config.LeaderTimeout*2)
 		return
 	}
 
 	// Check if there's a healthy leader
-	leaderID, err := c.client.Get(c.ctx, "skypilot:leader").Result()
+	leaderID, err := c.client.Get(c.ctx, "veloflux:leader").Result()
 	if err == nil && leaderID != "" {
 		// Leader exists, check if it's healthy
 		c.nodesMutex.RLock()
@@ -455,7 +455,7 @@ func (c *Cluster) performLeaderElection() {
 	}
 
 	// Try to become leader
-	success, err := c.client.SetNX(c.ctx, "skypilot:leader", c.nodeID, c.config.LeaderTimeout*2).Result()
+	success, err := c.client.SetNX(c.ctx, "veloflux:leader", c.nodeID, c.config.LeaderTimeout*2).Result()
 	if err != nil {
 		c.logger.Error("Error in leader election", zap.Error(err))
 		return
@@ -481,7 +481,7 @@ func (c *Cluster) performLeaderElection() {
 		}
 
 		data, _ := json.Marshal(event)
-		c.client.Publish(c.ctx, "skypilot:events", data)
+		c.client.Publish(c.ctx, "veloflux:events", data)
 	}
 }
 
@@ -555,7 +555,7 @@ func (c *Cluster) registerNode(node *ClusterNode) {
 
 	// Save to Redis
 	nodeData, _ := json.Marshal(node)
-	c.client.HSet(c.ctx, "skypilot:nodes", node.ID, nodeData)
+	c.client.HSet(c.ctx, "veloflux:nodes", node.ID, nodeData)
 
 	// Publish join event
 	event := ClusterEvent{
@@ -566,7 +566,7 @@ func (c *Cluster) registerNode(node *ClusterNode) {
 	}
 
 	data, _ := json.Marshal(event)
-	c.client.Publish(c.ctx, "skypilot:events", data)
+	c.client.Publish(c.ctx, "veloflux:events", data)
 }
 
 func (c *Cluster) notifyStateListeners(stateType StateType, key string, value []byte) {

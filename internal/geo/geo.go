@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/oschwald/geoip2-golang"
-	"github.com/skypilot/lb/internal/config"
+	"github.com/veloflux/lb/internal/config"
 	"go.uber.org/zap"
 )
 

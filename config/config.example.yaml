@@ -1,4 +1,4 @@
-# SkyPilot LB Configuration Example
+# VeloFlux LB Configuration Example
 global:
   bind_address: "0.0.0.0:80"
   tls_bind_address: "0.0.0.0:443"
@@ -8,7 +8,7 @@ global:
   tls:
     auto_cert: true
     acme_email: "admin@example.com"
-    cert_dir: "/etc/ssl/certs/skypilot"
+    cert_dir: "/etc/ssl/certs/veloflux"
 
   # Health Check Defaults
   health_check:

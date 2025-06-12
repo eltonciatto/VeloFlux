@@ -23,7 +23,7 @@ export const Hero = () => {
           </Badge>
           
           <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent mb-6">
-            SkyPilot LB
+            VeloFlux LB
           </h1>
           
           <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-4xl mx-auto leading-relaxed">

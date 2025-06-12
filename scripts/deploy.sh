@@ -2,13 +2,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# SkyPilot LB Zero-Downtime Deployment Script
+# VeloFlux LB Zero-Downtime Deployment Script
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Configuration
-IMAGE_NAME="skypilot-lb"
+IMAGE_NAME="veloflux-lb"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 CONFIG_PATH="${CONFIG_PATH:-$PROJECT_DIR/config/config.yaml}"
 DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-docker}" # docker, swarm, or nomad
@@ -47,7 +47,7 @@ check_prerequisites() {
 }
 
 build_image() {
-    log "Building SkyPilot LB image..."
+    log "Building VeloFlux LB image..."
     
     cd "$PROJECT_DIR"
     docker build -t "$IMAGE_NAME:$IMAGE_TAG" .
@@ -58,8 +58,8 @@ build_image() {
 deploy_docker() {
     log "Deploying with Docker..."
     
-    CONTAINER_NAME="skypilot-lb"
-    NEW_CONTAINER_NAME="skypilot-lb-new"
+    CONTAINER_NAME="veloflux-lb"
+    NEW_CONTAINER_NAME="veloflux-lb-new"
     
     # Build new image
     build_image
@@ -74,14 +74,14 @@ deploy_docker() {
             -p 8080:80 \
             -p 8443:443 \
             -p 8090:8080 \
-            -e SKY_CONFIG=/etc/skypilot/config.yaml \
-            -v "$(dirname "$CONFIG_PATH"):/etc/skypilot" \
+            -e VFX_CONFIG=/etc/veloflux/config.yaml \
+            -v "$(dirname "$CONFIG_PATH"):/etc/veloflux" \
             "$IMAGE_NAME:$IMAGE_TAG"
         
         # Wait for new container to be healthy
         log "Waiting for new container to be healthy..."
         for i in {1..30}; do
-            if docker exec "$NEW_CONTAINER_NAME" /usr/local/bin/skypilot-lb --health-check 2>/dev/null; then
+            if docker exec "$NEW_CONTAINER_NAME" /usr/local/bin/veloflux-lb --health-check 2>/dev/null; then
                 log "New container is healthy"
                 break
             fi
@@ -104,8 +104,8 @@ deploy_docker() {
             -p 80:80 \
             -p 443:443 \
             -p 8080:8080 \
-            -e SKY_CONFIG=/etc/skypilot/config.yaml \
-            -v "$(dirname "$CONFIG_PATH"):/etc/skypilot" \
+            -e VFX_CONFIG=/etc/veloflux/config.yaml \
+            -v "$(dirname "$CONFIG_PATH"):/etc/veloflux" \
             "$IMAGE_NAME:$IMAGE_TAG"
             
     else
@@ -115,8 +115,8 @@ deploy_docker() {
             -p 80:80 \
             -p 443:443 \
             -p 8080:8080 \
-            -e SKY_CONFIG=/etc/skypilot/config.yaml \
-            -v "$(dirname "$CONFIG_PATH"):/etc/skypilot" \
+            -e VFX_CONFIG=/etc/veloflux/config.yaml \
+            -v "$(dirname "$CONFIG_PATH"):/etc/veloflux" \
             "$IMAGE_NAME:$IMAGE_TAG"
     fi
     
@@ -133,7 +133,7 @@ deploy_swarm() {
     build_image
     
     # Deploy using docker stack
-    docker stack deploy -c "$PROJECT_DIR/docker-compose.yml" skypilot-stack
+    docker stack deploy -c "$PROJECT_DIR/docker-compose.yml" veloflux-stack
     
     log "Docker Swarm deployment completed successfully"
 }
@@ -148,8 +148,8 @@ deploy_nomad() {
     build_image
     
     # Create Nomad job file
-    cat > /tmp/skypilot-lb.nomad <<EOF
-job "skypilot-lb" {
+    cat > /tmp/veloflux-lb.nomad <<EOF
+job "veloflux-lb" {
   datacenters = ["dc1"]
   type = "service"
 
@@ -169,7 +169,7 @@ job "skypilot-lb" {
     }
 
     service {
-      name = "skypilot-lb"
+      name = "veloflux-lb"
       port = "http"
       
       check {
@@ -187,12 +187,12 @@ job "skypilot-lb" {
         image = "$IMAGE_NAME:$IMAGE_TAG"
         ports = ["http", "https", "metrics"]
         volumes = [
-          "$(dirname "$CONFIG_PATH"):/etc/skypilot"
+          "$(dirname "$CONFIG_PATH"):/etc/veloflux"
         ]
       }
 
       env {
-        SKY_CONFIG = "/etc/skypilot/config.yaml"
+        VFX_CONFIG = "/etc/veloflux/config.yaml"
       }
 
       resources {
@@ -204,14 +204,14 @@ job "skypilot-lb" {
 }
 EOF
 
-    nomad job run /tmp/skypilot-lb.nomad
-    rm /tmp/skypilot-lb.nomad
+    nomad job run /tmp/veloflux-lb.nomad
+    rm /tmp/veloflux-lb.nomad
     
     log "Nomad deployment completed successfully"
 }
 
 main() {
-    log "Starting SkyPilot LB deployment..."
+    log "Starting VeloFlux LB deployment..."
     log "Deployment mode: $DEPLOYMENT_MODE"
     log "Image: $IMAGE_NAME:$IMAGE_TAG"
     log "Config: $CONFIG_PATH"

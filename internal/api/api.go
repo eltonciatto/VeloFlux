@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/skypilot/lb/internal/balancer"
-	"github.com/skypilot/lb/internal/clustering"
-	"github.com/skypilot/lb/internal/config"
+	"github.com/veloflux/lb/internal/balancer"
+	"github.com/veloflux/lb/internal/clustering"
+	"github.com/veloflux/lb/internal/config"
 	"go.uber.org/zap"
 )
 
