@@ -13,7 +13,7 @@ A production-grade, container-native load balancer built in Go with SSL terminat
 
 1. **Clone and start the stack:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd veloflux-lb
 docker-compose up -d
 ```
