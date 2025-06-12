@@ -6,7 +6,9 @@ import { BackendOverview } from '@/components/dashboard/BackendOverview';
 import { HealthMonitor } from '@/components/dashboard/HealthMonitor';
 import { MetricsView } from '@/components/dashboard/MetricsView';
 import { ConfigManager } from '@/components/dashboard/ConfigManager';
-import { Activity, Server, BarChart3, Settings } from 'lucide-react';
+import { BackendManager } from '@/components/dashboard/BackendManager';
+import { ClusterStatus } from '@/components/dashboard/ClusterStatus';
+import { Activity, Server, BarChart3, Settings, Users, Crown } from 'lucide-react';
 
 export const Dashboard = () => {
   return (
@@ -31,6 +33,14 @@ export const Dashboard = () => {
               <BarChart3 className="w-4 h-4" />
               Metrics
             </TabsTrigger>
+            <TabsTrigger value="cluster" className="flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              Cluster
+            </TabsTrigger>
+            <TabsTrigger value="backends" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Backends
+            </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Configuration
@@ -47,6 +57,14 @@ export const Dashboard = () => {
 
           <TabsContent value="metrics">
             <MetricsView />
+          </TabsContent>
+
+          <TabsContent value="cluster">
+            <ClusterStatus />
+          </TabsContent>
+
+          <TabsContent value="backends">
+            <BackendManager />
           </TabsContent>
 
           <TabsContent value="config">
