@@ -9,6 +9,7 @@ import (
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/clustering"
 	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/middleware"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -42,6 +43,8 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, log
 		router:   mux.NewRouter(),
 		ctx:      context.Background(),
 	}
+
+	a.router.Use(middleware.AdminAuth)
 
 	a.registerRoutes()
 	return a

@@ -16,6 +16,7 @@ A production-grade, container-native load balancer built in Go with SSL terminat
 git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 docker-compose up -d
+# Admin API: http://localhost:9000 (set VF_ADMIN_USER and VF_ADMIN_PASS)
 ```
 ### Multi-Region Example
 Deploy VeloFlux in multiple regions while sharing a Redis cluster:
@@ -117,6 +118,8 @@ routes:
 
 - `VFX_CONFIG` - Path to configuration file (default: `/etc/veloflux/config.yaml`)
 - `VFX_LOG_LEVEL` - Log level: debug, info, warn, error
+- `VF_ADMIN_USER` - Username for the admin dashboard
+- `VF_ADMIN_PASS` - Password for the admin dashboard
 
 ## 🚀 Deployment
 
