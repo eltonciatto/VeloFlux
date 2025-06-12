@@ -1,4 +1,3 @@
-
 package ratelimit
 
 import (
@@ -6,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/veloflux/lb/internal/config"
+	"github.com/eltonciatto/veloflux/internal/config"
 	"golang.org/x/time/rate"
 )
 
@@ -48,7 +47,7 @@ func (l *Limiter) Allow(ip net.IP) bool {
 	}
 
 	key := ip.String()
-	
+
 	l.mu.RLock()
 	limiter, exists := l.limiters[key]
 	l.mu.RUnlock()

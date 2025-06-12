@@ -56,7 +56,7 @@ export const Hero = () => {
           
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
             <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-white">Under 50MB</div>
+            <div className="text-2xl font-bold text-white">Under 50 MB</div>
             <div className="text-sm text-blue-200">Container Size</div>
           </Card>
           

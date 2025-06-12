@@ -11,21 +11,21 @@ type Config struct {
 	Global  GlobalConfig  `yaml:"global"`
 	Pools   []Pool        `yaml:"pools"`
 	Routes  []Route       `yaml:"routes"`
-	Cluster ClusterConfig  `yaml:"cluster"` // Added cluster config
+	Cluster ClusterConfig `yaml:"cluster"` // Added cluster config
 }
 
 type GlobalConfig struct {
-	BindAddress       string        `yaml:"bind_address"`
-	TLSBindAddress    string        `yaml:"tls_bind_address"`
-	MetricsAddress    string        `yaml:"metrics_address"`
-	TLS               TLSConfig     `yaml:"tls"`
-	HealthCheck       HealthConfig  `yaml:"health_check"`
-	RateLimit         RateLimitConfig `yaml:"rate_limit"`
-	GeoIP             GeoIPConfig   `yaml:"geoip"`
+	BindAddress    string          `yaml:"bind_address"`
+	TLSBindAddress string          `yaml:"tls_bind_address"`
+	MetricsAddress string          `yaml:"metrics_address"`
+	TLS            TLSConfig       `yaml:"tls"`
+	HealthCheck    HealthConfig    `yaml:"health_check"`
+	RateLimit      RateLimitConfig `yaml:"rate_limit"`
+	GeoIP          GeoIPConfig     `yaml:"geoip"`
 }
 
 type TLSConfig struct {
-	AutoCert bool   `yaml:"auto_cert"`
+	AutoCert  bool   `yaml:"auto_cert"`
 	ACMEEmail string `yaml:"acme_email"`
 	CertDir   string `yaml:"cert_dir"`
 }
@@ -43,7 +43,7 @@ type RateLimitConfig struct {
 }
 
 type GeoIPConfig struct {
-	Enabled    bool   `yaml:"enabled"`
+	Enabled      bool   `yaml:"enabled"`
 	DatabasePath string `yaml:"database_path"`
 }
 
@@ -58,10 +58,10 @@ type ClusterConfig struct {
 }
 
 type Pool struct {
-	Name           string     `yaml:"name"`
-	Algorithm      string     `yaml:"algorithm"`
-	StickySessions bool       `yaml:"sticky_sessions"`
-	Backends       []Backend  `yaml:"backends"`
+	Name           string    `yaml:"name"`
+	Algorithm      string    `yaml:"algorithm"`
+	StickySessions bool      `yaml:"sticky_sessions"`
+	Backends       []Backend `yaml:"backends"`
 }
 
 type Backend struct {

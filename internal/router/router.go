@@ -1,4 +1,3 @@
-
 package router
 
 import (
@@ -10,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eltonciatto/veloflux/internal/balancer"
+	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/ratelimit"
 	"github.com/gorilla/mux"
-	"github.com/veloflux/lb/internal/balancer"
-	"github.com/veloflux/lb/internal/config"
-	"github.com/veloflux/lb/internal/ratelimit"
 	"go.uber.org/zap"
 )
 
@@ -42,12 +41,12 @@ func (r *Router) setupRoutes() {
 	// Setup routes based on configuration
 	for _, route := range r.config.Routes {
 		handler := r.createProxyHandler(route.Pool)
-		
+
 		routeBuilder := r.router.Host(route.Host)
 		if route.PathPrefix != "" {
 			routeBuilder = routeBuilder.PathPrefix(route.PathPrefix)
 		}
-		
+
 		routeBuilder.Handler(r.middleware(handler))
 	}
 
@@ -116,7 +115,7 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 		}
 
 		proxy := httputil.NewSingleHostReverseProxy(target)
-		
+
 		// Customize proxy behavior
 		proxy.ModifyResponse = func(resp *http.Response) error {
 			// Set sticky session cookie if enabled
@@ -131,7 +130,7 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 				}
 				resp.Header.Add("Set-Cookie", cookie.String())
 			}
-			
+
 			return nil
 		}
 

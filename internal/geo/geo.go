@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/veloflux/lb/internal/config"
 	"go.uber.org/zap"
 )
 

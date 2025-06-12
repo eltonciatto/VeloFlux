@@ -9,19 +9,19 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/veloflux/lb/internal/config"
-	"github.com/veloflux/lb/internal/geo"
+	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/geo"
 	"net/http"
 )
 
 type Algorithm string
 
 const (
-	RoundRobin      Algorithm = "round_robin"
-	LeastConn       Algorithm = "least_conn"
-	IPHash          Algorithm = "ip_hash"
+	RoundRobin         Algorithm = "round_robin"
+	LeastConn          Algorithm = "least_conn"
+	IPHash             Algorithm = "ip_hash"
 	WeightedRoundRobin Algorithm = "weighted_round_robin"
-	GeoProximity    Algorithm = "geo_proximity"
+	GeoProximity       Algorithm = "geo_proximity"
 )
 
 type Backend struct {
@@ -35,17 +35,17 @@ type Backend struct {
 }
 
 type Pool struct {
-	Name      string
-	Algorithm Algorithm
-	Backends  []*Backend
-	mu        sync.RWMutex
-	counter   atomic.Uint64
+	Name           string
+	Algorithm      Algorithm
+	Backends       []*Backend
+	mu             sync.RWMutex
+	counter        atomic.Uint64
 	StickySessions bool
 }
 
 type Balancer struct {
-	pools map[string]*Pool
-	mu    sync.RWMutex
+	pools      map[string]*Pool
+	mu         sync.RWMutex
 	geoManager *geo.Manager
 }
 
@@ -76,9 +76,9 @@ func (b *Balancer) AddPool(poolConfig config.Pool) {
 	}
 
 	pool := &Pool{
-		Name:      poolConfig.Name,
-		Algorithm: Algorithm(poolConfig.Algorithm),
-		Backends:  backends,
+		Name:           poolConfig.Name,
+		Algorithm:      Algorithm(poolConfig.Algorithm),
+		Backends:       backends,
 		StickySessions: poolConfig.StickySessions,
 	}
 
@@ -375,7 +375,7 @@ func (b *Balancer) getGeoProximityBackend(r *http.Request, healthyBackends []*Ba
 	// Get backend addresses
 	var addresses []string
 	addrToBackend := make(map[string]*Backend)
-	
+
 	for _, backend := range healthyBackends {
 		addresses = append(addresses, backend.Address)
 		addrToBackend[backend.Address] = backend
@@ -401,14 +401,14 @@ func (b *Balancer) getGeoProximityBackend(r *http.Request, healthyBackends []*Ba
 func (b *Balancer) GetPools() []config.Pool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	
+
 	pools := make([]config.Pool, 0, len(b.pools))
 	for _, pool := range b.pools {
 		var backends []config.Backend
 		for _, backend := range pool.Backends {
 			backends = append(backends, backend.Config)
 		}
-		
+
 		pools = append(pools, config.Pool{
 			Name:           pool.Name,
 			Algorithm:      string(pool.Algorithm),
@@ -416,7 +416,7 @@ func (b *Balancer) GetPools() []config.Pool {
 			Backends:       backends,
 		})
 	}
-	
+
 	return pools
 }
 
@@ -424,17 +424,17 @@ func (b *Balancer) GetPools() []config.Pool {
 func (b *Balancer) GetPool(name string) *config.Pool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	
+
 	pool, exists := b.pools[name]
 	if !exists {
 		return nil
 	}
-	
+
 	var backends []config.Backend
 	for _, backend := range pool.Backends {
 		backends = append(backends, backend.Config)
 	}
-	
+
 	return &config.Pool{
 		Name:           pool.Name,
 		Algorithm:      string(pool.Algorithm),
@@ -447,12 +447,12 @@ func (b *Balancer) GetPool(name string) *config.Pool {
 func (b *Balancer) UpdatePool(cfg config.Pool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	pool, exists := b.pools[cfg.Name]
 	if !exists {
 		return
 	}
-	
+
 	// Update properties that can change
 	pool.Algorithm = Algorithm(cfg.Algorithm)
 	// StickySessions would be updated here
@@ -462,7 +462,7 @@ func (b *Balancer) UpdatePool(cfg config.Pool) {
 func (b *Balancer) RemovePool(name string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	delete(b.pools, name)
 }
 
@@ -470,12 +470,12 @@ func (b *Balancer) RemovePool(name string) {
 func (b *Balancer) AddBackend(poolName string, cfg config.Backend) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	pool, exists := b.pools[poolName]
 	if !exists {
 		return
 	}
-	
+
 	// Check if backend already exists
 	for _, backend := range pool.Backends {
 		if backend.Address == cfg.Address {
@@ -485,17 +485,17 @@ func (b *Balancer) AddBackend(poolName string, cfg config.Backend) {
 			return
 		}
 	}
-	
+
 	// Add new backend
 	backend := &Backend{
 		Address: cfg.Address,
 		Weight:  cfg.Weight,
 		Config:  cfg,
 	}
-	
+
 	// Set as healthy by default
 	backend.Healthy.Store(true)
-	
+
 	pool.Backends = append(pool.Backends, backend)
 }
 
@@ -503,12 +503,12 @@ func (b *Balancer) AddBackend(poolName string, cfg config.Backend) {
 func (b *Balancer) RemoveBackend(poolName, address string) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	pool, exists := b.pools[poolName]
 	if !exists {
 		return fmt.Errorf("pool not found: %s", poolName)
 	}
-	
+
 	// Find and remove backend
 	for i, backend := range pool.Backends {
 		if backend.Address == address {
@@ -517,6 +517,6 @@ func (b *Balancer) RemoveBackend(poolName, address string) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("backend not found: %s", address)
 }

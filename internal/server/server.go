@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/veloflux/lb/internal/api"
-	"github.com/veloflux/lb/internal/balancer"
-	"github.com/veloflux/lb/internal/clustering"
-	"github.com/veloflux/lb/internal/config"
-	"github.com/veloflux/lb/internal/geo"
-	"github.com/veloflux/lb/internal/health"
-	"github.com/veloflux/lb/internal/metrics"
-	"github.com/veloflux/lb/internal/router"
+	"github.com/eltonciatto/veloflux/internal/admin"
+	"github.com/eltonciatto/veloflux/internal/api"
+	"github.com/eltonciatto/veloflux/internal/balancer"
+	"github.com/eltonciatto/veloflux/internal/clustering"
+	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/geo"
+	"github.com/eltonciatto/veloflux/internal/health"
+	"github.com/eltonciatto/veloflux/internal/metrics"
+	"github.com/eltonciatto/veloflux/internal/router"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -28,6 +29,7 @@ type Server struct {
 	httpsServer   *http.Server
 	metricsServer *http.Server
 	apiServer     *api.API
+	adminServer   *admin.Server
 	cluster       *clustering.Cluster
 	geoManager    *geo.Manager
 }
@@ -37,27 +39,27 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	var clusterManager *clustering.Cluster
 	if cfg.Cluster.Enabled {
 		var err error
-                clusterCfg := (*clustering.ClusterConfig)(&cfg.Cluster)
-                clusterManager, err = clustering.New(clusterCfg, logger)
+		clusterCfg := (*clustering.ClusterConfig)(&cfg.Cluster)
+		clusterManager, err = clustering.New(clusterCfg, logger)
 		if err != nil {
 			logger.Error("Failed to initialize clustering", zap.Error(err))
 			// Don't return error, continue without clustering
 		}
 	}
-	
+
 	// Initialize geo manager
 	geoManager, err := geo.New(cfg, logger)
 	if err != nil {
 		logger.Error("Failed to initialize geo manager", zap.Error(err))
 		// Don't return error, continue without geo routing
 	}
-	
+
 	// Create balancer and add pools
 	bal := balancer.New()
 	for _, pool := range cfg.Pools {
 		bal.AddPool(pool)
 	}
-	
+
 	// Set geo manager in balancer if available
 	if geoManager != nil {
 		bal.SetGeoManager(geoManager)
@@ -89,11 +91,11 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	// Setup TLS if enabled
 	if cfg.Global.TLS.AutoCert {
 		certManager := &autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			Email:      cfg.Global.TLS.ACMEEmail,
-			Cache:      autocert.DirCache(cfg.Global.TLS.CertDir),
+			Prompt: autocert.AcceptTOS,
+			Email:  cfg.Global.TLS.ACMEEmail,
+			Cache:  autocert.DirCache(cfg.Global.TLS.CertDir),
 		}
-		
+
 		httpsServer.TLSConfig = &tls.Config{
 			GetCertificate: certManager.GetCertificate,
 			NextProtos:     []string{"h2", "http/1.1"},
@@ -105,9 +107,11 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		Addr:    cfg.Global.MetricsAddress,
 		Handler: metrics.Handler(),
 	}
-	
+
 	// Create API server
 	apiServer := api.New(cfg, bal, clusterManager, logger)
+	// Create Admin server
+	adminServer := admin.New(cfg, bal, clusterManager, logger)
 
 	return &Server{
 		config:        cfg,
@@ -119,6 +123,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		httpsServer:   httpsServer,
 		metricsServer: metricsServer,
 		apiServer:     apiServer,
+		adminServer:   adminServer,
 		cluster:       clusterManager,
 		geoManager:    geoManager,
 	}, nil
@@ -131,11 +136,11 @@ func (s *Server) Start(ctx context.Context) error {
 			s.logger.Error("Failed to start cluster", zap.Error(err))
 			// Continue without clustering
 		}
-		
+
 		// Set node address for cluster discovery
 		s.cluster.SetNodeAddress(s.config.Global.BindAddress)
 	}
-	
+
 	// Start health checker
 	s.healthCheck.Start(ctx)
 
@@ -145,7 +150,14 @@ func (s *Server) Start(ctx context.Context) error {
 			s.logger.Error("Failed to start API server", zap.Error(err))
 		}
 	}
-	
+
+	// Start Admin server
+	if s.adminServer != nil {
+		if err := s.adminServer.Start(); err != nil {
+			s.logger.Error("Failed to start admin API", zap.Error(err))
+		}
+	}
+
 	// Start metrics server
 	go func() {
 		s.logger.Info("Starting metrics server", zap.String("address", s.config.Global.MetricsAddress))
@@ -182,21 +194,26 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	// Stop health checker
 	s.healthCheck.Stop()
-	
+
 	// Stop API server
 	if s.apiServer != nil {
 		if err := s.apiServer.Stop(ctx); err != nil {
 			s.logger.Error("Error shutting down API server", zap.Error(err))
 		}
 	}
-	
+	if s.adminServer != nil {
+		if err := s.adminServer.Stop(ctx); err != nil {
+			s.logger.Error("Error shutting down admin API", zap.Error(err))
+		}
+	}
+
 	// Stop cluster
 	if s.cluster != nil {
 		if err := s.cluster.Stop(); err != nil {
 			s.logger.Error("Error shutting down cluster", zap.Error(err))
 		}
 	}
-	
+
 	// Close geo manager
 	if s.geoManager != nil {
 		s.geoManager.Close()

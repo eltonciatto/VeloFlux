@@ -1,4 +1,4 @@
-module github.com/veloflux/lb
+module github.com/eltonciatto/veloflux
 
 go 1.22
 
