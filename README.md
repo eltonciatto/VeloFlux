@@ -230,8 +230,10 @@ See `docs/security.md` for:
 ### Building
 
 ```bash
-# Install dependencies
+# Install Go dependencies
 go mod download
+# Install frontend dependencies for linting
+npm install
 
 # Build binary
 go build -o veloflux ./cmd/velofluxlb
