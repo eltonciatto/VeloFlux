@@ -47,11 +47,14 @@ type Balancer struct {
 	pools      map[string]*Pool
 	mu         sync.RWMutex
 	geoManager *geo.Manager
+	stickyMu   sync.RWMutex
+	stickyMap  map[string]string // sessionID -> backend address
 }
 
 func New() *Balancer {
 	return &Balancer{
-		pools: make(map[string]*Pool),
+		pools:     make(map[string]*Pool),
+		stickyMap: make(map[string]string),
 	}
 }
 
@@ -140,6 +143,11 @@ func (b *Balancer) GetBackend(poolName string, clientIP net.IP, sessionID string
 	default:
 		// Default to round robin
 		backend = b.getRoundRobinBackend(pool, healthyBackends)
+	}
+
+	// Record sticky mapping if needed
+	if pool.StickySessions && sessionID != "" {
+		b.setStickyBackend(sessionID, backend.Address)
 	}
 
 	// Increment connections count
@@ -300,9 +308,29 @@ func (b *Balancer) DecrementConnections(poolName, backendAddress string) {
 }
 
 func (b *Balancer) getStickyBackend(pool *Pool, sessionID string, healthyBackends []*Backend) *Backend {
-	// Implement sticky session logic here
-	// For example, you can use a map to store backend references by session ID
+	b.stickyMu.RLock()
+	addr, ok := b.stickyMap[sessionID]
+	b.stickyMu.RUnlock()
+	if !ok {
+		return nil
+	}
+
+	for _, backend := range healthyBackends {
+		if backend.Address == addr {
+			return backend
+		}
+	}
+
+	b.stickyMu.Lock()
+	delete(b.stickyMap, sessionID)
+	b.stickyMu.Unlock()
 	return nil
+}
+
+func (b *Balancer) setStickyBackend(sessionID, address string) {
+	b.stickyMu.Lock()
+	b.stickyMap[sessionID] = address
+	b.stickyMu.Unlock()
 }
 
 func (b *Balancer) getRoundRobinBackend(pool *Pool, healthyBackends []*Backend) *Backend {
@@ -412,7 +440,7 @@ func (b *Balancer) GetPools() []config.Pool {
 		pools = append(pools, config.Pool{
 			Name:           pool.Name,
 			Algorithm:      string(pool.Algorithm),
-			StickySessions: false, // Fill from config
+			StickySessions: pool.StickySessions,
 			Backends:       backends,
 		})
 	}
@@ -438,7 +466,7 @@ func (b *Balancer) GetPool(name string) *config.Pool {
 	return &config.Pool{
 		Name:           pool.Name,
 		Algorithm:      string(pool.Algorithm),
-		StickySessions: false, // Fill from config
+		StickySessions: pool.StickySessions,
 		Backends:       backends,
 	}
 }
@@ -455,7 +483,7 @@ func (b *Balancer) UpdatePool(cfg config.Pool) {
 
 	// Update properties that can change
 	pool.Algorithm = Algorithm(cfg.Algorithm)
-	// StickySessions would be updated here
+	pool.StickySessions = cfg.StickySessions
 }
 
 // RemovePool removes a pool
