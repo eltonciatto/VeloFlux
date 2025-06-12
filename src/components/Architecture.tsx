@@ -46,7 +46,7 @@ export const Architecture = () => {
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-4">Global Load Balancing</h3>
                   <p className="text-blue-200 mb-6">
-                    SkyPilot LB operates as a distributed system with multiple points of presence (PoPs) 
+                    VeloFlux LB operates as a distributed system with multiple points of presence (PoPs) 
                     worldwide, automatically routing traffic to the nearest healthy backend.
                   </p>
                   
@@ -189,11 +189,11 @@ export const Architecture = () => {
                   <div className="text-green-400"># Build stage</div>
                   <div className="text-blue-200">FROM golang:1.22-alpine AS builder</div>
                   <div className="text-blue-200">COPY . /src</div>
-                  <div className="text-blue-200">RUN go build -o skypilot-lb ./cmd/skypilotlb</div>
+                  <div className="text-blue-200">RUN go build -o veloflux-lb ./cmd/velofluxlb</div>
                   <div className="text-green-400 mt-2"># Runtime stage</div>
                   <div className="text-blue-200">FROM scratch</div>
-                  <div className="text-blue-200">COPY --from=builder /src/skypilot-lb /</div>
-                  <div className="text-blue-200">ENTRYPOINT ["/skypilot-lb"]</div>
+                  <div className="text-blue-200">COPY --from=builder /src/veloflux-lb /</div>
+                  <div className="text-blue-200">ENTRYPOINT ["/veloflux-lb"]</div>
                 </div>
               </Card>
 

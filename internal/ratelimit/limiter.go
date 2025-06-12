@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/skypilot/lb/internal/config"
+	"github.com/veloflux/lb/internal/config"
 	"golang.org/x/time/rate"
 )
 

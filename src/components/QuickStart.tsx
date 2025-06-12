@@ -16,25 +16,25 @@ export const QuickStart = () => {
   };
 
   const dockerCommand = `docker run -d \\
-  --name skypilot-lb \\
+  --name veloflux-lb \\
   -p 80:80 -p 443:443 \\
-  -e SKY_CONFIG=/etc/skypilot/config.yaml \\
-  -v $(pwd)/config:/etc/skypilot \\
-  ghcr.io/skypilot/lb:latest`;
+  -e VFX_CONFIG=/etc/veloflux/config.yaml \\
+  -v $(pwd)/config:/etc/veloflux \\
+  ghcr.io/veloflux/lb:latest`;
 
   const composeFile = `version: '3.8'
 services:
-  skypilot-lb:
-    image: ghcr.io/skypilot/lb:latest
+  veloflux-lb:
+    image: ghcr.io/veloflux/lb:latest
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"  # metrics
     environment:
-      - SKY_CONFIG=/etc/skypilot/config.yaml
-      - SKY_LOG_LEVEL=info
+      - VFX_CONFIG=/etc/veloflux/config.yaml
+      - VFX_LOG_LEVEL=info
     volumes:
-      - ./config:/etc/skypilot
+      - ./config:/etc/veloflux
       - ./certs:/etc/ssl/certs
     restart: unless-stopped
 
@@ -48,7 +48,7 @@ services:
     ports:
       - "8002:80"`;
 
-  const configExample = `# SkyPilot LB Configuration
+  const configExample = `# VeloFlux LB Configuration
 global:
   bind_address: "0.0.0.0:80"
   tls_bind_address: "0.0.0.0:443"
@@ -100,7 +100,7 @@ routes:
             Quick Start Guide
           </h2>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Get SkyPilot LB running in under 5 minutes with Docker
+            Get VeloFlux LB running in under 5 minutes with Docker
           </p>
         </div>
 
@@ -128,7 +128,7 @@ routes:
               </div>
               
               <p className="text-blue-200 mb-6">
-                Run SkyPilot LB with a simple Docker command. Perfect for development and small deployments.
+                Run VeloFlux LB with a simple Docker command. Perfect for development and small deployments.
               </p>
 
               <div className="space-y-4">

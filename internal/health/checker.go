@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/skypilot/lb/internal/config"
+	"github.com/veloflux/lb/internal/config"
 	"go.uber.org/zap"
 )
 

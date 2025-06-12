@@ -2,18 +2,18 @@
 version: '3.8'
 
 services:
-  skypilot-lb:
+  veloflux-lb:
     build: .
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"  # metrics
     environment:
-      - SKY_CONFIG=/etc/skypilot/config.yaml
-      - SKY_LOG_LEVEL=info
+      - VFX_CONFIG=/etc/veloflux/config.yaml
+      - VFX_LOG_LEVEL=info
     volumes:
-      - ./config:/etc/skypilot
-      - ./certs:/etc/ssl/certs/skypilot
+      - ./config:/etc/veloflux
+      - ./certs:/etc/ssl/certs/veloflux
     depends_on:
       - backend-1
       - backend-2

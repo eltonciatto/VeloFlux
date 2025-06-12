@@ -214,7 +214,7 @@ pools:
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-white">Certificate Directory</span>
-                  <span className="text-blue-200">/etc/ssl/certs/skypilot</span>
+                  <span className="text-blue-200">/etc/ssl/certs/veloflux</span>
                 </div>
               </div>
             </Card>

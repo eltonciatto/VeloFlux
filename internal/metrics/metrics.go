@@ -11,7 +11,7 @@ import (
 var (
 	RequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "skypilot_requests_total",
+			Name: "veloflux_requests_total",
 			Help: "Total number of requests",
 		},
 		[]string{"method", "status_code", "pool"},
@@ -19,7 +19,7 @@ var (
 
 	RequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "skypilot_request_duration_seconds",
+			Name: "veloflux_request_duration_seconds",
 			Help: "Request duration in seconds",
 		},
 		[]string{"method", "pool"},
@@ -27,7 +27,7 @@ var (
 
 	ActiveConnections = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "skypilot_active_connections",
+			Name: "veloflux_active_connections",
 			Help: "Number of active connections",
 		},
 		[]string{"backend"},
@@ -35,7 +35,7 @@ var (
 
 	BackendHealth = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "skypilot_backend_health",
+			Name: "veloflux_backend_health",
 			Help: "Backend health status (1 = healthy, 0 = unhealthy)",
 		},
 		[]string{"pool", "backend"},

@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/skypilot/lb/internal/config"
-	"github.com/skypilot/lb/internal/server"
+	"github.com/veloflux/lb/internal/config"
+	"github.com/veloflux/lb/internal/server"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -27,9 +27,9 @@ func main() {
 	defer logger.Sync()
 
 	// Load configuration
-	configPath := os.Getenv("SKY_CONFIG")
+	configPath := os.Getenv("VFX_CONFIG")
 	if configPath == "" {
-		configPath = "/etc/skypilot/config.yaml"
+		configPath = "/etc/veloflux/config.yaml"
 	}
 
 	cfg, err := config.Load(configPath)
@@ -53,7 +53,7 @@ func main() {
 		}
 	}()
 
-	logger.Info("SkyPilot LB started successfully",
+	logger.Info("VeloFlux LB started successfully",
 		zap.String("version", "1.1.0"),
 		zap.String("bind_address", cfg.Global.BindAddress),
 		zap.String("tls_bind_address", cfg.Global.TLSBindAddress),
