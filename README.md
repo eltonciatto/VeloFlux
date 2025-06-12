@@ -14,9 +14,15 @@ A production-grade, container-native load balancer built in Go with SSL terminat
 1. **Clone and start the stack:**
 ```bash
 git clone https://github.com/eltonciatto/VeloFlux.git
-cd veloflux-lb
+cd VeloFlux
 docker-compose up -d
 ```
+### Multi-Region Example
+Deploy VeloFlux in multiple regions while sharing a Redis cluster:
+```bash
+redis-sentinel /etc/sentinel.conf --sentinel monitor veloflux 127.0.0.1 26379 2
+```
+
 
 2. **Test the load balancer:**
 ```bash
@@ -27,17 +33,17 @@ curl http://localhost
 curl http://localhost:8080/metrics
 
 # View logs
-docker-compose logs -f veloflux-lb
+docker-compose logs -f veloflux
 ```
 
 ### Build from Source
 
 ```bash
 # Build the binary
-go build -o veloflux-lb ./cmd/velofluxlb
+go build -o veloflux ./cmd/velofluxlb
 
 # Run with custom config
-VFX_CONFIG=./config/config.example.yaml ./veloflux-lb
+VFX_CONFIG=./config/config.example.yaml ./veloflux
 ```
 
 ## 🏗️ Architecture
@@ -67,7 +73,7 @@ VeloFlux LB is designed as a single-binary, stateless load balancer with the fol
 ### Performance
 - **100k+ concurrent connections** on 2 vCPU
 - **50k+ RPS** sustained throughput
-- **<50MB container size** with optimized Go binary
+- **Under 50 MB container size** with optimized Go binary
 - **Sub-millisecond latency** for healthy backends
 
 ## 🔧 Configuration
@@ -118,15 +124,15 @@ routes:
 
 ```bash
 # Build image
-docker build -t veloflux-lb .
+docker build -t veloflux .
 
 # Run container
 docker run -d \
-  --name veloflux-lb \
+  --name veloflux \
   -p 80:80 -p 443:443 -p 8080:8080 \
   -e VFX_CONFIG=/etc/veloflux/config.yaml \
   -v $(pwd)/config:/etc/veloflux \
-  veloflux-lb
+  veloflux
 ```
 
 ### Zero-Downtime Deployment
@@ -151,6 +157,14 @@ Access Prometheus metrics at `http://localhost:8080/metrics`:
 - `veloflux_requests_total` - Total requests by method, status, pool
 - `veloflux_request_duration_seconds` - Request latency histogram
 - `veloflux_active_connections` - Active connections per backend
+### Prometheus Scrape Configuration
+Add the following job to your Prometheus configuration to collect VeloFlux metrics:
+```yaml
+- job_name: veloflux
+  static_configs:
+  - targets: ["localhost:8080"]
+```
+
 - `veloflux_backend_health` - Backend health status
 
 ### Health Checks
@@ -215,7 +229,7 @@ See `docs/security.md` for:
 go mod download
 
 # Build binary
-go build -o veloflux-lb ./cmd/velofluxlb
+go build -o veloflux ./cmd/velofluxlb
 
 # Run tests
 go test ./...

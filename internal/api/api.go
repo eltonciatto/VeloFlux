@@ -5,27 +5,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
-        "strconv"
 	"sync"
 	"time"
 
+	"github.com/eltonciatto/veloflux/internal/balancer"
+	"github.com/eltonciatto/veloflux/internal/clustering"
+	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/gorilla/mux"
-	"github.com/veloflux/lb/internal/balancer"
-	"github.com/veloflux/lb/internal/clustering"
-	"github.com/veloflux/lb/internal/config"
 	"go.uber.org/zap"
 )
 
 // API handles dynamic configuration endpoints
 type API struct {
-	config    *config.Config
-	balancer  *balancer.Balancer
-	cluster   *clustering.Cluster
-	logger    *zap.Logger
-	router    *mux.Router
-	server    *http.Server
-	configMu  sync.RWMutex
+	config   *config.Config
+	balancer *balancer.Balancer
+	cluster  *clustering.Cluster
+	logger   *zap.Logger
+	router   *mux.Router
+	server   *http.Server
+	configMu sync.RWMutex
 }
 
 // BackendRequest represents a request to add/update a backend
@@ -76,7 +76,7 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, log
 
 	// Register routes
 	apiRouter := a.router.PathPrefix("/api").Subrouter()
-	
+
 	// GET endpoints
 	apiRouter.HandleFunc("/pools", a.handleListPools).Methods("GET")
 	apiRouter.HandleFunc("/pools/{name}", a.handleGetPool).Methods("GET")
@@ -106,7 +106,7 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, log
 		cl.RegisterStateListener(clustering.StateRoute, a.handleRouteStateChange)
 		cl.RegisterStateListener(clustering.StateConfig, a.handleConfigStateChange)
 	}
-	
+
 	return a
 }
 
@@ -120,10 +120,10 @@ func (a *API) Start() error {
 	// Use a different port for API
 	parts := strings.Split(address, ":")
 	if len(parts) > 1 {
-                portStr := parts[len(parts)-1]
-                portInt, _ := strconv.Atoi(portStr)
-                apiPort := fmt.Sprintf("%d", 8000+portInt)
-                address = strings.Join(append(parts[:len(parts)-1], apiPort), ":")
+		portStr := parts[len(parts)-1]
+		portInt, _ := strconv.Atoi(portStr)
+		apiPort := fmt.Sprintf("%d", 8000+portInt)
+		address = strings.Join(append(parts[:len(parts)-1], apiPort), ":")
 	} else {
 		address = "0.0.0.0:8000"
 	}
@@ -171,13 +171,13 @@ func (a *API) handleListPools(w http.ResponseWriter, r *http.Request) {
 func (a *API) handleGetPool(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
-	
+
 	pool := a.balancer.GetPool(name)
 	if pool == nil {
 		writeError(w, "Pool not found", http.StatusNotFound)
 		return
 	}
-	
+
 	writeJSON(w, pool)
 }
 
@@ -235,20 +235,20 @@ func (a *API) handleUpdatePool(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	name := vars["name"]
-	
+
 	// Check if pool exists
 	existingPool := a.balancer.GetPool(name)
 	if existingPool == nil {
 		writeError(w, "Pool not found", http.StatusNotFound)
 		return
 	}
-	
+
 	var req PoolRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Update pool config
 	pool := config.Pool{
 		Name:           name,
@@ -256,16 +256,16 @@ func (a *API) handleUpdatePool(w http.ResponseWriter, r *http.Request) {
 		StickySessions: req.StickySessions,
 		Backends:       existingPool.Backends,
 	}
-	
+
 	// Update in balancer
 	a.balancer.UpdatePool(pool)
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		data, _ := json.Marshal(pool)
 		a.cluster.PublishState(clustering.StatePool, pool.Name, data)
 	}
-	
+
 	writeJSON(w, pool)
 }
 
@@ -278,21 +278,21 @@ func (a *API) handleDeletePool(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	name := vars["name"]
-	
+
 	// Check if pool exists
 	if a.balancer.GetPool(name) == nil {
 		writeError(w, "Pool not found", http.StatusNotFound)
 		return
 	}
-	
+
 	// Remove from balancer
 	a.balancer.RemovePool(name)
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		a.cluster.PublishState(clustering.StatePool, name, nil)
 	}
-	
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -305,25 +305,25 @@ func (a *API) handleAddBackend(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	poolName := vars["name"]
-	
+
 	// Check if pool exists
 	pool := a.balancer.GetPool(poolName)
 	if pool == nil {
 		writeError(w, "Pool not found", http.StatusNotFound)
 		return
 	}
-	
+
 	var req BackendRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	
+
 	if req.Address == "" {
 		writeError(w, "Backend address is required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Create backend config
 	backend := config.Backend{
 		Address: req.Address,
@@ -335,17 +335,17 @@ func (a *API) handleAddBackend(w http.ResponseWriter, r *http.Request) {
 			ExpectedStatus: req.HealthCheck.ExpectedStatus,
 		},
 	}
-	
+
 	// Add to pool
 	a.balancer.AddBackend(poolName, backend)
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		data, _ := json.Marshal(backend)
 		key := fmt.Sprintf("%s/%s", poolName, backend.Address)
 		a.cluster.PublishState(clustering.StateBackend, key, data)
 	}
-	
+
 	w.WriteHeader(http.StatusCreated)
 	writeJSON(w, backend)
 }
@@ -360,27 +360,27 @@ func (a *API) handleDeleteBackend(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	poolName := vars["pool"]
 	address := vars["address"]
-	
+
 	// Remove from balancer
 	if err := a.balancer.RemoveBackend(poolName, address); err != nil {
 		writeError(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		key := fmt.Sprintf("%s/%s", poolName, address)
 		a.cluster.PublishState(clustering.StateBackend, key, nil)
 	}
-	
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *API) handleListBackends(w http.ResponseWriter, r *http.Request) {
 	pool := r.URL.Query().Get("pool")
-	
+
 	var backends []map[string]interface{}
-	
+
 	if pool != "" {
 		// Get backends for specific pool
 		p := a.balancer.GetPool(pool)
@@ -388,7 +388,7 @@ func (a *API) handleListBackends(w http.ResponseWriter, r *http.Request) {
 			writeError(w, "Pool not found", http.StatusNotFound)
 			return
 		}
-		
+
 		for _, b := range p.Backends {
 			backends = append(backends, map[string]interface{}{
 				"pool":    pool,
@@ -404,18 +404,18 @@ func (a *API) handleListBackends(w http.ResponseWriter, r *http.Request) {
 					"pool":    p.Name,
 					"address": b.Address,
 					"weight":  b.Weight,
-                                })
+				})
+			}
 		}
-                }
 	}
-	
+
 	writeJSON(w, backends)
 }
 func (a *API) handleListRoutes(w http.ResponseWriter, r *http.Request) {
 	a.configMu.RLock()
 	routes := a.config.Routes
 	a.configMu.RUnlock()
-	
+
 	writeJSON(w, routes)
 }
 
@@ -431,18 +431,18 @@ func (a *API) handleCreateRoute(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	
+
 	if req.Host == "" || req.Pool == "" {
 		writeError(w, "Host and pool are required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Check if pool exists
 	if a.balancer.GetPool(req.Pool) == nil {
 		writeError(w, "Referenced pool does not exist", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Check if route already exists
 	a.configMu.RLock()
 	for _, route := range a.config.Routes {
@@ -453,25 +453,25 @@ func (a *API) handleCreateRoute(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	a.configMu.RUnlock()
-	
+
 	// Create route
 	route := config.Route{
 		Host:       req.Host,
 		Pool:       req.Pool,
 		PathPrefix: req.PathPrefix,
 	}
-	
+
 	// Add to config
 	a.configMu.Lock()
 	a.config.Routes = append(a.config.Routes, route)
 	a.configMu.Unlock()
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		data, _ := json.Marshal(route)
 		a.cluster.PublishState(clustering.StateRoute, route.Host, data)
 	}
-	
+
 	w.WriteHeader(http.StatusCreated)
 	writeJSON(w, route)
 }
@@ -485,24 +485,24 @@ func (a *API) handleUpdateRoute(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	host := vars["host"]
-	
+
 	var req RouteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	
+
 	if req.Pool == "" {
 		writeError(w, "Pool is required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Check if pool exists
 	if a.balancer.GetPool(req.Pool) == nil {
 		writeError(w, "Referenced pool does not exist", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Find and update route
 	a.configMu.Lock()
 	var updated bool
@@ -515,25 +515,25 @@ func (a *API) handleUpdateRoute(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	a.configMu.Unlock()
-	
+
 	if !updated {
 		writeError(w, "Route not found", http.StatusNotFound)
 		return
 	}
-	
+
 	// Create updated route
 	route := config.Route{
 		Host:       host,
 		Pool:       req.Pool,
 		PathPrefix: req.PathPrefix,
 	}
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		data, _ := json.Marshal(route)
 		a.cluster.PublishState(clustering.StateRoute, route.Host, data)
 	}
-	
+
 	writeJSON(w, route)
 }
 
@@ -546,7 +546,7 @@ func (a *API) handleDeleteRoute(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	host := vars["host"]
-	
+
 	// Find and remove route
 	a.configMu.Lock()
 	var found bool
@@ -559,41 +559,41 @@ func (a *API) handleDeleteRoute(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	a.configMu.Unlock()
-	
+
 	if !found {
 		writeError(w, "Route not found", http.StatusNotFound)
 		return
 	}
-	
+
 	// Sync to cluster if enabled
 	if a.cluster != nil {
 		a.cluster.PublishState(clustering.StateRoute, host, nil)
 	}
-	
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *API) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	a.configMu.RLock()
 	defer a.configMu.RUnlock()
-	
+
 	// Return only safe, non-sensitive config
 	safeConfig := map[string]interface{}{
 		"global": map[string]interface{}{
-			"bind_address":    a.config.Global.BindAddress,
+			"bind_address":     a.config.Global.BindAddress,
 			"tls_bind_address": a.config.Global.TLSBindAddress,
-			"metrics_address": a.config.Global.MetricsAddress,
+			"metrics_address":  a.config.Global.MetricsAddress,
 		},
 		"routes": a.config.Routes,
 		"pools":  a.balancer.GetPools(),
 	}
-	
+
 	writeJSON(w, safeConfig)
 }
 
 func (a *API) handleClusterInfo(w http.ResponseWriter, r *http.Request) {
 	var response ClusterResponse
-	
+
 	if a.cluster == nil {
 		response = ClusterResponse{
 			Nodes:    []clustering.ClusterNode{},
@@ -601,19 +601,19 @@ func (a *API) handleClusterInfo(w http.ResponseWriter, r *http.Request) {
 			Enabled:  false,
 		}
 	} else {
-                nodesPtr := a.cluster.GetNodes()
-                nodes := make([]clustering.ClusterNode, len(nodesPtr))
-                for i, n := range nodesPtr {
-                        nodes[i] = *n
-                }
-                response = ClusterResponse{
-                        Nodes:     nodes,
-                        IsLeader:  a.cluster.IsLeader(),
-                        LocalNode: a.cluster.NodeID(),
-                        Enabled:   true,
-                }
+		nodesPtr := a.cluster.GetNodes()
+		nodes := make([]clustering.ClusterNode, len(nodesPtr))
+		for i, n := range nodesPtr {
+			nodes[i] = *n
+		}
+		response = ClusterResponse{
+			Nodes:     nodes,
+			IsLeader:  a.cluster.IsLeader(),
+			LocalNode: a.cluster.NodeID(),
+			Enabled:   true,
+		}
 	}
-	
+
 	writeJSON(w, response)
 }
 
@@ -627,7 +627,7 @@ func (a *API) handleReload(w http.ResponseWriter, r *http.Request) {
 	// Trigger a configuration reload
 	// This would typically reload from disk or database
 	// For now, we'll just return success
-	
+
 	writeJSON(w, map[string]string{"status": "reloaded"})
 }
 
@@ -637,36 +637,36 @@ func (a *API) handleBackendStateChange(stateType clustering.StateType, key strin
 	if stateType != clustering.StateBackend {
 		return
 	}
-	
+
 	// Parse pool and backend address from key
 	parts := strings.Split(key, "/")
 	if len(parts) != 2 {
 		a.logger.Error("Invalid backend state key", zap.String("key", key))
 		return
 	}
-	
+
 	poolName := parts[0]
 	address := parts[1]
-	
+
 	if value == nil {
 		// Backend was deleted
 		a.balancer.RemoveBackend(poolName, address)
-		a.logger.Info("Removed backend via cluster sync", 
-			zap.String("pool", poolName), 
+		a.logger.Info("Removed backend via cluster sync",
+			zap.String("pool", poolName),
 			zap.String("address", address))
 		return
 	}
-	
+
 	// Backend was added or updated
 	var backend config.Backend
 	if err := json.Unmarshal(value, &backend); err != nil {
 		a.logger.Error("Failed to unmarshal backend data", zap.Error(err))
 		return
 	}
-	
+
 	a.balancer.AddBackend(poolName, backend)
-	a.logger.Info("Updated backend via cluster sync", 
-		zap.String("pool", poolName), 
+	a.logger.Info("Updated backend via cluster sync",
+		zap.String("pool", poolName),
 		zap.String("address", backend.Address))
 }
 
@@ -674,9 +674,9 @@ func (a *API) handleRouteStateChange(stateType clustering.StateType, key string,
 	if stateType != clustering.StateRoute {
 		return
 	}
-	
+
 	host := key
-	
+
 	if value == nil {
 		// Route was deleted
 		a.configMu.Lock()
@@ -691,14 +691,14 @@ func (a *API) handleRouteStateChange(stateType clustering.StateType, key string,
 		a.configMu.Unlock()
 		return
 	}
-	
+
 	// Route was added or updated
 	var route config.Route
 	if err := json.Unmarshal(value, &route); err != nil {
 		a.logger.Error("Failed to unmarshal route data", zap.Error(err))
 		return
 	}
-	
+
 	// Update or add route
 	a.configMu.Lock()
 	var found bool
@@ -709,12 +709,12 @@ func (a *API) handleRouteStateChange(stateType clustering.StateType, key string,
 			break
 		}
 	}
-	
+
 	if !found {
 		a.config.Routes = append(a.config.Routes, route)
 	}
 	a.configMu.Unlock()
-	
+
 	a.logger.Info("Updated route via cluster sync", zap.String("host", host))
 }
 
@@ -722,7 +722,7 @@ func (a *API) handleConfigStateChange(stateType clustering.StateType, key string
 	if stateType != clustering.StateConfig {
 		return
 	}
-	
+
 	// Global config change, would handle reloading here
 	a.logger.Info("Received config change via cluster sync")
 }

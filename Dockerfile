@@ -3,7 +3,7 @@
 FROM golang:1.22-alpine AS builder
 
 # Install build dependencies
-RUN apk add --no-cache git ca-certificates tzdata
+RUN apk add --no-cache git ca-certificates tzdata nodejs npm
 
 # Set working directory
 WORKDIR /app
@@ -16,6 +16,9 @@ RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Build dashboard
+RUN npm ci && npm run build
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
@@ -36,35 +39,11 @@ RUN mkdir -p /geoip && \
     echo "This is a placeholder for the GeoIP database" > /geoip/GeoLite2-City.mmdb
 
 # Final stage - minimal yet functional image
-FROM alpine:latest
+FROM gcr.io/distroless/static
 
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates tzdata
-
-# Copy CA certificates for HTTPS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-# Copy timezone data
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-
-# Copy our binary
-COPY --from=builder /app/veloflux-lb /usr/local/bin/veloflux-lb
-
-# Copy GeoIP database
+USER 65532
+COPY --from=builder /app/veloflux-lb /bin/veloflux
+COPY --from=builder /app/dist /dist
 COPY --from=geoip /geoip /etc/geoip
-
-# Create directory structure
-RUN mkdir -p /etc/veloflux /etc/ssl/certs/veloflux /var/lib/veloflux /tmp
-
-# Expose ports
-EXPOSE 80 443 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["/usr/local/bin/veloflux-lb", "--health-check"]
-
-# Set user (non-root)
-USER 65534:65534
-
-# Run the binary
-ENTRYPOINT ["/usr/local/bin/veloflux-lb"]
+EXPOSE 80 443 8080 9000
+ENTRYPOINT ["/bin/veloflux"]

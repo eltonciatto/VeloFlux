@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -9,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/veloflux/lb/internal/config"
-	"github.com/veloflux/lb/internal/server"
+	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/server"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

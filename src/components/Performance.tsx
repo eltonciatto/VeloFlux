@@ -140,7 +140,7 @@ export const Performance = () => {
 
           <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
             <Clock className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-white mb-1">Under 1s</div>
+            <div className="text-2xl font-bold text-white mb-1">Under 1 s</div>
             <div className="text-sm text-blue-200">Startup Time</div>
             <div className="text-xs text-green-300 mt-1">Cold start to ready</div>
           </Card>

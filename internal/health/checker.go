@@ -1,4 +1,3 @@
-
 package health
 
 import (
@@ -8,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/veloflux/lb/internal/config"
+	"github.com/eltonciatto/veloflux/internal/config"
 	"go.uber.org/zap"
 )
 
@@ -25,12 +24,12 @@ type Checker struct {
 }
 
 type BackendStatus struct {
-	Address       string
-	Pool          string
-	Healthy       bool
-	LastCheck     time.Time
-	FailureCount  int
-	ResponseTime  time.Duration
+	Address      string
+	Pool         string
+	Healthy      bool
+	LastCheck    time.Time
+	FailureCount int
+	ResponseTime time.Duration
 }
 
 func New(cfg *config.Config, logger *zap.Logger, updater BackendHealthUpdater) *Checker {
@@ -96,7 +95,7 @@ func (c *Checker) checkBackend(ctx context.Context, poolName string, backend con
 			return
 		case <-ticker.C:
 			healthy := c.performHealthCheck(backend.Address, path, timeout, expectedStatus)
-			
+
 			if healthy {
 				if failureCount > 0 {
 					c.logger.Info("Backend recovered",
@@ -125,7 +124,7 @@ func (c *Checker) performHealthCheck(address, path string, timeout time.Duration
 	}
 
 	url := fmt.Sprintf("http://%s%s", address, path)
-	
+
 	start := time.Now()
 	resp, err := client.Get(url)
 	duration := time.Since(start)
@@ -140,7 +139,7 @@ func (c *Checker) performHealthCheck(address, path string, timeout time.Duration
 	defer resp.Body.Close()
 
 	healthy := resp.StatusCode == expectedStatus
-	
+
 	c.logger.Debug("Health check completed",
 		zap.String("url", url),
 		zap.Int("status_code", resp.StatusCode),
@@ -159,7 +158,7 @@ func (c *Checker) PassiveCheck(poolName, backendAddress string, statusCode int, 
 			zap.String("backend", backendAddress),
 			zap.Int("status_code", statusCode),
 			zap.Duration("response_time", responseTime))
-		
+
 		// Could implement more sophisticated passive checking logic here
 		// For now, just log the issue
 	}
