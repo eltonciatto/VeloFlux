@@ -8,9 +8,12 @@ services:
       - "80:80"
       - "443:443"
       - "8080:8080"  # metrics
+      - "9000:9000"  # admin API
     environment:
       - VFX_CONFIG=/etc/veloflux/config.yaml
       - VFX_LOG_LEVEL=info
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=senha-super
     volumes:
       - ./config:/etc/veloflux
       - ./certs:/etc/ssl/certs/veloflux
