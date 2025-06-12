@@ -3,13 +3,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, Zap, Shield, Globe, Activity, Box } from 'lucide-react';
+import { Cloud, Zap, Shield, Globe, Activity, Box, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-blue-900/30 to-indigo-900/50 opacity-20"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]"></div>
       
       <div className="max-w-7xl mx-auto text-center relative z-10">
         <div className="mb-8">
@@ -29,9 +33,12 @@ export const Hero = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg">
-            <Box className="w-5 h-5 mr-2" />
-            Get Started
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+            onClick={() => navigate('/dashboard')}
+          >
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Open Dashboard
           </Button>
           <Button variant="outline" className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20 px-8 py-3 text-lg">
             <Globe className="w-5 h-5 mr-2" />

@@ -1,0 +1,59 @@
+
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BackendOverview } from '@/components/dashboard/BackendOverview';
+import { HealthMonitor } from '@/components/dashboard/HealthMonitor';
+import { MetricsView } from '@/components/dashboard/MetricsView';
+import { ConfigManager } from '@/components/dashboard/ConfigManager';
+import { Activity, Server, BarChart3, Settings } from 'lucide-react';
+
+export const Dashboard = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">SkyPilot LB Dashboard</h1>
+          <p className="text-blue-200">Monitor and manage your load balancer instances</p>
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-white/10 border-white/20">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Server className="w-4 h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="health" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Health Monitor
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Metrics
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Configuration
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <BackendOverview />
+          </TabsContent>
+
+          <TabsContent value="health">
+            <HealthMonitor />
+          </TabsContent>
+
+          <TabsContent value="metrics">
+            <MetricsView />
+          </TabsContent>
+
+          <TabsContent value="config">
+            <ConfigManager />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
