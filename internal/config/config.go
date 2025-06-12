@@ -11,7 +11,9 @@ type Config struct {
 	Global  GlobalConfig  `yaml:"global"`
 	Pools   []Pool        `yaml:"pools"`
 	Routes  []Route       `yaml:"routes"`
-	Cluster ClusterConfig `yaml:"cluster"` // Added cluster config
+	Cluster ClusterConfig `yaml:"cluster"`
+	Auth    AuthConfig    `yaml:"auth"`
+	Tenants []Tenant      `yaml:"tenants"` // Tenant-specific configurations
 }
 
 type GlobalConfig struct {
@@ -45,8 +47,10 @@ type RateLimitConfig struct {
 }
 
 type WAFConfig struct {
-	Enabled   bool   `yaml:"enabled"`
-	RulesPath string `yaml:"rules_path"`
+	Enabled       bool   `yaml:"enabled"`
+	RulesetPath   string `yaml:"ruleset_path"`
+	Level         string `yaml:"level"` // "basic", "standard", "strict"
+	LogViolations bool   `yaml:"log_violations"`
 }
 
 type GeoIPConfig struct {
@@ -90,6 +94,26 @@ type Route struct {
 	PathPrefix string `yaml:"path_prefix"`
 }
 
+type AuthConfig struct {
+	Enabled        bool          `yaml:"enabled"`
+	JWTSecret      string        `yaml:"jwt_secret"`
+	JWTIssuer      string        `yaml:"jwt_issuer"`
+	JWTAudience    string        `yaml:"jwt_audience"`
+	TokenValidity  time.Duration `yaml:"token_validity"`
+	OIDCEnabled    bool          `yaml:"oidc_enabled"`
+	OIDCIssuerURL  string        `yaml:"oidc_issuer_url"`
+	OIDCClientID   string        `yaml:"oidc_client_id"`
+	OIDCRedirectURI string        `yaml:"oidc_redirect_uri"`
+}
+
+type Tenant struct {
+	ID          string   `yaml:"id"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	Enabled     bool     `yaml:"enabled"`
+	Policies     []string `yaml:"policies"`
+}
+
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -121,7 +145,7 @@ func Load(path string) (*Config, error) {
 		cfg.Global.HealthCheck.Retries = 3
 	}
 
-	if cfg.Global.WAF.RulesPath == "" {
+	if cfg.Global.WAF.RulesetPath == "" {
 		cfg.Global.WAF.Enabled = false
 	}
 
