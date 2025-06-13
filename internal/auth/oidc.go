@@ -2,19 +2,20 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/eltonciatto/veloflux/internal/tenant"
-	"github.com/coreos/go-oidc/v3/oidc"
-	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/go-redis/redis/v8"
+	"golang.org/x/oauth2"
 	"go.uber.org/zap"
 )
 

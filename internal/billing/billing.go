@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/eltonciatto/veloflux/internal/tenant"
@@ -99,7 +100,7 @@ type BillingManager struct {
 	logger            *zap.Logger
 	tenantManager     *tenant.Manager
 	gerencianetClient *GerencianetClient
-	stripeClient      *stripe.Client
+	// Stripe client is not needed as a field since we use the global stripe.API
 }
 
 // NewBillingManager creates a new billing manager
@@ -200,10 +201,8 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 		customerParams := &stripe.CustomerParams{
 			Name:  stripe.String(tenant.Name),
 			Email: stripe.String(tenant.ContactEmail),
-			Params: &stripe.Params{
-				Metadata: map[string]string{
-					"tenant_id": tenantID,
-				},
+			Metadata: stripe.Metadata{
+				"tenant_id": tenantID,
 			},
 		}
 		c, err := customer.New(customerParams)
@@ -282,7 +281,7 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 	}
 
 	if m.config.Provider == StripeProvider {
-		event, err := stripe.WebhookEndpoint.ConstructEvent(payload, signature, m.config.StripeWebhookKey)
+		event, err := stripe.WebhookConstructEvent(payload, signature, m.config.StripeWebhookKey)
 		if err != nil {
 			return err
 		}
@@ -467,7 +466,56 @@ func (m *BillingManager) GetUsageSummary(ctx context.Context, tenantID string, r
 	return result, nil
 }
 
-// ExportBillingData exports billing data for external billing systems
+// GetUsage retrieves usage records for a tenant within a time range
+func (m *BillingManager) GetUsage(ctx context.Context, tenantID string, startDate, endDate time.Time) ([]UsageRecord, error) {
+	// Validate time range
+	if endDate.Before(startDate) {
+		return nil, fmt.Errorf("end date must be after start date")
+	}
+
+	// Build Redis key pattern for usage records
+	pattern := fmt.Sprintf("vf:usage:%s:*", tenantID)
+
+	// Get all keys matching the pattern
+	keys, err := m.client.Keys(ctx, pattern).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query usage records: %w", err)
+	}
+
+	var records []UsageRecord
+
+	// Process each usage record
+	for _, key := range keys {
+		data, err := m.client.Get(ctx, key).Result()
+		if err != nil {
+			m.logger.Warn("Error retrieving usage record", zap.String("key", key), zap.Error(err))
+			continue
+		}
+
+		var record UsageRecord
+		if err := json.Unmarshal([]byte(data), &record); err != nil {
+			m.logger.Warn("Error unmarshaling usage record", zap.String("key", key), zap.Error(err))
+			continue
+		}
+
+		// Filter by date range
+		if (record.Timestamp.Equal(startDate) || record.Timestamp.After(startDate)) &&
+			(record.Timestamp.Equal(endDate) || record.Timestamp.Before(endDate)) {
+			records = append(records, record)
+		}
+	}
+
+	// Sort records by timestamp
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].Timestamp.Before(records[j].Timestamp)
+	})
+
+	return records, nil
+}
+
+/*
+// ExportBillingData exports billing data for external billing systems - Legacy version
+// This method is now implemented in export.go with an improved signature
 func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string, month time.Time) (map[string]interface{}, error) {
 	// Get tenant
 	tenant, err := m.tenantManager.GetTenant(ctx, tenantID)
@@ -487,7 +535,6 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 		}
 	}
 
-	// Get start and end of month
 	startOfMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC)
 	endOfMonth := startOfMonth.AddDate(0, 1, -1)
 

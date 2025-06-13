@@ -52,6 +52,9 @@ type Tenant struct {
 	Limits       LimitConfig `json:"limits"`
 	ContactEmail string      `json:"contact_email"`
 	CustomDomain string      `json:"custom_domain,omitempty"`
+	Document     string      `json:"document,omitempty"`    // For Brazilian CPF/CNPJ
+	BirthDate    string      `json:"birth_date,omitempty"` // Format: YYYY-MM-DD
+	Email        string      `json:"email,omitempty"`      // Additional email for billing/notifications
 }
 
 // UserInfo represents a user associated with a tenant
@@ -259,6 +262,48 @@ func (m *Manager) GetUserByID(ctx context.Context, userID string) (*UserInfo, er
 	m.usersMu.Unlock()
 
 	return &user, nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (m *Manager) GetUserByEmail(ctx context.Context, email string) (*UserInfo, error) {
+	// Check the user cache first
+	m.usersMu.RLock()
+	for _, userInfo := range m.usersCache {
+		if userInfo.Email == email {
+			m.usersMu.RUnlock()
+			return &userInfo, nil
+		}
+	}
+	m.usersMu.RUnlock()
+
+	// Not in cache, check Redis
+	pattern := "vf:user:*"
+	keys, err := m.client.Keys(ctx, pattern).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, key := range keys {
+		data, err := m.client.Get(ctx, key).Result()
+		if err != nil {
+			continue
+		}
+
+		var userInfo UserInfo
+		if err := json.Unmarshal([]byte(data), &userInfo); err != nil {
+			continue
+		}
+
+		if userInfo.Email == email {
+			// Update cache
+			m.usersMu.Lock()
+			m.usersCache[userInfo.UserID] = userInfo
+			m.usersMu.Unlock()
+			return &userInfo, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user with email %s not found", email)
 }
 
 // GetTenantUsers retrieves all users for a tenant

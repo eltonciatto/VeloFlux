@@ -173,14 +173,14 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 
 // ExportBillingDataToFile exports billing data to a file
 func (m *BillingManager) ExportBillingDataToFile(ctx context.Context, tenantID, filePath string, options ExportOptions) error {
-	// Ajuste para usar apenas dois valores de retorno
-	data, format, err := m.ExportBillingData(ctx, tenantID, options)
+	// Export billing data with the correct return values
+	data, contentType, err := m.ExportBillingData(ctx, tenantID, options)
 	if err != nil {
 		return err
 	}
 	
-	// Log de formato para depuração
-	m.logger.Debug("Exported billing data", zap.String("format", format))
+	// Log content type for debugging
+	m.logger.Debug("Exported billing data", zap.String("contentType", contentType))
 	
 	return os.WriteFile(filePath, data, 0644)
 }

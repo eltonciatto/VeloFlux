@@ -232,8 +232,7 @@ func (o *Orchestrator) SetTenantConfig(ctx context.Context, config *TenantOrches
 		}
 	} else if config.Mode == DedicatedMode {
 		// Update dedicated instance
-		err := o.updateDedicatedInstance(ctx, config.TenantID)
-		if err != nil {
+		err := o.updateDedicatedInstance(ctx, config.TenantID)		if err != nil {
 			o.logger.Error("Failed to update dedicated instance", 
 				zap.String("tenant_id", config.TenantID), 
 				zap.Error(err))
@@ -244,23 +243,12 @@ func (o *Orchestrator) SetTenantConfig(ctx context.Context, config *TenantOrches
 	return nil
 }
 
-// Observação: GetDeploymentStatus está implementado no arquivo kubernetes.go
-// para evitar duplicação de código.
-					TenantID:      tenantID,
-					Mode:          SharedMode,
-					Status:        "ready",
-					Namespace:     o.config.Namespace,
-					Version:       "shared",
-					LastUpdated:   time.Now(),
-				}, nil
-			}
-			
-			return &DeploymentStatus{
-				TenantID:     tenantID,
-				Mode:         config.Mode,
-				Status:       "unknown",
-				LastUpdated:  time.Now(),
-			}, nil
+// getDeploymentStatus retrieves deployment status for a tenant
+func (o *Orchestrator) getDeploymentStatus(ctx context.Context, tenantID string) (*DeploymentStatus, error) {
+	data, err := o.client.Get(ctx, fmt.Sprintf("vf:tenant:%s:deployment_status", tenantID)).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, fmt.Errorf("deployment status not found for tenant %s", tenantID)
 		}
 		return nil, err
 	}
