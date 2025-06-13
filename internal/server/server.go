@@ -8,13 +8,18 @@ import (
 
 	"github.com/eltonciatto/veloflux/internal/admin"
 	"github.com/eltonciatto/veloflux/internal/api"
+	"github.com/eltonciatto/veloflux/internal/auth"
 	"github.com/eltonciatto/veloflux/internal/balancer"
+	"github.com/eltonciatto/veloflux/internal/billing"
 	"github.com/eltonciatto/veloflux/internal/clustering"
 	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/eltonciatto/veloflux/internal/geo"
 	"github.com/eltonciatto/veloflux/internal/health"
 	"github.com/eltonciatto/veloflux/internal/metrics"
+	"github.com/eltonciatto/veloflux/internal/orchestration"
 	"github.com/eltonciatto/veloflux/internal/router"
+	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -32,6 +37,9 @@ type Server struct {
 	adminServer   *admin.Server
 	cluster       *clustering.Cluster
 	geoManager    *geo.Manager
+	billingManager *billing.BillingManager
+	oidcManager   *auth.OIDCManager
+	orchestrator  *orchestration.Orchestrator
 }
 
 func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
@@ -46,6 +54,24 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 			// Don't return error, continue without clustering
 		}
 	}
+
+	// Create Redis client
+	redisOpts := &redis.Options{
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	}
+	redisClient := redis.NewClient(redisOpts)
+	
+	// Test Redis connection
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
+	
+	// Initialize tenant manager
+	tenantManager := tenant.NewManager(cfg.Tenant, redisClient, logger)
 
 	// Initialize geo manager
 	geoManager, err := geo.New(cfg, logger)
@@ -63,6 +89,27 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	// Set geo manager in balancer if available
 	if geoManager != nil {
 		bal.SetGeoManager(geoManager)
+	}
+
+	// Initialize billing manager
+	billingManager, err := billing.NewBillingManager(cfg.Billing, redisClient, tenantManager, logger)
+	if err != nil {
+		logger.Error("Failed to initialize billing manager", zap.Error(err))
+		// Don't return error, continue without billing
+	}
+	
+	// Initialize OIDC manager
+	oidcManager, err := auth.NewOIDCManager(cfg.Auth.OIDC, redisClient, tenantManager, logger)
+	if err != nil {
+		logger.Error("Failed to initialize OIDC manager", zap.Error(err))
+		// Don't return error, continue without OIDC
+	}
+	
+	// Initialize orchestration manager
+	orchestrator, err := orchestration.NewOrchestrator(&cfg.Orchestration, redisClient, tenantManager, logger)
+	if err != nil {
+		logger.Error("Failed to initialize orchestrator", zap.Error(err))
+		// Don't return error, continue without orchestration
 	}
 
 	nodeID := "standalone"
@@ -112,19 +159,60 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		Handler: metrics.Handler(),
 	}
 
+	// Initialize Redis if configured
+	var redisClient *redis.Client
+	if cfg.Cluster.RedisAddress != "" {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr:     cfg.Cluster.RedisAddress,
+			Password: cfg.Cluster.RedisPassword,
+			DB:       cfg.Cluster.RedisDB,
+		})
+	}
+
+	// Initialize tenant manager
+	tenantManager, err := tenant.NewManager(redisClient, logger)
+	if err != nil {
+		logger.Error("Failed to initialize tenant manager", zap.Error(err))
+	}
+
+	// Initialize billing manager if configured
+	var billingManager *billing.BillingManager
+	if cfg.Billing.Enabled {
+		billingManager = billing.NewBillingManager(&cfg.Billing, redisClient, tenantManager, logger)
+	}
+
+	// Initialize OIDC manager if configured
+	var oidcManager *auth.OIDCManager
+	if cfg.Auth.OIDC.Enabled {
+		oidcManager = auth.NewOIDCManager(&cfg.Auth, tenantManager, redisClient, logger)
+	}
+
+	// Initialize orchestrator if configured
+	var orchestrator *orchestration.Orchestrator
+	if cfg.Orchestration.Enabled {
+		orchestrator, err = orchestration.NewOrchestrator(&cfg.Orchestration, redisClient, tenantManager, logger)
+		if err != nil {
+			logger.Error("Failed to initialize orchestrator", zap.Error(err))
+		}
+	}
+
 	// Create API server
-	apiServer := api.New(cfg, bal, clusterManager, logger)
+	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, oidcManager, orchestrator, logger)
+
 	// Create Admin server
 	adminServer := admin.New(cfg, bal, clusterManager, logger)
 
 	return &Server{
-		config:        cfg,
-		logger:        logger,
-		balancer:      bal,
-		router:        rtr,
-		healthCheck:   healthChecker,
-		httpServer:    httpServer,
-		httpsServer:   httpsServer,
+		config:         cfg,
+		logger:         logger,
+		balancer:       bal,
+		router:         rtr,
+		healthCheck:    healthChecker,
+		httpServer:     httpServer,
+		httpsServer:    httpsServer,
+		billingManager: billingManager,
+		oidcManager:    oidcManager,
+		orchestrator:   orchestrator,
 		metricsServer: metricsServer,
 		apiServer:     apiServer,
 		adminServer:   adminServer,

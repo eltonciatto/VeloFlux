@@ -5,27 +5,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strconv
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/eltonciatto/veloflux/internal/auth"
 	"github.com/eltonciatto/veloflux/internal/balancer"
+	"github.com/eltonciatto/veloflux/internal/billing"
 	"github.com/eltonciatto/veloflux/internal/clustering"
 	"github.com/eltonciatto/veloflux/internal/config"
+	"github.com/eltonciatto/veloflux/internal/orchestration"
+	"github.com/eltonciatto/veloflux/internal/tenant"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 // API handles dynamic configuration endpoints
 type API struct {
-	config   *config.Config
-	balancer *balancer.Balancer
-	cluster  *clustering.Cluster
-	logger   *zap.Logger
-	router   *mux.Router
-	server   *http.Server
-	configMu sync.RWMutex
+	config         *config.Config
+	balancer       *balancer.Balancer
+	cluster        *clustering.Cluster
+	logger         *zap.Logger
+	router         *mux.Router
+	server         *http.Server
+	configMu       sync.RWMutex
+	tenantManager  *tenant.Manager
+	billingManager *billing.BillingManager
+	oidcManager    *auth.OIDCManager
+	orchestrator   *orchestration.Orchestrator
 }
 
 // BackendRequest represents a request to add/update a backend
@@ -65,46 +73,21 @@ type ClusterResponse struct {
 }
 
 // New creates a new API server
-func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, logger *zap.Logger) *API {
+func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, 
+	tenantManager *tenant.Manager, billingManager *billing.BillingManager, 
+	oidcManager *auth.OIDCManager, orchestrator *orchestration.Orchestrator, 
+	logger *zap.Logger) *API {
+	
 	a := &API{
-		config:   cfg,
-		balancer: bal,
-		cluster:  cl,
-		logger:   logger,
-		router:   mux.NewRouter(),
-	}
-
-	// Register routes
-	apiRouter := a.router.PathPrefix("/api").Subrouter()
-
-	// GET endpoints
-	apiRouter.HandleFunc("/pools", a.handleListPools).Methods("GET")
-	apiRouter.HandleFunc("/pools/{name}", a.handleGetPool).Methods("GET")
-	apiRouter.HandleFunc("/routes", a.handleListRoutes).Methods("GET")
-	apiRouter.HandleFunc("/backends", a.handleListBackends).Methods("GET")
-	apiRouter.HandleFunc("/cluster", a.handleClusterInfo).Methods("GET")
-	apiRouter.HandleFunc("/config", a.handleGetConfig).Methods("GET")
-
-	// POST/PUT endpoints
-	apiRouter.HandleFunc("/pools", a.handleCreatePool).Methods("POST")
-	apiRouter.HandleFunc("/pools/{name}", a.handleUpdatePool).Methods("PUT")
-	apiRouter.HandleFunc("/pools/{name}/backends", a.handleAddBackend).Methods("POST")
-	apiRouter.HandleFunc("/routes", a.handleCreateRoute).Methods("POST")
-	apiRouter.HandleFunc("/routes/{host}", a.handleUpdateRoute).Methods("PUT")
-
-	// DELETE endpoints
-	apiRouter.HandleFunc("/pools/{name}", a.handleDeletePool).Methods("DELETE")
-	apiRouter.HandleFunc("/backends/{pool}/{address}", a.handleDeleteBackend).Methods("DELETE")
-	apiRouter.HandleFunc("/routes/{host}", a.handleDeleteRoute).Methods("DELETE")
-
-	// Hot reload endpoint
-	apiRouter.HandleFunc("/reload", a.handleReload).Methods("POST")
-
-	// Register state listener for cluster changes
-	if cl != nil {
-		cl.RegisterStateListener(clustering.StateBackend, a.handleBackendStateChange)
-		cl.RegisterStateListener(clustering.StateRoute, a.handleRouteStateChange)
-		cl.RegisterStateListener(clustering.StateConfig, a.handleConfigStateChange)
+		config:         cfg,
+		balancer:       bal,
+		cluster:        cl,
+		logger:         logger,
+		router:         mux.NewRouter(),
+		tenantManager:  tenantManager,
+		billingManager: billingManager,
+		oidcManager:    oidcManager,
+		orchestrator:   orchestrator,
 	}
 
 	return a
@@ -112,38 +95,98 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, log
 
 // Start begins the API server
 func (a *API) Start() error {
-	if a.server != nil {
-		return fmt.Errorf("API server already running")
-	}
-
-	address := a.config.Global.BindAddress
-	// Use a different port for API
-	parts := strings.Split(address, ":")
-	if len(parts) > 1 {
-		portStr := parts[len(parts)-1]
-		portInt, _ := strconv.Atoi(portStr)
-		apiPort := fmt.Sprintf("%d", 8000+portInt)
-		address = strings.Join(append(parts[:len(parts)-1], apiPort), ":")
-	} else {
-		address = "0.0.0.0:8000"
-	}
-
+	// Setup API server
 	a.server = &http.Server{
-		Addr:         address,
+		Addr:         a.config.API.BindAddress,
 		Handler:      a.router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	a.logger.Info("Starting API server", zap.String("address", address))
+	// Register routes
+	a.setupRoutes()
+
+	// Start HTTP server
 	go func() {
+		a.logger.Info("Starting API server", zap.String("address", a.server.Addr))
 		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			a.logger.Error("API server error", zap.Error(err))
 		}
 	}()
 
 	return nil
+}
+
+// setupRoutes registers all API routes
+func (a *API) setupRoutes() {
+	// Create router
+	a.router = mux.NewRouter()
+	apiRouter := a.router.PathPrefix("/api").Subrouter()
+
+	// Basic authentication middleware
+	authMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			username, password, ok := r.BasicAuth()
+			if !ok || username != a.config.API.Username || password != a.config.API.Password {
+				w.Header().Set("WWW-Authenticate", `Basic realm="VeloFlux API"`)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	// Apply basic authentication
+	if a.config.API.AuthEnabled {
+		apiRouter.Use(authMiddleware)
+	}
+
+	// Core pool/backend/route management
+	apiRouter.HandleFunc("/pools", a.handleListPools).Methods("GET")
+	apiRouter.HandleFunc("/pools/{name}", a.handleGetPool).Methods("GET")
+	apiRouter.HandleFunc("/pools", a.handleCreatePool).Methods("POST")
+	apiRouter.HandleFunc("/pools/{name}", a.handleUpdatePool).Methods("PUT")
+	apiRouter.HandleFunc("/pools/{name}", a.handleDeletePool).Methods("DELETE")
+	
+	apiRouter.HandleFunc("/backends", a.handleListBackends).Methods("GET")
+	apiRouter.HandleFunc("/backends/{id}", a.handleGetBackend).Methods("GET")
+	apiRouter.HandleFunc("/backends", a.handleAddBackend).Methods("POST")
+	apiRouter.HandleFunc("/backends/{id}", a.handleUpdateBackend).Methods("PUT")
+	apiRouter.HandleFunc("/backends/{id}", a.handleRemoveBackend).Methods("DELETE")
+	
+	apiRouter.HandleFunc("/routes", a.handleListRoutes).Methods("GET")
+	apiRouter.HandleFunc("/routes/{id}", a.handleGetRoute).Methods("GET")
+	apiRouter.HandleFunc("/routes", a.handleAddRoute).Methods("POST")
+	apiRouter.HandleFunc("/routes/{id}", a.handleUpdateRoute).Methods("PUT")
+	apiRouter.HandleFunc("/routes/{id}", a.handleDeleteRoute).Methods("DELETE")
+	
+	apiRouter.HandleFunc("/cluster", a.handleGetCluster).Methods("GET")
+	apiRouter.HandleFunc("/status", a.handleGetStatus).Methods("GET")
+	
+	// Tenant APIs
+	if a.tenantManager != nil {
+		tenantAPI := NewTenantAPI(a.tenantManager, a.logger)
+		tenantAPI.SetupRoutes(apiRouter)
+	}
+	
+	// Billing APIs
+	if a.billingManager != nil {
+		billingAPI := NewBillingAPI(a.billingManager, a.logger)
+		billingAPI.SetupRoutes(apiRouter)
+	}
+	
+	// OIDC APIs
+	if a.oidcManager != nil {
+		oidcAPI := NewOIDCAPI(a.oidcManager, a.tenantManager, a.logger)
+		oidcAPI.SetupRoutes(apiRouter)
+	}
+	
+	// Orchestration APIs
+	if a.orchestrator != nil {
+		orchestrationAPI := NewOrchestrationAPI(a.orchestrator, a.tenantManager, a.logger)
+		orchestrationAPI.SetupRoutes(apiRouter)
+	}
 }
 
 // Stop shuts down the API server
