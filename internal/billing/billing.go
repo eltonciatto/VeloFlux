@@ -13,7 +13,7 @@ import (
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/customer"
-	"github.com/stripe/stripe-go/v72/price"
+	"github.com/stripe/stripe-go/v72/webhook"
 	"go.uber.org/zap"
 )
 
@@ -201,10 +201,9 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 		customerParams := &stripe.CustomerParams{
 			Name:  stripe.String(tenant.Name),
 			Email: stripe.String(tenant.ContactEmail),
-			Metadata: stripe.Metadata{
-				"tenant_id": tenantID,
-			},
 		}
+		// Add metadata
+		customerParams.AddMetadata("tenant_id", tenantID)
 		c, err := customer.New(customerParams)
 		if err != nil {
 			return "", err
@@ -281,7 +280,7 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 	}
 
 	if m.config.Provider == StripeProvider {
-		event, err := stripe.WebhookConstructEvent(payload, signature, m.config.StripeWebhookKey)
+		event, err := webhook.ConstructEvent(payload, signature, m.config.StripeWebhookKey)
 		if err != nil {
 			return err
 		}
@@ -594,6 +593,7 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 
 	return result, nil
 }
+*/
 
 // Helper functions for billing calculations
 

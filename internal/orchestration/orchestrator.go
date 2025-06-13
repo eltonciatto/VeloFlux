@@ -229,10 +229,10 @@ func (o *Orchestrator) SetTenantConfig(ctx context.Context, config *TenantOrches
 					zap.Error(err))
 				return err
 			}
-		}
-	} else if config.Mode == DedicatedMode {
+		}	} else if config.Mode == DedicatedMode {
 		// Update dedicated instance
-		err := o.updateDedicatedInstance(ctx, config.TenantID)		if err != nil {
+		err := o.updateDedicatedInstance(ctx, config.TenantID)
+		if err != nil {
 			o.logger.Error("Failed to update dedicated instance", 
 				zap.String("tenant_id", config.TenantID), 
 				zap.Error(err))

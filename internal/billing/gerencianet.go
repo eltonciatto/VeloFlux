@@ -387,8 +387,7 @@ func (m *BillingManager) handleGerencianetWebhook(ctx context.Context, body []by
 			billingInfo.Status = SubscriptionPastDue
 		}
 	}
-
 	// Save updated billing info
 	billingInfo.UpdatedAt = time.Now()
-	return m.saveBillingInfo(ctx, billingInfo)
+	return m.SaveBillingInfo(ctx, billingInfo)
 }
