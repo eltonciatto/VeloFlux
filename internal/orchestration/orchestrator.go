@@ -12,6 +12,7 @@ import (
 	"github.com/eltonciatto/veloflux/internal/tenant"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,18 +164,17 @@ func (o *Orchestrator) GetTenantConfig(ctx context.Context, tenantID string) (*T
 		}
 		return nil, err
 	}
-	
-	var config TenantOrchestratorConfig
-	if err := json.Unmarshal(data, &config); err != nil {
+		var configData TenantOrchestratorConfig
+	if err := json.Unmarshal(data, &configData); err != nil {
 		return nil, err
 	}
 	
 	// Update cache
 	o.configMu.Lock()
-	o.tenantConfigs[tenantID] = &config
+	o.tenantConfigs[tenantID] = &configData
 	o.configMu.Unlock()
 	
-	return &config, nil
+	return &configData, nil
 }
 
 // SetTenantConfig sets orchestration configuration for a tenant
@@ -244,20 +244,8 @@ func (o *Orchestrator) SetTenantConfig(ctx context.Context, config *TenantOrches
 	return nil
 }
 
-// GetDeploymentStatus gets deployment status for a tenant
-func (o *Orchestrator) GetDeploymentStatus(ctx context.Context, tenantID string) (*DeploymentStatus, error) {
-	data, err := o.client.Get(ctx, fmt.Sprintf("vf:tenant:%s:deployment_status", tenantID)).Bytes()
-	if err != nil {
-		if err == redis.Nil {
-			// Check tenant orchestration config
-			config, err := o.GetTenantConfig(ctx, tenantID)
-			if err != nil {
-				return nil, err
-			}
-			
-			// Return default status for shared mode
-			if config.Mode == SharedMode {
-				return &DeploymentStatus{
+// Observação: GetDeploymentStatus está implementado no arquivo kubernetes.go
+// para evitar duplicação de código.
 					TenantID:      tenantID,
 					Mode:          SharedMode,
 					Status:        "ready",

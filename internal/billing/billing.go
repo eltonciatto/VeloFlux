@@ -99,7 +99,7 @@ type BillingManager struct {
 	logger            *zap.Logger
 	tenantManager     *tenant.Manager
 	gerencianetClient *GerencianetClient
-	tenantManager     *tenant.Manager
+	stripeClient      *stripe.Client
 }
 
 // NewBillingManager creates a new billing manager
@@ -200,8 +200,10 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 		customerParams := &stripe.CustomerParams{
 			Name:  stripe.String(tenant.Name),
 			Email: stripe.String(tenant.ContactEmail),
-			Metadata: map[string]string{
-				"tenant_id": tenantID,
+			Params: &stripe.Params{
+				Metadata: map[string]string{
+					"tenant_id": tenantID,
+				},
 			},
 		}
 		c, err := customer.New(customerParams)
@@ -245,14 +247,18 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 		Customer: stripe.String(customerID),
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
 			TrialPeriodDays: stripe.Int64(planConfig.TrialDays),
+			Params: stripe.Params{
+				Metadata: map[string]string{
+					"tenant_id": tenantID,
+					"plan":      string(planType),
+				},
+			},
+		},
+		Params: stripe.Params{
 			Metadata: map[string]string{
 				"tenant_id": tenantID,
 				"plan":      string(planType),
 			},
-		},
-		Metadata: map[string]string{
-			"tenant_id": tenantID,
-			"plan":      string(planType),
 		},
 	}
 
@@ -276,7 +282,7 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 	}
 
 	if m.config.Provider == StripeProvider {
-		event, err := webhook.ConstructEvent(payload, signature, m.config.StripeWebhookKey)
+		event, err := stripe.WebhookEndpoint.ConstructEvent(payload, signature, m.config.StripeWebhookKey)
 		if err != nil {
 			return err
 		}

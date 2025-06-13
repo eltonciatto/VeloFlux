@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
@@ -9,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	
+	"go.uber.org/zap"
 )
 
 // ExportFormat represents the format for billing data export
@@ -64,9 +67,8 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 	if err != nil {
 		return nil, "", err
 	}
-
 	// Get usage records
-	usageRecords, err := m.GetUsageRecords(ctx, tenantID, options.StartDate, options.EndDate)
+	usageRecords, err := m.GetUsage(ctx, tenantID, options.StartDate, options.EndDate)
 	if err != nil {
 		return nil, "", err
 	}
@@ -171,10 +173,14 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 
 // ExportBillingDataToFile exports billing data to a file
 func (m *BillingManager) ExportBillingDataToFile(ctx context.Context, tenantID, filePath string, options ExportOptions) error {
-	data, _, err := m.ExportBillingData(ctx, tenantID, options)
+	// Ajuste para usar apenas dois valores de retorno
+	data, format, err := m.ExportBillingData(ctx, tenantID, options)
 	if err != nil {
 		return err
 	}
+	
+	// Log de formato para depuração
+	m.logger.Debug("Exported billing data", zap.String("format", format))
 	
 	return os.WriteFile(filePath, data, 0644)
 }
@@ -224,14 +230,14 @@ func exportToCSV(data BillingExportData) ([]byte, error) {
 		}
 	}
 	
-	// Write CSV
-	var csvContent []byte
-	buf := &csvContent
-	w := csv.NewWriter(buf)
+	// Write CSV	// Create a buffer to write CSV data to
+	var buffer bytes.Buffer
+	w := csv.NewWriter(&buffer)
 	err := w.WriteAll(records)
 	if err != nil {
 		return nil, err
 	}
+	w.Flush()
 	
-	return *buf, nil
+	return buffer.Bytes(), nil
 }

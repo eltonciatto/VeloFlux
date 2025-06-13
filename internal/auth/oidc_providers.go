@@ -8,6 +8,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
+	"go.uber.org/zap"
 )
 
 // KeycloakOIDCProvider is a specialized OIDC provider for Keycloak

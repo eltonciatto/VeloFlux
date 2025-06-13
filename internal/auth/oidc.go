@@ -81,10 +81,9 @@ func (m *OIDCManager) GetOIDCConfig(ctx context.Context, tenantID string) (*OIDC
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-	
-	// Ensure sensitive fields are not returned to clients
+		// Ensure sensitive fields are not returned to clients
 	if strings.HasPrefix(config.ClientSecret, "*****") {
-		secretLen := len(config.ClientSecret)
+		// Obter o segredo real do armazenamento
 		actualSecret, err := m.client.Get(ctx, fmt.Sprintf("vf:tenant:%s:oidc_secret", tenantID)).Result()
 		if err == nil && actualSecret != "" {
 			config.ClientSecret = actualSecret
@@ -153,9 +152,8 @@ func (m *OIDCManager) GetProvider(ctx context.Context, tenantID string) (*OIDCPr
 		clientSecret = secret
 		config.ClientSecret = secret // Update the config with the actual secret
 	}
-	
-	// Create provider based on provider type
-	provider, err = m.createOIDCProviderByType(ctx, config)
+		// Create OIDC provider
+	oidcProvider, err := oidc.NewProvider(ctx, config.ProviderURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
 	}
