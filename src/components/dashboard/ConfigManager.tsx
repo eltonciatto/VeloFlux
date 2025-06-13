@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, RefreshCw, Settings, Shield, Globe } from 'lucide-react';
+import { useConfig } from '@/hooks/use-api';
 
 export const ConfigManager = () => {
-  const [config, setConfig] = useState({
+  const { data } = useConfig();
+  const [config, setConfig] = useState(data as any || {
     global: {
       bind_address: '0.0.0.0:80',
       tls_bind_address: '0.0.0.0:443',
@@ -28,6 +30,10 @@ export const ConfigManager = () => {
       }
     ]
   });
+
+  useEffect(() => {
+    if (data) setConfig(data as any);
+  }, [data]);
 
   const [yamlConfig, setYamlConfig] = useState(`global:
   bind_address: "0.0.0.0:80"

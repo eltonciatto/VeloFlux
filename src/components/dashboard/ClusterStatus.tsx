@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Server, Crown, Users, Wifi, WifiOff, Clock } from 'lucide-react';
+import { useClusterInfo } from '@/hooks/use-api';
 
 interface ClusterNode {
   id: string;
@@ -17,35 +18,8 @@ interface ClusterNode {
 }
 
 export const ClusterStatus = () => {
-  const [nodes, setNodes] = useState<ClusterNode[]>([
-    {
-      id: 'node-1',
-      address: '10.0.1.10:8080',
-      role: 'leader',
-      status: 'healthy',
-      lastSeen: '2025-01-12T10:30:00Z',
-      term: 5,
-      version: '1.0.0'
-    },
-    {
-      id: 'node-2',
-      address: '10.0.1.11:8080',
-      role: 'follower',
-      status: 'healthy',
-      lastSeen: '2025-01-12T10:30:00Z',
-      term: 5,
-      version: '1.0.0'
-    },
-    {
-      id: 'node-3',
-      address: '10.0.1.12:8080',
-      role: 'follower',
-      status: 'unreachable',
-      lastSeen: '2025-01-12T10:25:00Z',
-      term: 4,
-      version: '1.0.0'
-    }
-  ]);
+  const { data } = useClusterInfo();
+  const nodes = data?.nodes || [];
 
   const healthyNodes = nodes.filter(n => n.status === 'healthy').length;
   const totalNodes = nodes.length;
