@@ -13,7 +13,6 @@ import (
 	"github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/price"
-	"github.com/stripe/stripe-go/v72/subscription"
 	"go.uber.org/zap"
 )
 
@@ -29,16 +28,16 @@ const (
 
 // BillingConfig holds the billing configuration
 type BillingConfig struct {
-	Provider           BillingProvider `yaml:"provider"`
-	Enabled            bool            `yaml:"enabled"`
-	StripeAPIKey       string          `yaml:"stripe_api_key"`
-	StripeWebhookKey   string          `yaml:"stripe_webhook_key"`
-	GerencianetClientID string         `yaml:"gerencianet_client_id"`
-	GerencianetSecret  string          `yaml:"gerencianet_secret"`
-	WebhookEndpoint    string          `yaml:"webhook_endpoint"`
-	SuccessURL         string          `yaml:"success_url"`
-	CancelURL          string          `yaml:"cancel_url"`
-	PlanConfigs        []PlanConfig    `yaml:"plan_configs"`
+	Provider            BillingProvider `yaml:"provider"`
+	Enabled             bool            `yaml:"enabled"`
+	StripeAPIKey        string          `yaml:"stripe_api_key"`
+	StripeWebhookKey    string          `yaml:"stripe_webhook_key"`
+	GerencianetClientID string          `yaml:"gerencianet_client_id"`
+	GerencianetSecret   string          `yaml:"gerencianet_secret"`
+	WebhookEndpoint     string          `yaml:"webhook_endpoint"`
+	SuccessURL          string          `yaml:"success_url"`
+	CancelURL           string          `yaml:"cancel_url"`
+	PlanConfigs         []PlanConfig    `yaml:"plan_configs"`
 }
 
 // PlanConfig maps internal plans to external billing system IDs
@@ -73,8 +72,8 @@ const (
 // TenantBillingInfo stores billing information for a tenant
 type TenantBillingInfo struct {
 	TenantID           string             `json:"tenant_id"`
-	CustomerID         string             `json:"customer_id"`         // External billing system customer ID
-	SubscriptionID     string             `json:"subscription_id"`     // External billing system subscription ID
+	CustomerID         string             `json:"customer_id"`     // External billing system customer ID
+	SubscriptionID     string             `json:"subscription_id"` // External billing system subscription ID
 	Plan               tenant.PlanType    `json:"plan"`
 	Status             SubscriptionStatus `json:"status"`
 	CurrentPeriodStart time.Time          `json:"current_period_start"`
@@ -95,12 +94,12 @@ type UsageRecord struct {
 
 // BillingManager handles billing operations
 type BillingManager struct {
-	config           *BillingConfig
-	client           *redis.Client
-	logger           *zap.Logger
-	tenantManager    *tenant.Manager
+	config            *BillingConfig
+	client            *redis.Client
+	logger            *zap.Logger
+	tenantManager     *tenant.Manager
 	gerencianetClient *GerencianetClient
-	tenantManager *tenant.Manager
+	tenantManager     *tenant.Manager
 }
 
 // NewBillingManager creates a new billing manager
@@ -110,18 +109,18 @@ func NewBillingManager(config *BillingConfig, redisClient *redis.Client, tenantM
 		if config.Provider == StripeProvider && config.StripeAPIKey != "" {
 			stripe.Key = config.StripeAPIKey
 		}
-		
+
 		// Initialize Gerencianet client if credentials are provided
 		var gerencianetClient *GerencianetClient
 		if config.Provider == GerencianetProvider && config.GerencianetClientID != "" && config.GerencianetSecret != "" {
 			gerencianetClient = NewGerencianetClient(config.GerencianetClientID, config.GerencianetSecret, true) // true for sandbox mode
 		}
-		
+
 		return &BillingManager{
-			config:           config,
-			client:           redisClient,
-			logger:           logger,
-			tenantManager:    tenantManager,
+			config:            config,
+			client:            redisClient,
+			logger:            logger,
+			tenantManager:     tenantManager,
 			gerencianetClient: gerencianetClient,
 		}
 	}
@@ -316,11 +315,11 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 			if sub.TrialEnd > 0 {
 				billingInfo.TrialEnd = time.Unix(sub.TrialEnd, 0)
 			}
-			
+
 			// Update plan in billing info
 			if sub.Metadata["plan"] != "" {
 				billingInfo.Plan = tenant.PlanType(sub.Metadata["plan"])
-				
+
 				// Also update tenant plan
 				t, err := m.tenantManager.GetTenant(ctx, tenantID)
 				if err == nil {
@@ -336,7 +335,7 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 				m.logger.Error("Failed to save billing info", zap.Error(err))
 				return err
 			}
-			
+
 		case "customer.subscription.deleted":
 			var sub stripe.Subscription
 			err = json.Unmarshal(event.Data.Raw, &sub)
@@ -354,13 +353,13 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 			if err == nil {
 				billingInfo.Status = SubscriptionCanceled
 				billingInfo.CancelAtPeriodEnd = true
-				
+
 				// Save updated billing info
 				if err := m.SaveBillingInfo(ctx, billingInfo); err != nil {
 					m.logger.Error("Failed to save billing info", zap.Error(err))
 					return err
 				}
-				
+
 				// Downgrade tenant to free plan after subscription ends
 				t, err := m.tenantManager.GetTenant(ctx, tenantID)
 				if err == nil {
@@ -382,7 +381,7 @@ func (m *BillingManager) HandleWebhook(ctx context.Context, payload []byte, sign
 // RecordUsage records resource usage for a tenant
 func (m *BillingManager) RecordUsage(ctx context.Context, tenantID string, resourceKey string, quantity int64) error {
 	now := time.Now()
-	
+
 	// Store usage record
 	record := UsageRecord{
 		TenantID:    tenantID,
@@ -390,47 +389,47 @@ func (m *BillingManager) RecordUsage(ctx context.Context, tenantID string, resou
 		Quantity:    quantity,
 		Timestamp:   now,
 	}
-	
+
 	data, err := json.Marshal(record)
 	if err != nil {
 		return err
 	}
-	
+
 	// Store in Redis with a key that includes the date for easier aggregation
-	key := fmt.Sprintf("vf:tenant:%s:usage:%s:%s", 
-		tenantID, 
-		resourceKey, 
+	key := fmt.Sprintf("vf:tenant:%s:usage:%s:%s",
+		tenantID,
+		resourceKey,
 		now.Format("2006-01-02"))
-	
+
 	// Append to a list for this resource on this day
 	err = m.client.RPush(ctx, key, data).Err()
 	if err != nil {
 		return err
 	}
-	
+
 	// Set expiration to keep data for 90 days
 	err = m.client.Expire(ctx, key, 90*24*time.Hour).Err()
 	if err != nil {
 		m.logger.Warn("Failed to set expiration for usage record", zap.Error(err))
 	}
-	
+
 	// Also increment today's counter
-	counterKey := fmt.Sprintf("vf:tenant:%s:usage_total:%s:%s", 
-		tenantID, 
-		resourceKey, 
+	counterKey := fmt.Sprintf("vf:tenant:%s:usage_total:%s:%s",
+		tenantID,
+		resourceKey,
 		now.Format("2006-01-02"))
-	
+
 	err = m.client.IncrBy(ctx, counterKey, quantity).Err()
 	if err != nil {
 		m.logger.Warn("Failed to increment usage counter", zap.Error(err))
 	}
-	
+
 	// Set expiration for counter
 	err = m.client.Expire(ctx, counterKey, 90*24*time.Hour).Err()
 	if err != nil {
 		m.logger.Warn("Failed to set expiration for usage counter", zap.Error(err))
 	}
-	
+
 	return nil
 }
 
@@ -439,26 +438,26 @@ func (m *BillingManager) GetUsageSummary(ctx context.Context, tenantID string, r
 	// Format dates for keys
 	current := startDate
 	result := make(map[string]int64)
-	
+
 	// Collect data for each day in the date range
 	for current.Before(endDate) || current.Equal(endDate) {
 		dateStr := current.Format("2006-01-02")
 		counterKey := fmt.Sprintf("vf:tenant:%s:usage_total:%s:%s", tenantID, resourceKey, dateStr)
-		
+
 		val, err := m.client.Get(ctx, counterKey).Int64()
 		if err != nil && err != redis.Nil {
 			return nil, err
 		}
-		
+
 		if err != redis.Nil {
 			result[dateStr] = val
 		} else {
 			result[dateStr] = 0
 		}
-		
+
 		current = current.AddDate(0, 0, 1)
 	}
-	
+
 	return result, nil
 }
 
@@ -469,7 +468,7 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get billing info
 	billingInfo, err := m.GetBillingInfo(ctx, tenantID)
 	if err != nil {
@@ -481,43 +480,43 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 			CreatedAt: tenant.CreatedAt,
 		}
 	}
-	
+
 	// Get start and end of month
 	startOfMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC)
 	endOfMonth := startOfMonth.AddDate(0, 1, -1)
-	
+
 	// Get usage data for common resources
 	requestsUsage, err := m.GetUsageSummary(ctx, tenantID, "requests", startOfMonth, endOfMonth)
 	if err != nil {
 		m.logger.Error("Failed to get requests usage", zap.Error(err))
 		requestsUsage = make(map[string]int64)
 	}
-	
+
 	bandwidthUsage, err := m.GetUsageSummary(ctx, tenantID, "bandwidth", startOfMonth, endOfMonth)
 	if err != nil {
 		m.logger.Error("Failed to get bandwidth usage", zap.Error(err))
 		bandwidthUsage = make(map[string]int64)
 	}
-	
+
 	// Calculate totals
 	var totalRequests int64
 	var totalBandwidth int64
-	
+
 	for _, v := range requestsUsage {
 		totalRequests += v
 	}
-	
+
 	for _, v := range bandwidthUsage {
 		totalBandwidth += v
 	}
-	
+
 	// Construct export data
 	result := map[string]interface{}{
-		"tenant_id":          tenantID,
-		"tenant_name":        tenant.Name,
-		"plan":               tenant.Plan,
-		"contact_email":      tenant.ContactEmail,
-		"billing_period":     map[string]string{
+		"tenant_id":     tenantID,
+		"tenant_name":   tenant.Name,
+		"plan":          tenant.Plan,
+		"contact_email": tenant.ContactEmail,
+		"billing_period": map[string]string{
 			"start": startOfMonth.Format("2006-01-02"),
 			"end":   endOfMonth.Format("2006-01-02"),
 		},
@@ -539,7 +538,7 @@ func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string,
 			},
 		},
 	}
-	
+
 	return result, nil
 }
 
