@@ -92,7 +92,19 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	}
 
 	// Initialize billing manager
-	billingManager := billing.NewBillingManager(&cfg.Billing, redisClient, tenantManager, logger)
+	// Convert config.BillingConfig to billing.BillingConfig
+	billingCfg := &billing.BillingConfig{
+		Provider:            billing.BillingProvider(cfg.Billing.Provider),
+		Enabled:             cfg.Billing.Enabled,
+		StripeAPIKey:        cfg.Billing.StripeAPIKey,
+		StripeWebhookKey:    cfg.Billing.StripeWebhookKey,
+		GerencianetClientID: cfg.Billing.GerencianetClientID,
+		GerencianetSecret:   cfg.Billing.GerencianetSecret,
+		WebhookEndpoint:     cfg.Billing.WebhookEndpoint,
+		SuccessURL:          cfg.Billing.SuccessURL,
+		CancelURL:           cfg.Billing.CancelURL,
+	}
+	billingManager := billing.NewBillingManager(billingCfg, redisClient, tenantManager, logger)
 	
 	// Initialize auth config for OIDC
 	authConfig := &auth.Config{
@@ -107,17 +119,19 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	}
 
 	// Create authenticator used by tenant and OIDC APIs
-	authenticator := auth.New(&cfg.Auth, tenantManager, logger)
+	// Reuse authConfig that we created earlier
+	authenticator := auth.New(authConfig, tenantManager, logger)
 
 	// Initialize OIDC manager
-	oidcManager, err := auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
-	if err != nil {
-		logger.Error("Failed to initialize OIDC manager", zap.Error(err))
-		// Don't return error, continue without OIDC
-	}
+	oidcManager := auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
 
 	// Initialize orchestration manager
-	orchestrator, err := orchestration.NewOrchestrator(&cfg.Orchestration, redisClient, tenantManager, logger)
+	// Convert config.OrchestrationConfig to orchestration.OrchestrationConfig
+	orchCfg := &orchestration.OrchestrationConfig{
+		Enabled:        cfg.Orchestration.Enabled,
+		KubeConfigPath: cfg.Orchestration.KubeConfig,
+	}
+	orchestrator, err := orchestration.NewOrchestrator(orchCfg, redisClient, tenantManager, logger)
 	if err != nil {
 		logger.Error("Failed to initialize orchestrator", zap.Error(err))
 		// Don't return error, continue without orchestration
@@ -170,31 +184,8 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		Handler: metrics.Handler(),
 	}
 
-	// Initialize Redis if configured
-	var redisClient *redis.Client
-	if cfg.Cluster.RedisAddress != "" {
-		redisClient = redis.NewClient(&redis.Options{
-			Addr:     cfg.Cluster.RedisAddress,
-			Password: cfg.Cluster.RedisPassword,
-			DB:       cfg.Cluster.RedisDB,
-		})
-	}
-
-	// Initialize tenant manager
-	tenantManager, err := tenant.NewManager(redisClient, logger)
-	if err != nil {
-		logger.Error("Failed to initialize tenant manager", zap.Error(err))
-	}
-
-	// Initialize billing manager if configured
-	var billingManager *billing.BillingManager
-	if cfg.Billing.Enabled {
-		billingManager = billing.NewBillingManager(&cfg.Billing, redisClient, tenantManager, logger)
-	}
-
-	// Initialize OIDC manager if configured
-	var oidcManager *auth.OIDCManager
-	if cfg.Auth.OIDC.Enabled {
+	// These managers are already initialized in the New function, 
+	// so we'll use the existing instances instead of creating new ones
 		authConfig := &auth.Config{
 			JWTSecret:       cfg.Auth.JWTSecret,
 			JWTIssuer:       cfg.Auth.JWTIssuer,
@@ -208,17 +199,10 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		oidcManager = auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
 	}
 
-	// Initialize orchestrator if configured
-	var orchestrator *orchestration.Orchestrator
-	if cfg.Orchestration.Enabled {
-		orchestrator, err = orchestration.NewOrchestrator(&cfg.Orchestration, redisClient, tenantManager, logger)
-		if err != nil {
-			logger.Error("Failed to initialize orchestrator", zap.Error(err))
-		}
-	}
+	// Orchestrator is already initialized in the New function
 
 	// Create API server
-	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, authenticator, oidcManager, orchestrator, logger)
+	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, oidcManager, orchestrator, logger)
 
 	// Create Admin server
 	adminServer := admin.New(cfg, bal, clusterManager, logger)
