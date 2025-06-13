@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,7 +21,9 @@ import {
   ArrowRight,
   FileText,
   Database,
-  Cloud
+  Cloud,
+  Zap,
+  Wifi 
 } from 'lucide-react';
 import Header from '@/components/Header';
 import { useNavigate } from 'react-router-dom';
@@ -974,6 +975,104 @@ pools:
                     </pre>
                   </div>
                 </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-blue-300 mb-4 flex items-center">
+                    <Zap className="w-6 h-6 mr-2 text-orange-400" />
+                    Integração com CDN (Cloudflare/Outros)
+                  </h3>
+                  <p className="text-blue-200 mb-4">
+                    Maximize o desempenho e segurança do VeloFlux ao combiná-lo com uma CDN, mesmo usando planos gratuitos:
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <Card className="bg-gradient-to-br from-orange-900/30 to-blue-900/30 border-orange-500/20 p-5">
+                      <h4 className="text-white font-semibold text-lg flex items-center mb-3">
+                        <Wifi className="w-5 h-5 mr-2 text-orange-400" />
+                        Benefícios da Integração
+                      </h4>
+                      <ul className="space-y-2">
+                        <li className="flex items-start text-blue-200">
+                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-1 flex-shrink-0" />
+                          <span><strong className="text-white">Latência global reduzida</strong>: Conteúdo distribuído através de servidores em todo o mundo</span>
+                        </li>
+                        <li className="flex items-start text-blue-200">
+                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-1 flex-shrink-0" />
+                          <span><strong className="text-white">Proteção contra DDoS</strong>: Absorção de ataques antes de atingirem seu VeloFlux</span>
+                        </li>
+                        <li className="flex items-start text-blue-200">
+                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-1 flex-shrink-0" />
+                          <span><strong className="text-white">Cache de borda</strong>: Reduz drasticamente o tráfego direto aos seus servidores</span>
+                        </li>
+                        <li className="flex items-start text-blue-200">
+                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-1 flex-shrink-0" />
+                          <span><strong className="text-white">Camada extra de WAF</strong>: Complementa as proteções do VeloFlux</span>
+                        </li>
+                        <li className="flex items-start text-blue-200">
+                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-1 flex-shrink-0" />
+                          <span><strong className="text-white">SSL/TLS gerenciado</strong>: Renovação automática de certificados</span>
+                        </li>
+                      </ul>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-blue-900/30 to-orange-900/30 border-blue-500/20 p-5">
+                      <h4 className="text-white font-semibold text-lg flex items-center mb-3">
+                        <Settings className="w-5 h-5 mr-2 text-blue-400" />
+                        Configuração com Cloudflare (Free)
+                      </h4>
+                      <ol className="space-y-2 text-blue-200 list-decimal list-inside">
+                        <li>Crie uma conta gratuita no <strong className="text-white">Cloudflare</strong></li>
+                        <li>Adicione seu domínio e siga o processo de transferência dos nameservers</li>
+                        <li>Configure regras de cache para arquivos estáticos (JS, CSS, imagens)</li>
+                        <li>Ative o <strong className="text-white">modo Proxy</strong> (ícone laranja) para seus subdomínios</li>
+                        <li>Em <strong className="text-white">SSL/TLS</strong>, configure para "Full" ou "Full (Strict)"</li>
+                        <li>Ative o <strong className="text-white">Always Use HTTPS</strong> em SSL/TLS</li>
+                        <li>Configure <strong className="text-white">Page Rules</strong> para cache específico de rotas</li>
+                      </ol>
+                    </Card>
+                  </div>
+                  
+                  <div className="bg-black/50 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold text-blue-300 mb-3">Regras de Cache Otimizadas para Cloudflare</h4>
+                    <pre className="text-green-400 text-sm overflow-x-auto">
+{`# No arquivo .htaccess ou configuração do Nginx
+# Maximiza a eficiência do cache
+
+# Permitir que o Cloudflare cache conteúdo estático por 7 dias
+<FilesMatch "\\.(jpg|jpeg|png|gif|ico|css|js)$">
+  Header set Cache-Control "public, max-age=604800"
+</FilesMatch>
+
+# No dashboard do Cloudflare, crie Page Rules:
+# 1. Para arquivos estáticos:
+# URL Pattern: *example.com/static/*
+# Setting: Cache Level: Cache Everything, Edge Cache TTL: 7 days
+
+# 2. Para bypass em áreas dinâmicas:
+# URL Pattern: *example.com/api/*
+# Setting: Cache Level: Bypass`}
+                    </pre>
+                  </div>
+                  
+                  <div className="mt-6 bg-indigo-900/30 border border-indigo-500/30 rounded-lg p-4">
+                    <h4 className="text-indigo-300 font-semibold flex items-center mb-2">
+                      <Zap className="w-5 h-5 mr-2" />
+                      Por que funciona tão bem com plano Free
+                    </h4>
+                    <p className="text-indigo-100 text-sm mb-3">
+                      O VeloFlux e o Cloudflare Free se complementam perfeitamente, criando uma arquitetura robusta com:
+                    </p>
+                    <ul className="text-indigo-100 text-sm space-y-2 list-disc list-inside">
+                      <li>Cloudflare lida com <strong>picos de tráfego e DDoS</strong> na borda, reduzindo carga no seu servidor</li>
+                      <li>VeloFlux manipula <strong>balanceamento inteligente</strong> entre seus servidores internos</li>
+                      <li>Cache de borda <strong>reduz até 70%</strong> das requisições aos seus servidores de origem</li> 
+                      <li>Ambos fornecem <strong>métricas complementares</strong>: Cloudflare mostra dados de borda, VeloFlux mostra performance do backend</li>
+                      <li>O <strong>WAF multi-camadas</strong> (Cloudflare + VeloFlux) bloqueia ataques em diferentes pontos</li>
+                      <li>Você obtém presença global <strong>sem precificar servidores em múltiplas regiões</strong></li>
+                    </ul>
+                  </div>
+                </div>
+
               </div>
             </Card>
           </TabsContent>
