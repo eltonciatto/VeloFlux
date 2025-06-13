@@ -21,18 +21,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/helm/pkg/helm"
-	"k8s.io/helm/pkg/helm/portforwarder"
-	"k8s.io/helm/pkg/kube"
 )
-
-// HelmChartConfig holds configuration for the Helm chart
-type HelmChartConfig struct {
-	Name       string                 `json:"name"`
-	Version    string                 `json:"version"`
-	Repository string                 `json:"repository"`
-	Values     map[string]interface{} `json:"values"`
-}
 
 // DeployTenantInstance deploys a dedicated instance for a tenant
 func (o *Orchestrator) DeployTenantInstance(ctx context.Context, tenantID string, config *TenantOrchestratorConfig) (*DeploymentStatus, error) {
@@ -88,13 +77,7 @@ func (o *Orchestrator) DeployTenantInstance(ctx context.Context, tenantID string
 	go func() {
 		var deployErr error
 		if config.Mode == DedicatedMode {
-			if o.config.HelmReleaseName != "" {
-				// Use Helm for deployment
-				deployErr = o.deployWithHelm(ctx, tenantID, namespace, config)
-			} else {
-				// Use direct Kubernetes API
-				deployErr = o.deployWithKubernetes(ctx, tenantID, namespace, config)
-			}
+			deployErr = o.deployWithKubernetes(ctx, tenantID, namespace, config)
 		}
 
 		// Update status
@@ -137,102 +120,6 @@ func (o *Orchestrator) createNamespaceIfNotExists(namespace string) error {
 
 	_, err = o.kubeClient.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
 	return err
-}
-
-// deployWithHelm deploys a tenant instance using Helm
-func (o *Orchestrator) deployWithHelm(ctx context.Context, tenantID, namespace string, config *TenantOrchestratorConfig) error {
-	// Initialize Helm client
-	helmClient, err := o.getHelmClient()
-	if err != nil {
-		return fmt.Errorf("failed to initialize Helm client: %w", err)
-	}
-
-	// Prepare values
-	values := map[string]interface{}{
-		"tenantId": tenantID,
-		"resources": map[string]interface{}{
-			"requests": map[string]string{
-				"cpu":    config.ResourceLimits.CPURequest,
-				"memory": config.ResourceLimits.MemoryRequest,
-			},
-			"limits": map[string]string{
-				"cpu":    config.ResourceLimits.CPULimit,
-				"memory": config.ResourceLimits.MemoryLimit,
-			},
-		},
-		"autoscaling": map[string]interface{}{
-			"enabled":                  config.AutoscalingEnabled,
-			"minReplicas":             config.MinReplicas,
-			"maxReplicas":             config.MaxReplicas,
-			"targetCPUUtilizationPercentage": config.TargetCPUUtilization,
-		},
-		"ingress": map[string]interface{}{
-			"enabled": true,
-			"hosts":   config.CustomDomains,
-		},
-	}
-
-	// Get the chart path
-	chartPath := o.config.ChartPath
-	if !filepath.IsAbs(chartPath) {
-		// Use relative path from working directory
-		chartPath = filepath.Join(".", chartPath)
-	}
-
-	// Create release name
-	releaseName := fmt.Sprintf("%s-%s", o.config.HelmReleaseName, tenantID)
-
-	// Install or upgrade chart
-	_, err = helmClient.InstallRelease(
-		chartPath,
-		namespace,
-		helm.ValueOverrides([]byte(toYAML(values))),
-		helm.ReleaseName(releaseName),
-	)
-
-	return err
-}
-
-// getHelmClient initializes a Helm client
-func (o *Orchestrator) getHelmClient() (*helm.Client, error) {
-	// Get Kubernetes config
-	config, err := o.getKubeConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create Kubernetes clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Setup port forwarding for Tiller
-	tillerNamespace := "kube-system"
-	tillerPod, err := getFirstRunningPod(clientset, tillerNamespace, "app=helm,name=tiller")
-	if err != nil {
-		return nil, err
-	}
-
-	// Setup port forwarding
-	fw, err := portforwarder.New(tillerNamespace, clientset, config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Forward port to Tiller
-	ports := []string{fmt.Sprintf(":%d", 44134)}
-	err = fw.ForwardPorts(tillerPod, ports)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create Helm client
-	opts := []helm.Option{
-		helm.Host(fmt.Sprintf("localhost:%d", fw.Local)),
-	}
-
-	return helm.NewClient(opts...), nil
 }
 
 // getFirstRunningPod returns the first running pod that matches the selector
@@ -612,11 +499,7 @@ func (o *Orchestrator) UpdateTenantInstance(ctx context.Context, tenantID string
 		var updateErr error
 		if config.Mode == DedicatedMode {
 			namespace := status.Namespace
-			if o.config.HelmReleaseName != "" {
-				updateErr = o.deployWithHelm(ctx, tenantID, namespace, config)
-			} else {
-				updateErr = o.deployWithKubernetes(ctx, tenantID, namespace, config)
-			}
+			updateErr = o.deployWithKubernetes(ctx, tenantID, namespace, config)
 		}
 
 		// Update status
@@ -663,19 +546,7 @@ func (o *Orchestrator) RemoveTenantInstance(ctx context.Context, tenantID string
 		var removeErr error
 		if status.Mode == DedicatedMode {
 			namespace := status.Namespace
-			if o.config.HelmReleaseName != "" {
-				// Remove Helm release
-				helmClient, err := o.getHelmClient()
-				if err == nil {
-					releaseName := fmt.Sprintf("%s-%s", o.config.HelmReleaseName, tenantID)
-					_, removeErr = helmClient.DeleteRelease(releaseName, helm.DeletePurge(true))
-				} else {
-					removeErr = err
-				}
-			} else {
-				// Remove Kubernetes resources
-				removeErr = o.removeKubernetesResources(ctx, tenantID, namespace)
-			}
+			removeErr = o.removeKubernetesResources(ctx, tenantID, namespace)
 		}
 
 		// Update status
@@ -735,30 +606,6 @@ func (o *Orchestrator) removeKubernetesResources(ctx context.Context, tenantID, 
 }
 
 // GetDeploymentStatus retrieves the deployment status for a tenant
-func (o *Orchestrator) GetDeploymentStatus(ctx context.Context, tenantID string) (*DeploymentStatus, error) {
-	data, err := o.client.Get(ctx, fmt.Sprintf("vf:tenant:%s:deployment", tenantID)).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	var status DeploymentStatus
-	if err := json.Unmarshal(data, &status); err != nil {
-		return nil, err
-	}
-
-	// If status is "ready", get actual status from Kubernetes
-	if status.Status == "ready" && status.Mode == DedicatedMode {
-		namespace := status.Namespace
-		deployment, err := o.kubeClient.AppsV1().Deployments(namespace).Get(ctx,
-			fmt.Sprintf("veloflux-%s", tenantID), metav1.GetOptions{})
-		if err == nil {
-			status.Replicas = int(deployment.Status.Replicas)
-			status.ReadyReplicas = int(deployment.Status.ReadyReplicas)
-		}
-	}
-
-	return &status, nil
-}
 
 // saveDeploymentStatus saves deployment status for a tenant
 func (o *Orchestrator) saveDeploymentStatus(ctx context.Context, status *DeploymentStatus) error {
@@ -776,7 +623,7 @@ func (o *Orchestrator) getKubeConfig() (*rest.Config, error) {
 		// Use in-cluster config
 		return rest.InClusterConfig()
 	}
-	
+
 	// Use kubeconfig file
 	return clientcmd.BuildConfigFromFlags("", o.config.KubeConfigPath)
 }
@@ -803,7 +650,7 @@ func (o *Orchestrator) GetDetailedDeploymentStatus(ctx context.Context, tenantID
 	if err != nil {
 		return nil, fmt.Errorf("failed to get basic deployment status: %w", err)
 	}
-	
+
 	// Create detailed status with basic information
 	detailed := &DetailedDeploymentStatus{
 		DeploymentStatus: *basic,
@@ -811,58 +658,58 @@ func (o *Orchestrator) GetDetailedDeploymentStatus(ctx context.Context, tenantID
 		Metrics:          DeploymentMetrics{},
 		Pods:             []PodStatus{},
 	}
-	
+
 	// If not in dedicated mode, return basic status
 	if basic.Mode != DedicatedMode || basic.Namespace == "" {
 		return detailed, nil
 	}
-	
+
 	// Get deployment events
 	events, err := o.getDeploymentEvents(ctx, tenantID, basic.Namespace)
 	if err != nil {
-		o.logger.Error("Failed to get deployment events", 
+		o.logger.Error("Failed to get deployment events",
 			zap.String("tenant_id", tenantID),
 			zap.Error(err))
 	} else {
 		detailed.Events = events
 	}
-	
+
 	// Get pod metrics and statuses
 	pods, err := o.getPodStatuses(ctx, tenantID, basic.Namespace)
 	if err != nil {
-		o.logger.Error("Failed to get pod statuses", 
+		o.logger.Error("Failed to get pod statuses",
 			zap.String("tenant_id", tenantID),
 			zap.Error(err))
 	} else {
 		detailed.Pods = pods
 	}
-	
+
 	// Get resource metrics
 	metrics, err := o.getDeploymentMetrics(ctx, tenantID, basic.Namespace)
 	if err != nil {
-		o.logger.Error("Failed to get deployment metrics", 
+		o.logger.Error("Failed to get deployment metrics",
 			zap.String("tenant_id", tenantID),
 			zap.Error(err))
 	} else {
 		detailed.Metrics = metrics
 	}
-	
+
 	return detailed, nil
 }
 
 // getDeploymentEvents retrieves recent events for a tenant's deployment
 func (o *Orchestrator) getDeploymentEvents(ctx context.Context, tenantID, namespace string) ([]DeploymentEvent, error) {
 	// Get events for this deployment
-	fieldSelector := fmt.Sprintf("involvedObject.name=%s,involvedObject.namespace=%s", 
+	fieldSelector := fmt.Sprintf("involvedObject.name=%s,involvedObject.namespace=%s",
 		fmt.Sprintf("veloflux-%s", tenantID), namespace)
-	
+
 	events, err := o.kubeClient.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{
 		FieldSelector: fieldSelector,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list events: %w", err)
 	}
-	
+
 	var deploymentEvents []DeploymentEvent
 	for _, event := range events.Items {
 		deploymentEvents = append(deploymentEvents, DeploymentEvent{
@@ -874,7 +721,7 @@ func (o *Orchestrator) getDeploymentEvents(ctx context.Context, tenantID, namesp
 			LastSeen:  event.LastTimestamp.Time,
 		})
 	}
-	
+
 	return deploymentEvents, nil
 }
 
@@ -882,14 +729,14 @@ func (o *Orchestrator) getDeploymentEvents(ctx context.Context, tenantID, namesp
 func (o *Orchestrator) getPodStatuses(ctx context.Context, tenantID, namespace string) ([]PodStatus, error) {
 	// List pods for this deployment
 	labelSelector := fmt.Sprintf("app=veloflux,tenant_id=%s", tenantID)
-	
+
 	pods, err := o.kubeClient.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelSelector,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
-	
+
 	var podStatuses []PodStatus
 	for _, pod := range pods.Items {
 		var containerStatuses []ContainerStatus
@@ -901,51 +748,51 @@ func (o *Orchestrator) getPodStatuses(ctx context.Context, tenantID, namespace s
 				Started:      cs.Started != nil && *cs.Started,
 			})
 		}
-		
+
 		podStatuses = append(podStatuses, PodStatus{
-			Name:            pod.Name,
-			Status:          string(pod.Status.Phase),
-			CreationTime:    pod.CreationTimestamp.Time,
-			Containers:      containerStatuses,
-			NodeName:        pod.Spec.NodeName,
-			IP:              pod.Status.PodIP,
-			RestartPolicty:  string(pod.Spec.RestartPolicy),
+			Name:           pod.Name,
+			Status:         string(pod.Status.Phase),
+			CreationTime:   pod.CreationTimestamp.Time,
+			Containers:     containerStatuses,
+			NodeName:       pod.Spec.NodeName,
+			IP:             pod.Status.PodIP,
+			RestartPolicty: string(pod.Spec.RestartPolicy),
 		})
 	}
-	
+
 	return podStatuses, nil
 }
 
 // getDeploymentMetrics retrieves resource metrics for a tenant's deployment
 func (o *Orchestrator) getDeploymentMetrics(ctx context.Context, tenantID, namespace string) (DeploymentMetrics, error) {
 	metrics := DeploymentMetrics{}
-	
+
 	// This would typically use the Metrics API or Prometheus
 	// For now, we'll use a placeholder implementation
-	
+
 	// Get HPA if it exists to check utilization metrics
 	hpa, err := o.kubeClient.AutoscalingV2().HorizontalPodAutoscalers(namespace).Get(
 		ctx, fmt.Sprintf("veloflux-%s", tenantID), metav1.GetOptions{})
-	
+
 	if err == nil {
 		// Extract metrics from HPA status
 		for _, metric := range hpa.Status.CurrentMetrics {
-			if metric.Type == autoscalingv2.ResourceMetricSourceType && 
-			   metric.Resource != nil && 
-			   metric.Resource.Name == corev1.ResourceCPU && 
-			   metric.Resource.Current.AverageUtilization != nil {
+			if metric.Type == autoscalingv2.ResourceMetricSourceType &&
+				metric.Resource != nil &&
+				metric.Resource.Name == corev1.ResourceCPU &&
+				metric.Resource.Current.AverageUtilization != nil {
 				metrics.CPUUtilization = *metric.Resource.Current.AverageUtilization
 			}
-			
-			if metric.Type == autoscalingv2.ResourceMetricSourceType && 
-			   metric.Resource != nil && 
-			   metric.Resource.Name == corev1.ResourceMemory && 
-			   metric.Resource.Current.AverageUtilization != nil {
+
+			if metric.Type == autoscalingv2.ResourceMetricSourceType &&
+				metric.Resource != nil &&
+				metric.Resource.Name == corev1.ResourceMemory &&
+				metric.Resource.Current.AverageUtilization != nil {
 				metrics.MemoryUtilization = *metric.Resource.Current.AverageUtilization
 			}
 		}
 	}
-	
+
 	return metrics, nil
 }
 
@@ -953,8 +800,8 @@ func (o *Orchestrator) getDeploymentMetrics(ctx context.Context, tenantID, names
 type DetailedDeploymentStatus struct {
 	DeploymentStatus
 	Events  []DeploymentEvent `json:"events,omitempty"`
-	Metrics DeploymentMetrics  `json:"metrics,omitempty"`
-	Pods    []PodStatus        `json:"pods,omitempty"`
+	Metrics DeploymentMetrics `json:"metrics,omitempty"`
+	Pods    []PodStatus       `json:"pods,omitempty"`
 }
 
 // DeploymentEvent represents a Kubernetes event related to a deployment
@@ -1002,45 +849,45 @@ func (o *Orchestrator) ScaleTenantInstance(ctx context.Context, tenantID string,
 	if err != nil {
 		return fmt.Errorf("deployment not found: %w", err)
 	}
-	
+
 	// Only scale dedicated instances
 	if status.Mode != DedicatedMode {
 		return errors.New("can only scale dedicated instances")
 	}
-	
+
 	namespace := status.Namespace
-	
+
 	// Update deployment with new replica count
-	deployment, err := o.kubeClient.AppsV1().Deployments(namespace).Get(ctx, 
+	deployment, err := o.kubeClient.AppsV1().Deployments(namespace).Get(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get deployment: %w", err)
 	}
-	
+
 	// Update replicas
 	replicasInt32 := int32(replicas)
 	deployment.Spec.Replicas = &replicasInt32
-	
+
 	_, err = o.kubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to scale deployment: %w", err)
 	}
-	
+
 	// Update status
 	status.Status = "scaling"
 	status.LastUpdated = time.Now()
 	status.Message = fmt.Sprintf("Scaling to %d replicas", replicas)
-	
+
 	if err := o.saveDeploymentStatus(ctx, status); err != nil {
 		o.logger.Error("Failed to update deployment status",
 			zap.String("tenant_id", tenantID),
 			zap.Error(err))
 	}
-	
+
 	o.logger.Info("Scaled tenant instance",
 		zap.String("tenant_id", tenantID),
 		zap.Int("replicas", replicas))
-	
+
 	return nil
 }
 
@@ -1051,18 +898,18 @@ func (o *Orchestrator) UpdateAutoscalingConfig(ctx context.Context, tenantID str
 	if err != nil {
 		return fmt.Errorf("deployment not found: %w", err)
 	}
-	
+
 	// Only update dedicated instances
 	if status.Mode != DedicatedMode {
 		return errors.New("can only update autoscaling for dedicated instances")
 	}
-	
+
 	namespace := status.Namespace
-	
+
 	// Check if HPA exists
 	hpaName := fmt.Sprintf("veloflux-%s", tenantID)
 	_, err = o.kubeClient.AutoscalingV2().HorizontalPodAutoscalers(namespace).Get(ctx, hpaName, metav1.GetOptions{})
-	
+
 	if err != nil {
 		if errors.IsNotFound(err) && config.AutoscalingEnabled {
 			// Create new HPA
@@ -1070,7 +917,7 @@ func (o *Orchestrator) UpdateAutoscalingConfig(ctx context.Context, tenantID str
 		}
 		return fmt.Errorf("failed to check HPA: %w", err)
 	}
-	
+
 	// HPA exists
 	if !config.AutoscalingEnabled {
 		// Delete HPA
@@ -1110,19 +957,19 @@ func (o *Orchestrator) UpdateAutoscalingConfig(ctx context.Context, tenantID str
 				},
 			},
 		}
-		
+
 		_, err = o.kubeClient.AutoscalingV2().HorizontalPodAutoscalers(namespace).Update(ctx, hpa, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update HPA: %w", err)
 		}
 	}
-	
+
 	o.logger.Info("Updated autoscaling config for tenant",
 		zap.String("tenant_id", tenantID),
 		zap.Bool("enabled", config.AutoscalingEnabled),
 		zap.Int("minReplicas", config.MinReplicas),
 		zap.Int("maxReplicas", config.MaxReplicas))
-	
+
 	return nil
 }
 
@@ -1133,49 +980,49 @@ func (o *Orchestrator) DrainTenantInstance(ctx context.Context, tenantID string)
 	if err != nil {
 		return fmt.Errorf("deployment not found: %w", err)
 	}
-	
+
 	// Only drain dedicated instances
 	if status.Mode != DedicatedMode {
 		return errors.New("can only drain dedicated instances")
 	}
-	
+
 	namespace := status.Namespace
-	
+
 	// Update status
 	status.Status = "draining"
 	status.LastUpdated = time.Now()
 	status.Message = "Instance is being drained"
-	
+
 	if err := o.saveDeploymentStatus(ctx, status); err != nil {
 		o.logger.Error("Failed to update deployment status",
 			zap.String("tenant_id", tenantID),
 			zap.Error(err))
 	}
-	
+
 	// Add a drain annotation to the pods
 	deployment, err := o.kubeClient.AppsV1().Deployments(namespace).Get(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get deployment: %w", err)
 	}
-	
+
 	// Add drain annotation
 	if deployment.Spec.Template.Annotations == nil {
 		deployment.Spec.Template.Annotations = make(map[string]string)
 	}
-	
+
 	// Add drain timestamp to force pod recreation
 	deployment.Spec.Template.Annotations["veloflux.io/drain-timestamp"] = time.Now().Format(time.RFC3339)
-	
+
 	_, err = o.kubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to update deployment for drain: %w", err)
 	}
-	
+
 	o.logger.Info("Initiated drain for tenant instance",
 		zap.String("tenant_id", tenantID),
 		zap.String("namespace", namespace))
-	
+
 	return nil
 }
 
@@ -1186,21 +1033,21 @@ func (o *Orchestrator) UpdateResourceLimits(ctx context.Context, tenantID string
 	if err != nil {
 		return fmt.Errorf("deployment not found: %w", err)
 	}
-	
+
 	// Only update dedicated instances
 	if status.Mode != DedicatedMode {
 		return errors.New("can only update resource limits for dedicated instances")
 	}
-	
+
 	namespace := status.Namespace
-	
+
 	// Get the current deployment
 	deployment, err := o.kubeClient.AppsV1().Deployments(namespace).Get(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get deployment: %w", err)
 	}
-	
+
 	// Update resource requirements
 	for i := range deployment.Spec.Template.Spec.Containers {
 		if deployment.Spec.Template.Spec.Containers[i].Name == "veloflux" {
@@ -1211,7 +1058,7 @@ func (o *Orchestrator) UpdateResourceLimits(ctx context.Context, tenantID string
 			if limits.MemoryRequest != "" {
 				deployment.Spec.Template.Spec.Containers[i].Resources.Requests[corev1.ResourceMemory] = resource.MustParse(limits.MemoryRequest)
 			}
-			
+
 			// Update limits
 			if limits.CPULimit != "" {
 				deployment.Spec.Template.Spec.Containers[i].Resources.Limits[corev1.ResourceCPU] = resource.MustParse(limits.CPULimit)
@@ -1219,30 +1066,30 @@ func (o *Orchestrator) UpdateResourceLimits(ctx context.Context, tenantID string
 			if limits.MemoryLimit != "" {
 				deployment.Spec.Template.Spec.Containers[i].Resources.Limits[corev1.ResourceMemory] = resource.MustParse(limits.MemoryLimit)
 			}
-			
+
 			break
 		}
 	}
-	
+
 	// Update deployment
 	_, err = o.kubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to update deployment resource limits: %w", err)
 	}
-	
+
 	// Update tenant config
 	config, err := o.GetTenantConfig(ctx, tenantID)
 	if err == nil {
 		config.ResourceLimits = limits
 		o.SetTenantConfig(ctx, config)
 	}
-	
+
 	o.logger.Info("Updated resource limits for tenant instance",
 		zap.String("tenant_id", tenantID),
 		zap.String("cpu_request", limits.CPURequest),
 		zap.String("memory_request", limits.MemoryRequest),
 		zap.String("cpu_limit", limits.CPULimit),
 		zap.String("memory_limit", limits.MemoryLimit))
-	
+
 	return nil
 }
