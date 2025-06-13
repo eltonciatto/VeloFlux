@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -73,11 +73,11 @@ type ClusterResponse struct {
 }
 
 // New creates a new API server
-func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster, 
-	tenantManager *tenant.Manager, billingManager *billing.BillingManager, 
-	oidcManager *auth.OIDCManager, orchestrator *orchestration.Orchestrator, 
+func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster,
+	tenantManager *tenant.Manager, billingManager *billing.BillingManager,
+	oidcManager *auth.OIDCManager, orchestrator *orchestration.Orchestrator,
 	logger *zap.Logger) *API {
-	
+
 	a := &API{
 		config:         cfg,
 		balancer:       bal,
@@ -148,40 +148,40 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/pools", a.handleCreatePool).Methods("POST")
 	apiRouter.HandleFunc("/pools/{name}", a.handleUpdatePool).Methods("PUT")
 	apiRouter.HandleFunc("/pools/{name}", a.handleDeletePool).Methods("DELETE")
-	
+
 	apiRouter.HandleFunc("/backends", a.handleListBackends).Methods("GET")
 	apiRouter.HandleFunc("/backends/{id}", a.handleGetBackend).Methods("GET")
 	apiRouter.HandleFunc("/backends", a.handleAddBackend).Methods("POST")
 	apiRouter.HandleFunc("/backends/{id}", a.handleUpdateBackend).Methods("PUT")
 	apiRouter.HandleFunc("/backends/{id}", a.handleRemoveBackend).Methods("DELETE")
-	
+
 	apiRouter.HandleFunc("/routes", a.handleListRoutes).Methods("GET")
 	apiRouter.HandleFunc("/routes/{id}", a.handleGetRoute).Methods("GET")
 	apiRouter.HandleFunc("/routes", a.handleAddRoute).Methods("POST")
 	apiRouter.HandleFunc("/routes/{id}", a.handleUpdateRoute).Methods("PUT")
 	apiRouter.HandleFunc("/routes/{id}", a.handleDeleteRoute).Methods("DELETE")
-	
+
 	apiRouter.HandleFunc("/cluster", a.handleGetCluster).Methods("GET")
 	apiRouter.HandleFunc("/status", a.handleGetStatus).Methods("GET")
-	
+
 	// Tenant APIs
 	if a.tenantManager != nil {
 		tenantAPI := NewTenantAPI(a.tenantManager, a.logger)
 		tenantAPI.SetupRoutes(apiRouter)
 	}
-	
+
 	// Billing APIs
 	if a.billingManager != nil {
 		billingAPI := NewBillingAPI(a.billingManager, a.logger)
 		billingAPI.SetupRoutes(apiRouter)
 	}
-	
+
 	// OIDC APIs
 	if a.oidcManager != nil {
 		oidcAPI := NewOIDCAPI(a.oidcManager, a.tenantManager, a.logger)
 		oidcAPI.SetupRoutes(apiRouter)
 	}
-	
+
 	// Orchestration APIs
 	if a.orchestrator != nil {
 		orchestrationAPI := NewOrchestrationAPI(a.orchestrator, a.tenantManager, a.logger)
