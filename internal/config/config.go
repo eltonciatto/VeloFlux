@@ -8,13 +8,17 @@ import (
 )
 
 type Config struct {
-	Global  GlobalConfig  `yaml:"global"`
-	Pools   []Pool        `yaml:"pools"`
-	Routes  []Route       `yaml:"routes"`
-	Cluster ClusterConfig `yaml:"cluster"`
-	Auth    AuthConfig    `yaml:"auth"`
-	Tenants []Tenant      `yaml:"tenants"` // Tenant-specific configurations
-	API     APIConfig     `yaml:"api"`     // API server configuration
+	Global        GlobalConfig        `yaml:"global"`
+	Pools         []Pool              `yaml:"pools"`
+	Routes        []Route             `yaml:"routes"`
+	Cluster       ClusterConfig       `yaml:"cluster"`
+	Auth          AuthConfig          `yaml:"auth"`
+	Redis         RedisConfig         `yaml:"redis"`
+	Tenant        TenantConfig        `yaml:"tenant"`
+	Billing       BillingConfig       `yaml:"billing"`
+	Orchestration OrchestrationConfig `yaml:"orchestration"`
+	Tenants       []Tenant            `yaml:"tenants"` // Tenant-specific configurations
+	API           APIConfig           `yaml:"api"`     // API server configuration
 }
 
 // APIConfig holds configuration for the API server
@@ -103,16 +107,56 @@ type Route struct {
 	PathPrefix string `yaml:"path_prefix"`
 }
 
+// RedisConfig holds Redis configuration
+type RedisConfig struct {
+	Address  string `yaml:"address"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
+}
+
+// TenantConfig holds tenant-specific configuration
+type TenantConfig struct {
+	MultiTenant bool `yaml:"multi_tenant"`
+}
+
+// BillingConfig holds billing configuration
+type BillingConfig struct {
+	Provider            string `yaml:"provider"` // "stripe" or "gerencianet" 
+	Enabled             bool   `yaml:"enabled"`
+	StripeAPIKey        string `yaml:"stripe_api_key"`
+	StripeWebhookKey    string `yaml:"stripe_webhook_key"`
+	GerencianetClientID string `yaml:"gerencianet_client_id"`
+	GerencianetSecret   string `yaml:"gerencianet_secret"`
+	WebhookEndpoint     string `yaml:"webhook_endpoint"`
+	SuccessURL          string `yaml:"success_url"`
+	CancelURL           string `yaml:"cancel_url"`
+}
+
+// OrchestrationConfig holds orchestration configuration
+type OrchestrationConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	KubeConfig string `yaml:"kubeconfig"`
+}
+
 type AuthConfig struct {
-	Enabled        bool          `yaml:"enabled"`
-	JWTSecret      string        `yaml:"jwt_secret"`
-	JWTIssuer      string        `yaml:"jwt_issuer"`
-	JWTAudience    string        `yaml:"jwt_audience"`
-	TokenValidity  time.Duration `yaml:"token_validity"`
-	OIDCEnabled    bool          `yaml:"oidc_enabled"`
-	OIDCIssuerURL  string        `yaml:"oidc_issuer_url"`
-	OIDCClientID   string        `yaml:"oidc_client_id"`
+	Enabled         bool          `yaml:"enabled"`
+	JWTSecret       string        `yaml:"jwt_secret"`
+	JWTIssuer       string        `yaml:"jwt_issuer"`
+	JWTAudience     string        `yaml:"jwt_audience"`
+	TokenValidity   time.Duration `yaml:"token_validity"`
+	OIDCEnabled     bool          `yaml:"oidc_enabled"`
+	OIDCIssuerURL   string        `yaml:"oidc_issuer_url"`
+	OIDCClientID    string        `yaml:"oidc_client_id"`
 	OIDCRedirectURI string        `yaml:"oidc_redirect_uri"`
+	OIDC            OIDCConfig    `yaml:"oidc"`
+}
+
+// OIDCConfig holds OIDC-specific configuration
+type OIDCConfig struct {
+	Enabled     bool   `yaml:"enabled"`
+	IssuerURL   string `yaml:"issuer_url"`
+	ClientID    string `yaml:"client_id"`
+	RedirectURI string `yaml:"redirect_uri"`
 }
 
 type Tenant struct {

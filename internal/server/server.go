@@ -71,7 +71,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	}
 
 	// Initialize tenant manager
-	tenantManager := tenant.NewManager(cfg.Tenant, redisClient, logger)
+	tenantManager := tenant.NewManager(redisClient, logger)
 
 	// Initialize geo manager
 	geoManager, err := geo.New(cfg, logger)
@@ -92,17 +92,25 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	}
 
 	// Initialize billing manager
-	billingManager, err := billing.NewBillingManager(cfg.Billing, redisClient, tenantManager, logger)
-	if err != nil {
-		logger.Error("Failed to initialize billing manager", zap.Error(err))
-		// Don't return error, continue without billing
+	billingManager := billing.NewBillingManager(&cfg.Billing, redisClient, tenantManager, logger)
+	
+	// Initialize auth config for OIDC
+	authConfig := &auth.Config{
+		JWTSecret:       cfg.Auth.JWTSecret,
+		JWTIssuer:       cfg.Auth.JWTIssuer,
+		JWTAudience:     cfg.Auth.JWTAudience,
+		TokenValidity:   cfg.Auth.TokenValidity,
+		OIDCEnabled:     cfg.Auth.OIDC.Enabled,
+		OIDCIssuerURL:   cfg.Auth.OIDC.IssuerURL,
+		OIDCClientID:    cfg.Auth.OIDC.ClientID,
+		OIDCRedirectURI: cfg.Auth.OIDC.RedirectURI,
 	}
 
 	// Create authenticator used by tenant and OIDC APIs
 	authenticator := auth.New(&cfg.Auth, tenantManager, logger)
 
 	// Initialize OIDC manager
-	oidcManager, err := auth.NewOIDCManager(cfg.Auth.OIDC, redisClient, tenantManager, logger)
+	oidcManager, err := auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
 	if err != nil {
 		logger.Error("Failed to initialize OIDC manager", zap.Error(err))
 		// Don't return error, continue without OIDC
@@ -187,7 +195,17 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	// Initialize OIDC manager if configured
 	var oidcManager *auth.OIDCManager
 	if cfg.Auth.OIDC.Enabled {
-		oidcManager = auth.NewOIDCManager(&cfg.Auth, tenantManager, redisClient, logger)
+		authConfig := &auth.Config{
+			JWTSecret:       cfg.Auth.JWTSecret,
+			JWTIssuer:       cfg.Auth.JWTIssuer,
+			JWTAudience:     cfg.Auth.JWTAudience,
+			TokenValidity:   cfg.Auth.TokenValidity,
+			OIDCEnabled:     cfg.Auth.OIDC.Enabled,
+			OIDCIssuerURL:   cfg.Auth.OIDC.IssuerURL,
+			OIDCClientID:    cfg.Auth.OIDC.ClientID,
+			OIDCRedirectURI: cfg.Auth.OIDC.RedirectURI,
+		}
+		oidcManager = auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
 	}
 
 	// Initialize orchestrator if configured
