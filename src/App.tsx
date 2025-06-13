@@ -6,8 +6,10 @@ import Index from '@/pages/Index';
 import { Dashboard } from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
 import Login from '@/pages/Login';
+import Register from '@/pages/Register';
 import Admin from '@/pages/Admin';
 import Profile from '@/pages/Profile';
+import TenantManagement from '@/pages/TenantManagement';
 import { AuthProvider } from '@/hooks/use-auth';
 import { RequireAuth } from '@/components/RequireAuth';
 
@@ -21,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route
               path="/dashboard"
               element={
@@ -42,6 +45,14 @@ function App() {
               element={
                 <RequireAuth>
                   <Profile />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/tenants"
+              element={
+                <RequireAuth>
+                  <TenantManagement />
                 </RequireAuth>
               }
             />

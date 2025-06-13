@@ -43,6 +43,21 @@ export const Login = () => {
           <Input value={user} onChange={(e) => setUser(e.target.value)} placeholder="Username" className="bg-white/10 border-white/20 text-white" />
           <Input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Password" className="bg-white/10 border-white/20 text-white" />
           <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Login</Button>
+          <div className="text-center mt-4">
+            <p className="text-blue-200">
+              Need an account?{" "}
+              <a 
+                href="/register" 
+                className="text-blue-400 hover:text-blue-300 hover:underline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/register');
+                }}
+              >
+                Sign up
+              </a>
+            </p>
+          </div>
         </form>
       </Card>
     </div>

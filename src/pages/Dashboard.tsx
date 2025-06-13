@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackendOverview } from '@/components/dashboard/BackendOverview';
@@ -8,10 +8,38 @@ import { MetricsView } from '@/components/dashboard/MetricsView';
 import { ConfigManager } from '@/components/dashboard/ConfigManager';
 import { BackendManager } from '@/components/dashboard/BackendManager';
 import { ClusterStatus } from '@/components/dashboard/ClusterStatus';
-import { Activity, Server, BarChart3, Settings, Users, Crown } from 'lucide-react';
+import WAFConfig from '@/components/dashboard/WAFConfig';
+import RateLimitConfig from '@/components/dashboard/RateLimitConfig';
+import { Activity, Server, BarChart3, Settings, Users, Crown, Shield, Gauge } from 'lucide-react';
 import Header from '@/components/Header';
+import { useAuth } from '@/hooks/use-auth';
 
 export const Dashboard = () => {
+  const { user } = useAuth();
+  const [selectedTenantId, setSelectedTenantId] = useState<string | undefined>(undefined);
+  
+  // Listen for tenant selection changes
+  useEffect(() => {
+    const storedTenantId = localStorage.getItem('vf_selected_tenant');
+    if (storedTenantId) {
+      setSelectedTenantId(storedTenantId);
+    } else if (user?.tenant_id) {
+      setSelectedTenantId(user.tenant_id);
+    }
+    
+    // Event listener for tenant changes
+    const handleTenantChange = (event: StorageEvent) => {
+      if (event.key === 'vf_selected_tenant') {
+        setSelectedTenantId(event.newValue || undefined);
+      }
+    };
+    
+    window.addEventListener('storage', handleTenantChange);
+    return () => {
+      window.removeEventListener('storage', handleTenantChange);
+    };
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <Header />
@@ -22,7 +50,7 @@ export const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-white/10 border-white/20">
+          <TabsList className="bg-white/10 border-white/20 overflow-x-auto scrollbar-hide flex">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Server className="w-4 h-4" />
               Overview
@@ -42,6 +70,14 @@ export const Dashboard = () => {
             <TabsTrigger value="backends" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Backends
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="ratelimit" className="flex items-center gap-2">
+              <Gauge className="w-4 h-4" />
+              Rate Limiting
             </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -67,6 +103,14 @@ export const Dashboard = () => {
 
           <TabsContent value="backends">
             <BackendManager />
+          </TabsContent>
+          
+          <TabsContent value="security">
+            <WAFConfig tenantId={selectedTenantId} />
+          </TabsContent>
+          
+          <TabsContent value="ratelimit">
+            <RateLimitConfig tenantId={selectedTenantId} />
           </TabsContent>
 
           <TabsContent value="config">
