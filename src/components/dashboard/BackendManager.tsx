@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Save, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useBackends, useAddBackend, useDeleteBackend } from '@/hooks/use-api';
 
 interface Backend {
   id: string;
@@ -20,24 +21,9 @@ interface Backend {
 
 export const BackendManager = () => {
   const { toast } = useToast();
-  const [backends, setBackends] = useState<Backend[]>([
-    {
-      id: 'backend-1',
-      address: 'backend-1:80',
-      pool: 'web-servers',
-      weight: 100,
-      region: 'us-east-1',
-      status: 'healthy'
-    },
-    {
-      id: 'backend-2',
-      address: 'backend-2:80',
-      pool: 'web-servers',
-      weight: 100,
-      region: 'us-west-1',
-      status: 'healthy'
-    }
-  ]);
+  const { data: backends = [], refetch } = useBackends();
+  const addBackendMutation = useAddBackend();
+  const deleteBackendMutation = useDeleteBackend();
 
   const [newBackend, setNewBackend] = useState({
     address: '',
@@ -46,49 +32,55 @@ export const BackendManager = () => {
     region: 'us-east-1'
   });
 
-  const addBackend = () => {
+  const addBackend = async () => {
     if (!newBackend.address) {
       toast({
-        title: "Error",
-        description: "Backend address is required",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Backend address is required',
+        variant: 'destructive',
       });
       return;
     }
 
-    const backend: Backend = {
-      id: `backend-${Date.now()}`,
-      ...newBackend,
-      status: 'unknown'
-    };
-
-    setBackends([...backends, backend]);
-    setNewBackend({
-      address: '',
-      pool: 'web-servers',
-      weight: 100,
-      region: 'us-east-1'
-    });
-
-    toast({
-      title: "Backend Added",
-      description: `Successfully added ${backend.address}`,
-    });
+    try {
+      await addBackendMutation.mutateAsync({
+        pool: newBackend.pool,
+        backend: {
+          address: newBackend.address,
+          weight: newBackend.weight,
+          region: newBackend.region,
+        },
+      });
+      setNewBackend({
+        address: '',
+        pool: 'web-servers',
+        weight: 100,
+        region: 'us-east-1',
+      });
+      toast({ title: 'Backend Added' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    }
   };
 
-  const removeBackend = (id: string) => {
-    setBackends(backends.filter(b => b.id !== id));
-    toast({
-      title: "Backend Removed",
-      description: "Backend has been removed from the pool",
-    });
+  const removeBackend = async (b: Backend) => {
+    try {
+      await deleteBackendMutation.mutateAsync({
+        pool: b.pool,
+        address: b.address,
+      });
+      toast({ title: 'Backend Removed' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    }
   };
 
   const saveConfiguration = () => {
-    // Here we would typically send the configuration to the backend
     toast({
-      title: "Configuration Saved",
-      description: "Backend configuration has been updated",
+      title: 'Configuration Saved',
+      description: 'Backend configuration has been updated',
     });
   };
 
@@ -173,7 +165,7 @@ export const BackendManager = () => {
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <h3 className="text-xl font-bold text-white">Configured Backends</h3>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+            <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => refetch()}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -208,7 +200,7 @@ export const BackendManager = () => {
                     size="sm" 
                     variant="outline" 
                     className="border-red-400/30 text-red-300 hover:bg-red-600/20"
-                    onClick={() => removeBackend(backend.id)}
+                    onClick={() => removeBackend(backend)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
