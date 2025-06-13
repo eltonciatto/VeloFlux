@@ -13,32 +13,11 @@ import RateLimitConfig from '@/components/dashboard/RateLimitConfig';
 import { Activity, Server, BarChart3, Settings, Users, Crown, Shield, Gauge } from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/use-auth';
+import { useTenant } from '@/hooks/use-tenant';
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const [selectedTenantId, setSelectedTenantId] = useState<string | undefined>(undefined);
-  
-  // Listen for tenant selection changes
-  useEffect(() => {
-    const storedTenantId = localStorage.getItem('vf_selected_tenant');
-    if (storedTenantId) {
-      setSelectedTenantId(storedTenantId);
-    } else if (user?.tenant_id) {
-      setSelectedTenantId(user.tenant_id);
-    }
-    
-    // Event listener for tenant changes
-    const handleTenantChange = (event: StorageEvent) => {
-      if (event.key === 'vf_selected_tenant') {
-        setSelectedTenantId(event.newValue || undefined);
-      }
-    };
-    
-    window.addEventListener('storage', handleTenantChange);
-    return () => {
-      window.removeEventListener('storage', handleTenantChange);
-    };
-  }, [user]);
+  const { selectedTenantId } = useTenant();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">

@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
+import { useTenant } from '@/hooks/use-tenant';
 import { apiFetch } from '@/lib/api';
 
 interface Tenant {
@@ -21,6 +22,7 @@ interface TenantSelectorProps {
 
 export const TenantSelector: React.FC<TenantSelectorProps> = ({ onTenantChange }) => {
   const { user } = useAuth();
+  const { selectedTenantId, setSelectedTenantId } = useTenant();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,24 +49,16 @@ export const TenantSelector: React.FC<TenantSelectorProps> = ({ onTenantChange }
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchTenants();
-  }, [user]);
-  const handleTenantSelect = (tenant: Tenant) => {
+  }, [user, selectedTenantId]);  const handleTenantSelect = (tenant: Tenant) => {
     setCurrentTenant(tenant);
+    // Update tenant context
+    setSelectedTenantId(tenant.id);
+    
     if (onTenantChange) {
       onTenantChange(tenant.id);
     }
-    // Save selected tenant to localStorage for persistence
-    localStorage.setItem('vf_selected_tenant', tenant.id);
-    
-    // Dispatch storage event to notify other components
-    const event = new StorageEvent('storage', {
-      key: 'vf_selected_tenant',
-      newValue: tenant.id
-    });
-    window.dispatchEvent(event);
   };
 
   if (loading) {

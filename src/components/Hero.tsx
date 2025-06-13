@@ -40,9 +40,20 @@ export const Hero = () => {
             <BarChart3 className="w-5 h-5 mr-2" />
             Open Dashboard
           </Button>
-          <Button variant="outline" className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20 px-8 py-3 text-lg">
-            <Globe className="w-5 h-5 mr-2" />
-            View Documentation
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+            onClick={() => navigate('/register')}
+          >
+            <Shield className="w-5 h-5 mr-2" />
+            Sign Up
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20 px-8 py-3 text-lg"
+            onClick={() => navigate('/login')}
+          >
+            <Box className="w-5 h-5 mr-2" />
+            Login
           </Button>
         </div>
 

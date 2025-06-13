@@ -10,7 +10,9 @@ import Register from '@/pages/Register';
 import Admin from '@/pages/Admin';
 import Profile from '@/pages/Profile';
 import TenantManagement from '@/pages/TenantManagement';
+import UserManager from '@/pages/UserManager';
 import { AuthProvider } from '@/hooks/use-auth';
+import { TenantProvider } from '@/hooks/use-tenant';
 import { RequireAuth } from '@/components/RequireAuth';
 
 const queryClient = new QueryClient();
@@ -19,8 +21,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Routes>
+        <TenantProvider>
+          <Router>
+            <Toaster position="top-right" />
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -59,7 +63,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
-        <Toaster />
+        </TenantProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
