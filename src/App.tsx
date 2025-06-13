@@ -11,6 +11,7 @@ import Admin from '@/pages/Admin';
 import Profile from '@/pages/Profile';
 import TenantManagement from '@/pages/TenantManagement';
 import UserManager from '@/pages/UserManager';
+import Docs from '@/pages/Docs';
 import { AuthProvider } from '@/hooks/use-auth';
 import { TenantProvider } from '@/hooks/use-tenant';
 import { RequireAuth } from '@/components/RequireAuth';
@@ -26,6 +27,7 @@ function App() {
             <Toaster position="top-right" />
             <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/docs" element={<Docs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

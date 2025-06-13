@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, Zap, Shield, Globe, Activity, Box, BarChart3 } from 'lucide-react';
+import { Cloud, Zap, Shield, Globe, Activity, Box, BarChart3, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Hero = () => {
@@ -39,6 +39,13 @@ export const Hero = () => {
           >
             <BarChart3 className="w-5 h-5 mr-2" />
             Open Dashboard
+          </Button>
+          <Button 
+            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg"
+            onClick={() => navigate('/docs')}
+          >
+            <BookOpen className="w-5 h-5 mr-2" />
+            Documentação
           </Button>
           <Button 
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
