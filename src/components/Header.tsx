@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 
@@ -9,9 +10,9 @@ export const Header: React.FC = () => {
       <div className="font-bold text-white">VeloFlux LB</div>
       <div className="flex items-center gap-4">
         {user && (
-          <span className="text-sm">
+          <Link to="/profile" className="text-sm hover:underline">
             {user.first_name} {user.last_name}
-          </span>
+          </Link>
         )}
         <Button size="sm" variant="outline" className="border-white/20" onClick={logout}>
           Logout

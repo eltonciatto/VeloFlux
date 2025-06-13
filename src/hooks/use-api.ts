@@ -22,6 +22,12 @@ export function useConfig() {
   });
 }
 
+export function useReloadConfig() {
+  return useMutation({
+    mutationFn: () => apiFetch('/api/reload', { method: 'POST' }),
+  });
+}
+
 export interface BackendInput {
   address: string;
   weight: number;

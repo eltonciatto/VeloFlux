@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, RefreshCw, Settings, Shield, Globe } from 'lucide-react';
-import { useConfig } from '@/hooks/use-api';
+import { useConfig, useReloadConfig } from '@/hooks/use-api';
+import { useToast } from '@/hooks/use-toast';
 
 interface Backend {
   address: string;
@@ -32,7 +33,9 @@ interface Config {
 }
 
 export const ConfigManager = () => {
-  const { data } = useConfig();
+  const { data, refetch } = useConfig();
+  const reloadMutation = useReloadConfig();
+  const { toast } = useToast();
   const [config, setConfig] = useState<Config>(
     (data as Config) || {
       global: {
@@ -90,7 +93,20 @@ pools:
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Configuration Management</h2>
         <div className="flex gap-3">
-          <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+            onClick={async () => {
+              try {
+                await reloadMutation.mutateAsync();
+                await refetch();
+                toast({ title: 'Configuration reloaded' });
+              } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                toast({ title: 'Error', description: message, variant: 'destructive' });
+              }
+            }}
+          >
             <RefreshCw className="w-4 h-4 mr-2" />
             Reload Config
           </Button>

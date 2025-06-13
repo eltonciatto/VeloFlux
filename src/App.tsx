@@ -7,6 +7,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
 import Login from '@/pages/Login';
 import Admin from '@/pages/Admin';
+import Profile from '@/pages/Profile';
 import { AuthProvider } from '@/hooks/use-auth';
 import { RequireAuth } from '@/components/RequireAuth';
 
@@ -33,6 +34,14 @@ function App() {
               element={
                 <RequireAuth>
                   <Admin />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth>
+                  <Profile />
                 </RequireAuth>
               }
             />

@@ -15,6 +15,7 @@ interface AuthContextProps {
   user: UserInfo | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (first: string, last: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -63,6 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchProfile(newToken);
   };
 
+  const updateProfile = async (first: string, last: string) => {
+    const updated = await apiFetch('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ first_name: first, last_name: last }),
+    });
+    localStorage.setItem('vf_user', JSON.stringify(updated));
+    setUser(updated as UserInfo);
+  };
+
   const logout = () => {
     localStorage.removeItem('vf_token');
     localStorage.removeItem('vf_user');
@@ -71,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
