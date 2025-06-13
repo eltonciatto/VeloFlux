@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { TokenService } from '@/lib/tokenService';
+import { safeApiFetch } from '@/lib/csrfToken';
 
 interface UserInfo {
   user_id: string;
@@ -16,20 +18,23 @@ interface AuthContextProps {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (first: string, last: string) => Promise<void>;
+  refreshToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const [token, setToken] = useState<string | null>(TokenService.getToken());
+  const [user, setUser] = useState<UserInfo | null>(TokenService.getUserInfo());
+  const [loginAttempts, setLoginAttempts] = useState<Record<string, number>>({});
+  const [lastLoginAttempt, setLastLoginAttempt] = useState<Record<string, number>>({});
 
   const fetchProfile = async (tok: string) => {
     try {
-      const profile = await apiFetch('/api/profile', {
+      const profile = await safeApiFetch('/api/profile', {
         headers: { Authorization: `Bearer ${tok}` },
       });
-      localStorage.setItem('vf_user', JSON.stringify(profile));
+      TokenService.setUserInfo(profile);
       setUser(profile as UserInfo);
     } catch {
       logout();
@@ -37,51 +42,111 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem('vf_token');
-    const storedUser = localStorage.getItem('vf_user');
-    if (stored) {
-      setToken(stored);
+    const storedToken = TokenService.getToken();
+    const storedUser = TokenService.getUserInfo();
+    
+    if (storedToken) {
+      setToken(storedToken);
       if (storedUser) {
         try {
-          setUser(JSON.parse(storedUser));
+          setUser(storedUser);
         } catch {
-          fetchProfile(stored);
+          fetchProfile(storedToken);
         }
       } else {
-        fetchProfile(stored);
+        fetchProfile(storedToken);
       }
     }
+    
+    // Set up token refresh interval
+    const refreshInterval = setInterval(() => {
+      if (storedToken) {
+        refreshToken();
+      }
+    }, 10 * 60 * 1000); // Refresh every 10 minutes
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    const { token: newToken } = res as { token: string };
-    localStorage.setItem('vf_token', newToken);
-    setToken(newToken);
-    await fetchProfile(newToken);
+    // Implement login throttling
+    const now = Date.now();
+    const recentAttempts = loginAttempts[email] || 0;
+    const lastAttempt = lastLoginAttempt[email] || 0;
+    
+    // If too many recent attempts, block temporarily
+    if (recentAttempts >= 5 && now - lastAttempt < 15 * 60 * 1000) { // 15 minutes lockout
+      throw new Error('Too many login attempts. Please try again later.');
+    }
+    
+    try {
+      const res = await safeApiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      const { token: newToken } = res as { token: string };
+      
+      // Reset login attempts on success
+      setLoginAttempts(prev => ({
+        ...prev,
+        [email]: 0
+      }));
+      
+      TokenService.setToken(newToken);
+      setToken(newToken);
+      await fetchProfile(newToken);
+    } catch (error) {
+      // Increment failed login attempts
+      setLoginAttempts(prev => ({
+        ...prev,
+        [email]: (prev[email] || 0) + 1
+      }));
+      
+      setLastLoginAttempt(prev => ({
+        ...prev,
+        [email]: now
+      }));
+      
+      throw error;
+    }
+  };
+
+  const refreshToken = async (): Promise<boolean> => {
+    try {
+      if (!token) return false;
+      
+      const res = await safeApiFetch('/auth/refresh', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const { token: newToken } = res as { token: string };
+      TokenService.setToken(newToken);
+      setToken(newToken);
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh token', error);
+      return false;
+    }
   };
 
   const updateProfile = async (first: string, last: string) => {
-    const updated = await apiFetch('/api/profile', {
+    const updated = await safeApiFetch('/api/profile', {
       method: 'PUT',
       body: JSON.stringify({ first_name: first, last_name: last }),
     });
-    localStorage.setItem('vf_user', JSON.stringify(updated));
+    TokenService.setUserInfo(updated);
     setUser(updated as UserInfo);
   };
 
   const logout = () => {
-    localStorage.removeItem('vf_token');
-    localStorage.removeItem('vf_user');
+    TokenService.clearAll();
     setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateProfile, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );
