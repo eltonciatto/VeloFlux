@@ -16,6 +16,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -323,9 +324,8 @@ func (o *Orchestrator) createDedicatedInstance(ctx context.Context, tenantID str
 	if err != nil {
 		return err
 	}
-	
-	// Get tenant details
-	tenant, err := o.tenantManager.GetTenant(ctx, tenantID)
+		// Check if tenant exists
+	_, err = o.tenantManager.GetTenant(ctx, tenantID)
 	if err != nil {
 		return err
 	}
