@@ -13,33 +13,40 @@ import (
 
 // OIDCHandlers handles OIDC-related API endpoints
 type OIDCHandlers struct {
-	logger         *zap.Logger
-	oidcManager    *auth.OIDCManager
-	authenticator  *auth.Authenticator
-	tenantManager  *tenant.Manager
+	logger        *zap.Logger
+	oidcManager   *auth.OIDCManager
+	authenticator *auth.Authenticator
+	tenantManager *tenant.Manager
 }
 
 // NewOIDCHandlers creates a new OIDC API handler
 func NewOIDCHandlers(oidcManager *auth.OIDCManager, authenticator *auth.Authenticator, tenantManager *tenant.Manager, logger *zap.Logger) *OIDCHandlers {
 	return &OIDCHandlers{
-		logger:         logger,
-		oidcManager:    oidcManager,
-		authenticator:  authenticator,
-		tenantManager:  tenantManager,
+		logger:        logger,
+		oidcManager:   oidcManager,
+		authenticator: authenticator,
+		tenantManager: tenantManager,
 	}
+}
+
+// Handler returns the HTTP handler for the OIDC API.
+func (h *OIDCHandlers) Handler() http.Handler {
+	r := mux.NewRouter()
+	h.SetupRoutes(r)
+	return r
 }
 
 // SetupRoutes sets up the routes for OIDC API
 func (h *OIDCHandlers) SetupRoutes(router *mux.Router) {
 	// Public endpoints
 	router.HandleFunc("/auth/oidc/callback", h.handleCallback).Methods("GET")
-	
+
 	// Tenant-specific protected endpoints
 	tenantRouter := router.PathPrefix("/api/tenants/{tenant_id}").Subrouter()
 	tenantRouter.Use(h.authenticator.TenantMiddleware)
 	tenantRouter.HandleFunc("/oidc/config", h.handleGetOIDCConfig).Methods("GET")
 	tenantRouter.HandleFunc("/oidc/config", h.handleSetOIDCConfig).Methods("PUT")
-	
+
 	// Login endpoints
 	router.HandleFunc("/auth/oidc/login/{tenant_id}", h.handleOIDCLogin).Methods("GET")
 }
@@ -49,13 +56,13 @@ func (h *OIDCHandlers) handleOIDCLogin(w http.ResponseWriter, r *http.Request) {
 	// Extract tenant ID from path
 	vars := mux.Vars(r)
 	tenantID := vars["tenant_id"]
-	
+
 	// Get the return URL from query parameter
 	returnURL := r.URL.Query().Get("return_url")
 	if returnURL == "" {
 		returnURL = "/"
 	}
-	
+
 	// Create authorization URL
 	authURL, err := h.oidcManager.CreateAuthURL(r.Context(), tenantID, returnURL)
 	if err != nil {
@@ -63,7 +70,7 @@ func (h *OIDCHandlers) handleOIDCLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to initiate login", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Redirect to authorization URL
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
@@ -75,25 +82,25 @@ func (h *OIDCHandlers) handleCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	providerError := r.URL.Query().Get("error")
 	providerErrorDescription := r.URL.Query().Get("error_description")
-	
+
 	if providerError != "" {
-		h.logger.Error("Provider error", 
+		h.logger.Error("Provider error",
 			zap.String("error", providerError),
 			zap.String("description", providerErrorDescription))
 		http.Error(w, "Authentication failed: "+providerErrorDescription, http.StatusBadRequest)
 		return
 	}
-	
+
 	if state == "" || code == "" {
 		http.Error(w, "Invalid request: missing state or code parameter", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Process callback
 	userInfo, returnURL, err := h.oidcManager.HandleCallback(r.Context(), state, code)
 	if err != nil {
 		h.logger.Error("Failed to handle callback", zap.Error(err))
-		
+
 		// Show better error page
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Header().Set("Content-Type", "text/html")
@@ -111,7 +118,7 @@ func (h *OIDCHandlers) handleCallback(w http.ResponseWriter, r *http.Request) {
 		`))
 		return
 	}
-	
+
 	// Generate JWT token
 	token, err := h.authenticator.GenerateToken(userInfo)
 	if err != nil {
@@ -119,7 +126,7 @@ func (h *OIDCHandlers) handleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to generate authentication token", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Set token as cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
@@ -130,12 +137,12 @@ func (h *OIDCHandlers) handleCallback(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		Secure:   r.TLS != nil,
 	})
-	
+
 	// Redirect to original URL
 	if returnURL == "" {
 		returnURL = "/"
 	}
-	
+
 	http.Redirect(w, r, returnURL, http.StatusFound)
 }
 
@@ -144,7 +151,7 @@ func (h *OIDCHandlers) handleGetOIDCConfig(w http.ResponseWriter, r *http.Reques
 	// Extract tenant ID from path
 	vars := mux.Vars(r)
 	tenantID := vars["tenant_id"]
-	
+
 	// Get OIDC configuration
 	config, err := h.oidcManager.GetOIDCConfig(r.Context(), tenantID)
 	if err != nil {
@@ -157,12 +164,12 @@ func (h *OIDCHandlers) handleGetOIDCConfig(w http.ResponseWriter, r *http.Reques
 			})
 			return
 		}
-		
+
 		h.logger.Error("Failed to get OIDC config", zap.Error(err))
 		http.Error(w, "Failed to get OIDC configuration", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Return configuration
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -174,7 +181,7 @@ func (h *OIDCHandlers) handleSetOIDCConfig(w http.ResponseWriter, r *http.Reques
 	// Extract tenant ID from path
 	vars := mux.Vars(r)
 	tenantID := vars["tenant_id"]
-	
+
 	// Parse request body
 	var config auth.OIDCConfig
 	err := json.NewDecoder(r.Body).Decode(&config)
@@ -182,7 +189,7 @@ func (h *OIDCHandlers) handleSetOIDCConfig(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Set OIDC configuration
 	err = h.oidcManager.SetOIDCConfig(r.Context(), tenantID, &config)
 	if err != nil {
@@ -190,7 +197,7 @@ func (h *OIDCHandlers) handleSetOIDCConfig(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Failed to update OIDC configuration", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Return success
 	w.WriteHeader(http.StatusOK)
 }

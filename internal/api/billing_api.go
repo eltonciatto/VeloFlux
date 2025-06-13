@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/eltonciatto/veloflux/internal/billing"
@@ -33,6 +35,11 @@ func NewBillingAPI(billingManager *billing.BillingManager, tenantManager *tenant
 	api.setupRoutes()
 
 	return api
+}
+
+// Handler returns the HTTP handler for the billing API.
+func (api *BillingAPI) Handler() http.Handler {
+	return api.router
 }
 
 // setupRoutes configures the billing API routes
@@ -233,8 +240,8 @@ func (api *BillingAPI) handleExportBilling(w http.ResponseWriter, r *http.Reques
 
 	// Parse dates
 	startDate := time.Now().AddDate(0, -1, 0) // Default to one month ago
-	endDate := time.Now()                    // Default to now
-	
+	endDate := time.Now()                     // Default to now
+
 	// If year/month parameters are provided (backward compatibility)
 	yearStr := r.URL.Query().Get("year")
 	monthStr := r.URL.Query().Get("month")
@@ -253,7 +260,7 @@ func (api *BillingAPI) handleExportBilling(w http.ResponseWriter, r *http.Reques
 				startDate = parsedStartDate
 			}
 		}
-		
+
 		if endDateStr != "" {
 			parsedEndDate, err := time.Parse("2006-01-02", endDateStr)
 			if err == nil {
@@ -261,13 +268,13 @@ func (api *BillingAPI) handleExportBilling(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	}
-	
+
 	// Parse include raw option
 	includeRaw := false
 	if includeRawStr == "true" {
 		includeRaw = true
 	}
-	
+
 	// Create export options
 	options := billing.ExportOptions{
 		Format:     billing.ExportFormat(format),
@@ -275,7 +282,7 @@ func (api *BillingAPI) handleExportBilling(w http.ResponseWriter, r *http.Reques
 		EndDate:    endDate,
 		IncludeRaw: includeRaw,
 	}
-	
+
 	// Export billing data
 	data, contentType, err := api.billingManager.ExportBillingData(r.Context(), tenantID, options)
 	if err != nil {
@@ -283,19 +290,19 @@ func (api *BillingAPI) handleExportBilling(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Failed to export billing data", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Set filename based on tenant ID and format
-	filename := fmt.Sprintf("veloflux_billing_%s_%s_to_%s.%s", 
-		tenantID, 
-		startDate.Format("20060102"), 
-		endDate.Format("20060102"), 
+	filename := fmt.Sprintf("veloflux_billing_%s_%s_to_%s.%s",
+		tenantID,
+		startDate.Format("20060102"),
+		endDate.Format("20060102"),
 		strings.ToLower(string(options.Format)))
-	
+
 	// Set headers
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
-	
+
 	// Write response
 	w.Write(data)
 }

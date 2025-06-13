@@ -25,21 +25,21 @@ import (
 )
 
 type Server struct {
-	config        *config.Config
-	logger        *zap.Logger
-	balancer      *balancer.Balancer
-	router        *router.Router
-	healthCheck   *health.Checker
-	httpServer    *http.Server
-	httpsServer   *http.Server
-	metricsServer *http.Server
-	apiServer     *api.API
-	adminServer   *admin.Server
-	cluster       *clustering.Cluster
-	geoManager    *geo.Manager
+	config         *config.Config
+	logger         *zap.Logger
+	balancer       *balancer.Balancer
+	router         *router.Router
+	healthCheck    *health.Checker
+	httpServer     *http.Server
+	httpsServer    *http.Server
+	metricsServer  *http.Server
+	apiServer      *api.API
+	adminServer    *admin.Server
+	cluster        *clustering.Cluster
+	geoManager     *geo.Manager
 	billingManager *billing.BillingManager
-	oidcManager   *auth.OIDCManager
-	orchestrator  *orchestration.Orchestrator
+	oidcManager    *auth.OIDCManager
+	orchestrator   *orchestration.Orchestrator
 }
 
 func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
@@ -62,14 +62,14 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		DB:       cfg.Redis.DB,
 	}
 	redisClient := redis.NewClient(redisOpts)
-	
+
 	// Test Redis connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
-	
+
 	// Initialize tenant manager
 	tenantManager := tenant.NewManager(cfg.Tenant, redisClient, logger)
 
@@ -97,14 +97,17 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		logger.Error("Failed to initialize billing manager", zap.Error(err))
 		// Don't return error, continue without billing
 	}
-	
+
+	// Create authenticator used by tenant and OIDC APIs
+	authenticator := auth.New(&cfg.Auth, tenantManager, logger)
+
 	// Initialize OIDC manager
 	oidcManager, err := auth.NewOIDCManager(cfg.Auth.OIDC, redisClient, tenantManager, logger)
 	if err != nil {
 		logger.Error("Failed to initialize OIDC manager", zap.Error(err))
 		// Don't return error, continue without OIDC
 	}
-	
+
 	// Initialize orchestration manager
 	orchestrator, err := orchestration.NewOrchestrator(&cfg.Orchestration, redisClient, tenantManager, logger)
 	if err != nil {
@@ -197,7 +200,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	}
 
 	// Create API server
-	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, oidcManager, orchestrator, logger)
+	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, authenticator, oidcManager, orchestrator, logger)
 
 	// Create Admin server
 	adminServer := admin.New(cfg, bal, clusterManager, logger)
@@ -213,11 +216,11 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		billingManager: billingManager,
 		oidcManager:    oidcManager,
 		orchestrator:   orchestrator,
-		metricsServer: metricsServer,
-		apiServer:     apiServer,
-		adminServer:   adminServer,
-		cluster:       clusterManager,
-		geoManager:    geoManager,
+		metricsServer:  metricsServer,
+		apiServer:      apiServer,
+		adminServer:    adminServer,
+		cluster:        clusterManager,
+		geoManager:     geoManager,
 	}, nil
 }
 

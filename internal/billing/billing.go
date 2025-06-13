@@ -628,6 +628,13 @@ func getLimitForPlan(plan tenant.PlanType, resource string) int64 {
 	return 0
 }
 
+// GetLimitForPlan exposes the included resource limit for a plan. This is a
+// thin wrapper around the internal helper so other packages (like the API
+// layer) can query plan limits without duplicating the logic.
+func (m *BillingManager) GetLimitForPlan(plan tenant.PlanType, resource string) int64 {
+	return getLimitForPlan(plan, resource)
+}
+
 // getOverage calculates resource usage overage
 func getOverage(plan tenant.PlanType, resource string, usage int64) int64 {
 	limit := getLimitForPlan(plan, resource)

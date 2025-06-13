@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,6 +31,7 @@ type API struct {
 	configMu       sync.RWMutex
 	tenantManager  *tenant.Manager
 	billingManager *billing.BillingManager
+	authenticator  *auth.Authenticator
 	oidcManager    *auth.OIDCManager
 	orchestrator   *orchestration.Orchestrator
 }
@@ -75,8 +75,8 @@ type ClusterResponse struct {
 // New creates a new API server
 func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster,
 	tenantManager *tenant.Manager, billingManager *billing.BillingManager,
-	oidcManager *auth.OIDCManager, orchestrator *orchestration.Orchestrator,
-	logger *zap.Logger) *API {
+	authenticator *auth.Authenticator, oidcManager *auth.OIDCManager,
+	orchestrator *orchestration.Orchestrator, logger *zap.Logger) *API {
 
 	a := &API{
 		config:         cfg,
@@ -86,6 +86,7 @@ func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster,
 		router:         mux.NewRouter(),
 		tenantManager:  tenantManager,
 		billingManager: billingManager,
+		authenticator:  authenticator,
 		oidcManager:    oidcManager,
 		orchestrator:   orchestrator,
 	}
@@ -172,27 +173,29 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/status", a.handleGetConfig).Methods("GET")
 
 	// Tenant APIs
-	if a.tenantManager != nil {
-		tenantAPI := NewTenantAPI(a.tenantManager, a.logger)
-		tenantAPI.SetupRoutes(apiRouter)
+	if a.tenantManager != nil && a.authenticator != nil {
+		tenantAPI := NewTenantAPI(a.config, a.balancer, a.tenantManager, a.authenticator, a.cluster, a.logger)
+		// Mount /auth and /api tenant endpoints
+		a.router.PathPrefix("/auth").Handler(tenantAPI.Handler())
+		a.router.PathPrefix("/api").Handler(tenantAPI.Handler())
 	}
 
 	// Billing APIs
 	if a.billingManager != nil {
-		billingAPI := NewBillingAPI(a.billingManager, a.logger)
-		billingAPI.SetupRoutes(apiRouter)
+		billingAPI := NewBillingAPI(a.billingManager, a.tenantManager, a.logger)
+		a.router.PathPrefix("/api").Handler(billingAPI.Handler())
 	}
 
 	// OIDC APIs
-	if a.oidcManager != nil {
-		oidcAPI := NewOIDCAPI(a.oidcManager, a.tenantManager, a.logger)
-		oidcAPI.SetupRoutes(apiRouter)
+	if a.oidcManager != nil && a.authenticator != nil {
+		oidcAPI := NewOIDCHandlers(a.oidcManager, a.authenticator, a.tenantManager, a.logger)
+		oidcAPI.SetupRoutes(a.router)
 	}
 
 	// Orchestration APIs
 	if a.orchestrator != nil {
 		orchestrationAPI := NewOrchestrationAPI(a.orchestrator, a.tenantManager, a.logger)
-		orchestrationAPI.SetupRoutes(apiRouter)
+		orchestrationAPI.SetupRoutes(a.router)
 	}
 }
 
