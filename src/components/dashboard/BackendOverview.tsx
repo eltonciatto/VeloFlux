@@ -1,61 +1,30 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Server, Activity, Clock, Users, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useBackends } from '@/hooks/use-api';
 
 interface Backend {
-  id: string;
   address: string;
   pool: string;
-  status: 'healthy' | 'unhealthy' | 'unknown';
-  connections: number;
-  responseTime: number;
-  lastCheck: string;
   weight: number;
+  status?: 'healthy' | 'unhealthy' | 'unknown';
+  connections?: number;
+  responseTime?: number;
+  lastCheck?: string;
 }
 
 export const BackendOverview = () => {
-  const [backends, setBackends] = useState<Backend[]>([
-    {
-      id: 'backend-1',
-      address: 'backend-1:80',
-      pool: 'web-servers',
-      status: 'healthy',
-      connections: 45,
-      responseTime: 1.2,
-      lastCheck: '2025-01-12T10:30:00Z',
-      weight: 100
-    },
-    {
-      id: 'backend-2',
-      address: 'backend-2:80',
-      pool: 'web-servers',
-      status: 'healthy',
-      connections: 52,
-      responseTime: 1.8,
-      lastCheck: '2025-01-12T10:30:00Z',
-      weight: 100
-    },
-    {
-      id: 'api-1',
-      address: 'api-1:8080',
-      pool: 'api-servers',
-      status: 'unhealthy',
-      connections: 0,
-      responseTime: 0,
-      lastCheck: '2025-01-12T10:29:45Z',
-      weight: 150
-    }
-  ]);
+  const { data: backends = [] } = useBackends();
 
   const totalBackends = backends.length;
   const healthyBackends = backends.filter(b => b.status === 'healthy').length;
-  const totalConnections = backends.reduce((sum, b) => sum + b.connections, 0);
+  const totalConnections = backends.reduce((sum, b) => sum + (b.connections || 0), 0);
   const avgResponseTime = backends.filter(b => b.status === 'healthy')
-    .reduce((sum, b, _, arr) => sum + b.responseTime / arr.length, 0);
+    .reduce((sum, b, _, arr) => sum + ((b.responseTime || 0) / arr.length), 0);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -129,10 +98,10 @@ export const BackendOverview = () => {
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            {backends.map((backend) => (
-              <div key={backend.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+            {backends.map((backend, idx) => (
+              <div key={backend.address || idx} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex items-center gap-4">
-                  {getStatusIcon(backend.status)}
+                  {getStatusIcon(backend.status || 'unknown')}
                   <div>
                     <div className="font-semibold text-white">{backend.address}</div>
                     <div className="text-sm text-blue-200">Pool: {backend.pool}</div>
@@ -142,12 +111,12 @@ export const BackendOverview = () => {
                 <div className="flex items-center gap-6">
                   <div className="text-center">
                     <div className="text-sm text-blue-200">Connections</div>
-                    <div className="font-semibold text-white">{backend.connections}</div>
+                    <div className="font-semibold text-white">{backend.connections ?? 0}</div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-sm text-blue-200">Response Time</div>
-                    <div className="font-semibold text-white">{backend.responseTime}ms</div>
+                    <div className="font-semibold text-white">{backend.responseTime ?? 0}ms</div>
                   </div>
 
                   <div className="text-center">
@@ -155,8 +124,8 @@ export const BackendOverview = () => {
                     <div className="font-semibold text-white">{backend.weight}</div>
                   </div>
 
-                  <Badge className={getStatusBadge(backend.status)}>
-                    {backend.status}
+                  <Badge className={getStatusBadge(backend.status || 'unknown')}>
+                    {backend.status || 'unknown'}
                   </Badge>
 
                   <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
