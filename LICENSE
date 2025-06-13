@@ -1,21 +1,26 @@
-MIT License
+VeloFlux Custom License
 
 Copyright (c) 2025 Elton Ciatto
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license governs the use of the VeloFlux software and associated documentation files (the "Software").
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+PERMISSIONS:
+1. Permission is granted to any person or entity obtaining a copy of this Software to use, copy, modify, and distribute the Software for non-commercial purposes, subject to the restrictions below.
+2. The Software may be used freely for personal, educational, research, and internal business purposes.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+RESTRICTIONS:
+1. COMMERCIAL RESTRICTIONS: The Software may not be used to sell subscription-based services that compete directly or indirectly with the VeloFlux project or its owner.
+2. TRADEMARK AND BRANDING: The VeloFlux name, logo, and any associated branding elements are protected by trademark law and may not be used without explicit written permission from the copyright holder.
+3. COMPETITIVE USE: The Software may not be used to create or offer products or services that compete with those offered by the copyright holder.
+
+COPYRIGHT NOTICE:
+The VeloFlux source code, documentation, and design are protected by copyright law. This copyright notice and permission notice must be included in all copies or substantial portions of the Software.
+
+ATTRIBUTION:
+Any use of the Software must include clear and visible attribution to the original copyright holder, including a link to the official repository when used in digital contexts.
+
+NO WARRANTY:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+TERMINATION:
+This license will terminate automatically if you fail to comply with any of the terms and conditions outlined herein.

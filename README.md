@@ -271,7 +271,9 @@ go run -race ./cmd/velofluxlb
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+VeloFlux Custom License - see LICENSE file for details.
+
+This project uses a custom license that allows free non-commercial use but restricts competitive commercial use, especially subscription services. The VeloFlux name, logo, source code, and design are protected by copyright.
 
 ## 🙏 Acknowledgments
 

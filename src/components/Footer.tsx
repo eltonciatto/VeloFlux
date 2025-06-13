@@ -125,7 +125,7 @@ export const Footer = () => {
             </div>
             
             <div className="text-blue-200 text-sm">
-              © 2024 VeloFlux LB. MIT License.
+              © 2025 VeloFlux LB. VeloFlux Custom License.
             </div>
           </div>
         </div>
