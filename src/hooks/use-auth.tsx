@@ -4,6 +4,10 @@ import { apiFetch } from '@/lib/api';
 interface UserInfo {
   user_id: string;
   tenant_id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role?: string;
 }
 
 interface AuthContextProps {
@@ -19,17 +23,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserInfo | null>(null);
 
+  const fetchProfile = async (tok: string) => {
+    try {
+      const profile = await apiFetch('/api/profile', {
+        headers: { Authorization: `Bearer ${tok}` },
+      });
+      localStorage.setItem('vf_user', JSON.stringify(profile));
+      setUser(profile as UserInfo);
+    } catch {
+      logout();
+    }
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem('vf_token');
     const storedUser = localStorage.getItem('vf_user');
     if (stored) {
       setToken(stored);
-    }
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        // ignore
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          fetchProfile(stored);
+        }
+      } else {
+        fetchProfile(stored);
       }
     }
   }, []);
@@ -39,15 +57,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    const { token: newToken, user_id, tenant_id } = res as {
-      token: string;
-      user_id: string;
-      tenant_id: string;
-    };
+    const { token: newToken } = res as { token: string };
     localStorage.setItem('vf_token', newToken);
-    localStorage.setItem('vf_user', JSON.stringify({ user_id, tenant_id }));
     setToken(newToken);
-    setUser({ user_id, tenant_id });
+    await fetchProfile(newToken);
   };
 
   const logout = () => {
