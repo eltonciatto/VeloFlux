@@ -14,6 +14,15 @@ type Config struct {
 	Cluster ClusterConfig `yaml:"cluster"`
 	Auth    AuthConfig    `yaml:"auth"`
 	Tenants []Tenant      `yaml:"tenants"` // Tenant-specific configurations
+	API     APIConfig     `yaml:"api"`     // API server configuration
+}
+
+// APIConfig holds configuration for the API server
+type APIConfig struct {
+	BindAddress string `yaml:"bind_address"`
+	AuthEnabled bool   `yaml:"auth_enabled"`
+	Username    string `yaml:"username"`
+	Password    string `yaml:"password"`
 }
 
 type GlobalConfig struct {

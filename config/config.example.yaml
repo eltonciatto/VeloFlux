@@ -57,6 +57,13 @@ cluster:
   heartbeat_interval: "5s"
   leader_timeout: "15s"
 
+# API Server Configuration
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: true
+  username: "admin"
+  password: "veloflux-admin-password"
+
 # Tenant-specific configurations
 tenants:
   - id: "tenant1"

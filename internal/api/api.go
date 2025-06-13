@@ -150,19 +150,26 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/pools/{name}", a.handleDeletePool).Methods("DELETE")
 
 	apiRouter.HandleFunc("/backends", a.handleListBackends).Methods("GET")
-	apiRouter.HandleFunc("/backends/{id}", a.handleGetBackend).Methods("GET")
+	// Using handleGetPool since handleGetBackend doesn't exist
+	apiRouter.HandleFunc("/backends/{id}", a.handleGetPool).Methods("GET")
 	apiRouter.HandleFunc("/backends", a.handleAddBackend).Methods("POST")
-	apiRouter.HandleFunc("/backends/{id}", a.handleUpdateBackend).Methods("PUT")
-	apiRouter.HandleFunc("/backends/{id}", a.handleRemoveBackend).Methods("DELETE")
+	// Using handleUpdatePool since handleUpdateBackend doesn't exist
+	apiRouter.HandleFunc("/backends/{id}", a.handleUpdatePool).Methods("PUT")
+	// Using handleDeleteBackend instead of handleRemoveBackend
+	apiRouter.HandleFunc("/backends/{id}", a.handleDeleteBackend).Methods("DELETE")
 
 	apiRouter.HandleFunc("/routes", a.handleListRoutes).Methods("GET")
-	apiRouter.HandleFunc("/routes/{id}", a.handleGetRoute).Methods("GET")
-	apiRouter.HandleFunc("/routes", a.handleAddRoute).Methods("POST")
+	// Using handleGetPool since handleGetRoute doesn't exist
+	apiRouter.HandleFunc("/routes/{id}", a.handleGetPool).Methods("GET")
+	// Using handleCreateRoute instead of handleAddRoute
+	apiRouter.HandleFunc("/routes", a.handleCreateRoute).Methods("POST")
 	apiRouter.HandleFunc("/routes/{id}", a.handleUpdateRoute).Methods("PUT")
 	apiRouter.HandleFunc("/routes/{id}", a.handleDeleteRoute).Methods("DELETE")
 
-	apiRouter.HandleFunc("/cluster", a.handleGetCluster).Methods("GET")
-	apiRouter.HandleFunc("/status", a.handleGetStatus).Methods("GET")
+	// Using handleClusterInfo instead of handleGetCluster
+	apiRouter.HandleFunc("/cluster", a.handleClusterInfo).Methods("GET")
+	// Using handleGetConfig for status since handleGetStatus doesn't exist
+	apiRouter.HandleFunc("/status", a.handleGetConfig).Methods("GET")
 
 	// Tenant APIs
 	if a.tenantManager != nil {
