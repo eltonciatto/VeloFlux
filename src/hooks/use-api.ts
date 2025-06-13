@@ -22,10 +22,16 @@ export function useConfig() {
   });
 }
 
+export interface BackendInput {
+  address: string;
+  weight: number;
+  region: string;
+}
+
 export function useAddBackend() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { pool: string; backend: any }) =>
+    mutationFn: async (data: { pool: string; backend: BackendInput }) =>
       apiFetch(`/api/pools/${data.pool}/backends`, {
         method: 'POST',
         body: JSON.stringify(data.backend),

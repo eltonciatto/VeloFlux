@@ -58,8 +58,9 @@ export const BackendManager = () => {
         region: 'us-east-1',
       });
       toast({ title: 'Backend Added' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 
@@ -70,8 +71,9 @@ export const BackendManager = () => {
         address: b.address,
       });
       toast({ title: 'Backend Removed' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 

@@ -15,7 +15,10 @@ export const Login = () => {
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const from = (
+    (location.state as { from?: { pathname: string } } | null)?.from?.pathname ||
+    '/dashboard'
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +29,9 @@ export const Login = () => {
     try {
       await login(user, pass);
       navigate(from, { replace: true });
-    } catch (err: any) {
-      toast({ title: 'Login failed', description: err.message || 'Invalid credentials', variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid credentials';
+      toast({ title: 'Login failed', description: message, variant: 'destructive' });
     }
   };
 

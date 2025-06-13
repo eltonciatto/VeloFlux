@@ -22,8 +22,9 @@ export const Admin = () => {
       });
       toast({ title: 'Backend added' });
       setAddress('');
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 
@@ -31,8 +32,9 @@ export const Admin = () => {
     try {
       await adminFetch('/admin/drain', user, pass, { method: 'POST' });
       toast({ title: 'Cluster draining initiated' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     }
   };
 

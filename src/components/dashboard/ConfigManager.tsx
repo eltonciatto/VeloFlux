@@ -10,14 +10,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, RefreshCw, Settings, Shield, Globe } from 'lucide-react';
 import { useConfig } from '@/hooks/use-api';
 
+interface Backend {
+  address: string;
+  weight: number;
+}
+
+interface Pool {
+  name: string;
+  algorithm: string;
+  sticky_sessions: boolean;
+  backends: Backend[];
+}
+
+interface Config {
+  global: {
+    bind_address: string;
+    tls_bind_address: string;
+    metrics_address: string;
+  };
+  pools: Pool[];
+}
+
 export const ConfigManager = () => {
   const { data } = useConfig();
-  const [config, setConfig] = useState(data as any || {
-    global: {
-      bind_address: '0.0.0.0:80',
-      tls_bind_address: '0.0.0.0:443',
-      metrics_address: '0.0.0.0:8080'
-    },
+  const [config, setConfig] = useState<Config>(
+    (data as Config) || {
+      global: {
+        bind_address: '0.0.0.0:80',
+        tls_bind_address: '0.0.0.0:443',
+        metrics_address: '0.0.0.0:8080'
+      },
     pools: [
       {
         name: 'web-servers',
@@ -32,7 +54,7 @@ export const ConfigManager = () => {
   });
 
   useEffect(() => {
-    if (data) setConfig(data as any);
+    if (data) setConfig(data as Config);
   }, [data]);
 
   const [yamlConfig, setYamlConfig] = useState(`global:
