@@ -1,77 +1,90 @@
-# SaaS Multitenant Roadmap
+# SaaS Multitenant - Status Atual
 
-### O projeto **VeloFlux 0.0.3** já consegue atender **vários clientes ao mesmo tempo** ─ mas, para operar como **SaaS multitenant** de verdade, você precisará adicionar algumas camadas de governança (auth, isolamento lógico, billing). A boa notícia: a arquitetura atual (roteamento declarativo + Redis compartilhado + API Admin) é um alicerce sólido; basta estender.
-
----
-
-## O que *já* cobre vários clientes
-
-| Recurso                        | Como usar hoje                               | Exemplo                                                    |
-| ------------------------------ | -------------------------------------------- | ---------------------------------------------------------- |
-| **Vhosts / domínios**          | cada cliente recebe um `route.host` distinto | `cliente1.myapp.com`, `cliente2.myapp.com`                 |
-| **Algoritmos e peso**          | podem ser definidos por rota                 | Cliente A usa `least_conn`, Cliente B usa `round_robin`    |
-| **Health-check**               | configurável por back-end                    | Viewer-A `/api/health`; Viewer-B `/healthz`                |
-| **Rate-limit cluster-safe**    | limite RPM configurável globalmente          | basta duplicar bloco `ratelimit:` por rota (pequeno patch) |
-| **WAF (Coraza)**               | regras CRS aplicadas a todas as rotas        | bloqueia ataques OWASP independentemente do cliente        |
-| **Hot drain / rolling update** | zero-downtime afeta todos os tenants         | manutenção sem interrupção                                 |
-
-Ou seja, se o seu SaaS for **“várias empresas, cada uma em subdomínio próprio”**, o VeloFlux já funciona: basta adicionar um bloco `route` por cliente no YAML (ou via API Admin) e apontar os back-ends deles.
+### O projeto **VeloFlux** agora funciona como uma verdadeira plataforma **SaaS multitenant** com todas as camadas necessárias de governança (autenticação, isolamento lógico, RBAC e observabilidade). A arquitetura baseada em Redis como armazenamento principal permite alta performance e escalabilidade.
 
 ---
 
-## Lacunas para um SaaS completo
+## Recursos SaaS já implementados
 
-| Tema                           | Por que importa                                             | Como implementar                                                                                                                    |
-| ------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Autenticação & RBAC**        | Painel `/admin` precisa login multi-usuário / multi-cliente | ① Integrar OIDC (Keycloak / Auth0) <br>② Guardar `tenant_id`, `role` em JWT <br>③ Middleware verifica antes de exibir/alterar rotas |
-| **Isolamento de config**       | Um cliente não pode editar rotas de outro                   | Armazenar YAML por **namespace**:<br>`vf:config:<tenant_id>` no Redis/etcd                                                          |
-| **Rate-limit/WAF por tenant**  | planos diferentes (Free vs Pro)                             | No middleware, chavear counters/regras usando `tenant_id`                                                                           |
-| **Observabilidade por tenant** | dashboards, SLA individuais                                 | Adicionar label `tenant="XYZ"` nas métricas Prometheus e logs JSON                                                                  |
-| **Billing / quotas**           | cobrar por RPS, bandwidth                                   | Exportar métricas por tenant → Prometheus + metering (Cortex, Thanos) ou banco próprio                                              |
-| **On-boarding self-service**   | criar LB sem intervenção manual                             | Já existe API Admin → basta UI que chama `POST /admin/tenants` + `POST /admin/routes`                                               |
-| **Orquestração de back-ends**  | alguns clientes querem instância dedicada                   | usar Helm chart com `--name clienteX`, apontar DNS via API                                                                          |
+| Recurso                           | Status       | Implementação atual                                             |
+| --------------------------------- | ------------ | --------------------------------------------------------------- |
+| **Autenticação & RBAC**           | ✅ Completo  | JWT com `tenant_id` e `role`, middleware de autorização         |
+| **Isolamento de config**          | ✅ Completo  | Prefixos `vf:config:<tenant_id>` no Redis                       |
+| **Rate-limit/WAF por tenant**     | ✅ Completo  | Configurações por tenant e níveis baseados em planos            |
+| **Painel multi-tenant**           | ✅ Completo  | Selector de tenant e controle de acesso baseado em roles        |
+| **Observabilidade por tenant**    | ✅ Completo  | Métricas, logs e dashboards com `tenant_id` como label          |
+| **On-boarding self-service**      | ✅ Completo  | Interface de registro e gerenciamento de tenants                |
+| **Gerenciamento de usuários**     | ✅ Completo  | Adição/remoção de usuários com diferentes níveis de acesso      |
+
+## Recursos técnicos multi-cliente
+
+| Recurso                        | Implementação                                 | Exemplo                                                    |
+| ------------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| **Vhosts / domínios**          | Cada tenant recebe um `route.host` distinto   | `cliente1.myapp.com`, `cliente2.myapp.com`                 |
+| **Algoritmos e peso**          | Configuráveis por tenant e rota               | Cliente A usa `least_conn`, Cliente B usa `round_robin`    |
+| **Health-check**               | Configurável por back-end                     | Tenant A `/api/health`; Tenant B `/healthz`                |
+| **Rate-limit cluster-safe**    | Limite RPM configurável por tenant            | Configurações baseadas em planos (Free, Pro, Enterprise)   |
+| **WAF (Coraza)**               | Proteção adaptável por tenant                 | Níveis basic/standard/strict baseados no plano contratado  |
+| **Hot drain / rolling update** | Zero-downtime para todos os tenants           | Manutenção sem interrupção                                 |
 
 ---
 
-## Roadmap mínimo para “lançar SaaS”
+## Funcionalidades pendentes
 
-1. **Camada de identidade**
-   *Integre Keycloak* (gratuito) → VeloFlux só aceita JWT com `aud=veloflux`
-   Roles: `owner`, `member`, `viewer`.
+| Tema                       | Status           | O que falta                                                  |
+| -------------------------- | ---------------- | ------------------------------------------------------------ |
+| **Billing / quotas**       | 🔶 Parcial      | Exportação para sistemas de billing (Stripe/Gerencianet)     |
+| **API OIDC externa**       | 🔶 Parcial      | Integração com provedores externos (Keycloak/Auth0)          |
+| **Orquestração avançada**  | 🔶 Parcial      | Integração completa com Kubernetes para instâncias dedicadas |
 
-2. **Namespace na Config**
+---
 
-   ```yaml
-   tenants:
-     - id: clienteA
-       routes:
-         - host: clienteA.app.com
-           ...
+## Arquitetura Multi-tenant
+
+### Componentes Principais
+
+1. **Sistema de autenticação**
+   * Autenticação baseada em JWT com `tenant_id` e `role`
+   * Roles configuradas: `owner`, `member`, `viewer`
+   * Middleware de autorização por tenant e role
+
+2. **Isolamento de dados e configuração**
+
+   ```
+   Redis Keys:
+   vf:tenant:{tenant_id} → Dados do tenant
+   vf:tenant:{tenant_id}:users → Conjunto de usuários do tenant
+   vf:user:{user_id} → Dados do usuário
+   vf:config:{tenant_id} → Configurações específicas do tenant
    ```
 
-   Serializar direto no Redis no prefixo do tenant.
+3. **Interface multi-tenant**
 
-3. **Painel multi-tenant**
+   * Selector de tenant na barra lateral
+   * Visualização de dados filtrada por tenant
+   * Controle de acesso baseado em role
 
-   * Sidebar “select tenant”.
-   * Apenas rotas daquele tenant no grid.
-   * Chaves rate-limit por tenant.
+4. **Observabilidade**
 
-4. **Metering & Billing**
-
-   * Scrape métricas por label `tenant`.
-   * Job diário grava em PostgreSQL (`tenant_id`, `sum(bytes)`).
-   * Integra com Stripe ou Gerencianet.
+   * Métricas isoladas por `tenant_id`
+   * Logs com contexto de tenant
+   * Dashboards com filtros por tenant
 
 ---
 
-## E se eu quiser **um LB por cliente**?
+## Implantação flexível
 
-Basta usar o **Helm chart** já pronto:
+### Modo compartilhado (vários tenants, uma instância)
+
+O modo padrão atual do VeloFlux, onde tenants compartilham a mesma instância com isolamento lógico.
+
+### Modo dedicado (um tenant, uma instância)
+
+Para clientes que precisam de isolamento total:
 
 ```bash
-helm install velo-cliente1 veloflux/veloflux   --set tenantId=cliente1 --set redis.auth.password=****
-helm install velo-cliente2 veloflux/veloflux   --set tenantId=cliente2
+helm install velo-cliente1 veloflux/veloflux --set tenantId=cliente1 --set redis.auth.password=****
+helm install velo-cliente2 veloflux/veloflux --set tenantId=cliente2
 ```
 
 *Prós*: isolamento total; clientes podem escolher a própria versão.
@@ -81,11 +94,11 @@ helm install velo-cliente2 veloflux/veloflux   --set tenantId=cliente2
 
 ### Conclusão
 
-* **Hoje** o VeloFlux atende múltiplos domínios (clientes) no mesmo cluster, com fail-over e WAF.
-* Para virar **SaaS multitenant**, concentre-se em:
-  1. **Auth + RBAC por tenant**,
-  2. **Config isolada** (prefixos Redis),
-  3. **Rate-limit/WAF/metrics por tenant**, 
-  4. Painel self-service + faturamento.
+O VeloFlux evoluiu de um simples balanceador multi-domínio para uma plataforma SaaS completa com:
 
-Com essas peças, o projeto atual evolui sem reescrever nada fundamental, mantendo o core de balanceamento e hot-drain já sólido.
+1. **Autenticação robusta e RBAC por tenant**
+2. **Isolamento completo via prefixos Redis**
+3. **Rate-limit/WAF/metrics configurados por tenant**
+4. **Interface de administração multi-tenant**
+
+A implementação atual mantém o core de balanceamento e hot-drain original enquanto adiciona as capacidades SaaS necessárias para operação em produção.
