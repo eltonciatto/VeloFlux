@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,13 +31,13 @@ type GerencianetClient struct {
 
 // GerencianetPlan represents a plan in the Gerencianet API
 type GerencianetPlan struct {
-	ID           int     `json:"plan_id"`
-	Name         string  `json:"name"`
-	Interval     int     `json:"interval"`
-	IntervalType string  `json:"interval_type"` // days, weeks, months, years
-	Amount       int     `json:"amount"`        // in cents
-	Currency     string  `json:"currency"`
-	Description  string  `json:"description"`
+	ID           int    `json:"plan_id"`
+	Name         string `json:"name"`
+	Interval     int    `json:"interval"`
+	IntervalType string `json:"interval_type"` // days, weeks, months, years
+	Amount       int    `json:"amount"`        // in cents
+	Currency     string `json:"currency"`
+	Description  string `json:"description"`
 }
 
 // GerencianetSubscription represents a subscription in the Gerencianet API
@@ -196,9 +197,9 @@ func (c *GerencianetClient) CreateCustomer(name, email, document, birthDate, pho
 	requestBody := map[string]string{
 		"name":         name,
 		"email":        email,
-		"cpf":          document,          // Brazilian CPF
-		"birth":        birthDate,         // Format: YYYY-MM-DD
-		"phone_number": phoneNumber,       // Format: +5500000000000
+		"cpf":          document,    // Brazilian CPF
+		"birth":        birthDate,   // Format: YYYY-MM-DD
+		"phone_number": phoneNumber, // Format: +5500000000000
 	}
 
 	response, err := c.makeRequest("POST", "customers", requestBody)
@@ -223,7 +224,7 @@ func (c *GerencianetClient) CreateSubscription(planID, customerID int, paymentMe
 	requestBody := map[string]interface{}{
 		"plan_id":     planID,
 		"customer_id": customerID,
-		"payment":     map[string]string{
+		"payment": map[string]string{
 			"method": paymentMethod, // "credit_card", "billet", "pix"
 		},
 	}
@@ -276,7 +277,7 @@ func (m *BillingManager) createGerencianetCheckout(ctx context.Context, tenant *
 	amount := planConfig.PriceMonthly
 	interval := 1
 	intervalType := "months"
-	
+
 	if isYearly {
 		amount = planConfig.PriceYearly
 		interval = 1
@@ -295,10 +296,10 @@ func (m *BillingManager) createGerencianetCheckout(ctx context.Context, tenant *
 		// Create new customer
 		customerID, err = m.gerencianetClient.CreateCustomer(
 			tenant.Name,
-			tenant.Email,
-			tenant.Document,
-			tenant.BirthDate,
-			tenant.PhoneNumber,
+			tenant.ContactEmail,
+			"",
+			"",
+			"",
 		)
 		if err != nil {
 			return "", fmt.Errorf("failed to create customer: %w", err)
@@ -318,7 +319,7 @@ func (m *BillingManager) createGerencianetCheckout(ctx context.Context, tenant *
 		// Create plan
 		planName := fmt.Sprintf("%s - %s", planConfig.DisplayName, tenant.ID)
 		planDesc := planConfig.Description
-		
+
 		planID, err = m.gerencianetClient.CreatePlan(planName, planDesc, int(amount), intervalType, interval)
 		if err != nil {
 			return "", fmt.Errorf("failed to create plan: %w", err)
@@ -362,7 +363,7 @@ func (m *BillingManager) handleGerencianetWebhook(ctx context.Context, body []by
 		// If billing info doesn't exist, create it
 		if err.Error() == "billing info not found for tenant: "+tenantID {
 			billingInfo = &TenantBillingInfo{
-				TenantID:      tenantID,
+				TenantID:       tenantID,
 				SubscriptionID: fmt.Sprintf("%d", webhook.SubscriptionID),
 				CreatedAt:      time.Now(),
 			}
@@ -389,5 +390,5 @@ func (m *BillingManager) handleGerencianetWebhook(ctx context.Context, body []by
 
 	// Save updated billing info
 	billingInfo.UpdatedAt = time.Now()
-	return m.saveBillingInfo(ctx, billingInfo)
+	return m.SaveBillingInfo(ctx, billingInfo)
 }

@@ -285,6 +285,19 @@ func (m *Manager) GetTenantUsers(ctx context.Context, tenantID string) ([]UserIn
 	return users, nil
 }
 
+// GetUserByEmail retrieves a user by email if present
+func (m *Manager) GetUserByEmail(ctx context.Context, email string) (*UserInfo, error) {
+	m.usersMu.RLock()
+	for _, u := range m.usersCache {
+		if u.Email == email {
+			m.usersMu.RUnlock()
+			return &u, nil
+		}
+	}
+	m.usersMu.RUnlock()
+	return nil, fmt.Errorf("user not found: %s", email)
+}
+
 // AddUser adds a user to a tenant
 func (m *Manager) AddUser(ctx context.Context, user *UserInfo) error {
 	if user.UserID == "" || user.TenantID == "" || user.Email == "" {

@@ -12,7 +12,7 @@ import (
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/customer"
-	"github.com/stripe/stripe-go/v72/price"
+	"github.com/stripe/stripe-go/v72/webhook"
 	"go.uber.org/zap"
 )
 
@@ -99,7 +99,6 @@ type BillingManager struct {
 	logger            *zap.Logger
 	tenantManager     *tenant.Manager
 	gerencianetClient *GerencianetClient
-	tenantManager     *tenant.Manager
 }
 
 // NewBillingManager creates a new billing manager
@@ -200,9 +199,9 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 		customerParams := &stripe.CustomerParams{
 			Name:  stripe.String(tenant.Name),
 			Email: stripe.String(tenant.ContactEmail),
-			Metadata: map[string]string{
-				"tenant_id": tenantID,
-			},
+		}
+		customerParams.Params.Metadata = map[string]string{
+			"tenant_id": tenantID,
 		}
 		c, err := customer.New(customerParams)
 		if err != nil {
@@ -249,10 +248,6 @@ func (m *BillingManager) CreateCheckoutSession(ctx context.Context, tenantID str
 				"tenant_id": tenantID,
 				"plan":      string(planType),
 			},
-		},
-		Metadata: map[string]string{
-			"tenant_id": tenantID,
-			"plan":      string(planType),
 		},
 	}
 
@@ -461,8 +456,42 @@ func (m *BillingManager) GetUsageSummary(ctx context.Context, tenantID string, r
 	return result, nil
 }
 
+// GetUsageRecords retrieves raw usage records for a tenant in a date range
+func (m *BillingManager) GetUsageRecords(ctx context.Context, tenantID string, startDate, endDate time.Time) ([]UsageRecord, error) {
+	var records []UsageRecord
+
+	current := startDate
+	for !current.After(endDate) {
+		dayKey := fmt.Sprintf("vf:tenant:%s:usage:%s:%s", tenantID, "requests", current.Format("2006-01-02"))
+		vals, err := m.client.LRange(ctx, dayKey, 0, -1).Result()
+		if err != nil && err != redis.Nil {
+			return nil, err
+		}
+		for _, v := range vals {
+			var rec UsageRecord
+			if err := json.Unmarshal([]byte(v), &rec); err == nil {
+				records = append(records, rec)
+			}
+		}
+		dayKey = fmt.Sprintf("vf:tenant:%s:usage:%s:%s", tenantID, "bandwidth", current.Format("2006-01-02"))
+		vals, err = m.client.LRange(ctx, dayKey, 0, -1).Result()
+		if err != nil && err != redis.Nil {
+			return nil, err
+		}
+		for _, v := range vals {
+			var rec UsageRecord
+			if err := json.Unmarshal([]byte(v), &rec); err == nil {
+				records = append(records, rec)
+			}
+		}
+		current = current.AddDate(0, 0, 1)
+	}
+
+	return records, nil
+}
+
 // ExportBillingData exports billing data for external billing systems
-func (m *BillingManager) ExportBillingData(ctx context.Context, tenantID string, month time.Time) (map[string]interface{}, error) {
+func (m *BillingManager) ExportBillingSummary(ctx context.Context, tenantID string, month time.Time) (map[string]interface{}, error) {
 	// Get tenant
 	tenant, err := m.tenantManager.GetTenant(ctx, tenantID)
 	if err != nil {

@@ -3,6 +3,7 @@ package orchestration
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ import (
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -25,9 +26,8 @@ import (
 
 // DeployTenantInstance deploys a dedicated instance for a tenant
 func (o *Orchestrator) DeployTenantInstance(ctx context.Context, tenantID string, config *TenantOrchestratorConfig) (*DeploymentStatus, error) {
-	// Check if tenant exists
-	tenant, err := o.tenantManager.GetTenant(ctx, tenantID)
-	if err != nil {
+	// Ensure tenant exists
+	if _, err := o.tenantManager.GetTenant(ctx, tenantID); err != nil {
 		return nil, fmt.Errorf("tenant not found: %w", err)
 	}
 
@@ -104,7 +104,7 @@ func (o *Orchestrator) createNamespaceIfNotExists(namespace string) error {
 		return nil
 	}
 
-	if !errors.IsNotFound(err) {
+	if !k8serrors.IsNotFound(err) {
 		return err
 	}
 
@@ -199,7 +199,7 @@ mode: %s
 	// Apply ConfigMap
 	_, err := o.kubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
+		if k8serrors.IsAlreadyExists(err) {
 			// Update if already exists
 			_, err = o.kubeClient.CoreV1().ConfigMaps(namespace).Update(ctx, cm, metav1.UpdateOptions{})
 		}
@@ -323,7 +323,7 @@ func (o *Orchestrator) createDeployment(ctx context.Context, tenantID, namespace
 	// Apply Deployment
 	_, err := o.kubeClient.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
+		if k8serrors.IsAlreadyExists(err) {
 			// Update if already exists
 			_, err = o.kubeClient.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 		}
@@ -360,7 +360,7 @@ func (o *Orchestrator) createService(ctx context.Context, tenantID, namespace st
 	// Apply Service
 	_, err := o.kubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{})
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
+		if k8serrors.IsAlreadyExists(err) {
 			// Update if already exists
 			_, err = o.kubeClient.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{})
 		}
@@ -419,7 +419,7 @@ func (o *Orchestrator) createIngress(ctx context.Context, tenantID, namespace st
 	// Apply Ingress
 	_, err := o.kubeClient.NetworkingV1().Ingresses(namespace).Create(ctx, ingress, metav1.CreateOptions{})
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
+		if k8serrors.IsAlreadyExists(err) {
 			// Update if already exists
 			_, err = o.kubeClient.NetworkingV1().Ingresses(namespace).Update(ctx, ingress, metav1.UpdateOptions{})
 		}
@@ -570,28 +570,28 @@ func (o *Orchestrator) removeKubernetesResources(ctx context.Context, tenantID, 
 	// Delete HPA
 	err := o.kubeClient.AutoscalingV2().HorizontalPodAutoscalers(namespace).Delete(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.DeleteOptions{})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
 
 	// Delete Ingress
 	err = o.kubeClient.NetworkingV1().Ingresses(namespace).Delete(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.DeleteOptions{})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
 
 	// Delete Service
 	err = o.kubeClient.CoreV1().Services(namespace).Delete(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.DeleteOptions{})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
 
 	// Delete Deployment
 	err = o.kubeClient.AppsV1().Deployments(namespace).Delete(ctx,
 		fmt.Sprintf("veloflux-%s", tenantID), metav1.DeleteOptions{})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
 

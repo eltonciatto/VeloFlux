@@ -2,20 +2,21 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/eltonciatto/veloflux/internal/tenant"
-	"github.com/coreos/go-oidc/v3/oidc"
-	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 )
 
 // OIDCProvider represents a configured OpenID Connect provider
@@ -28,22 +29,22 @@ type OIDCProvider struct {
 // OIDCConfig holds OIDC provider configuration for a tenant
 type OIDCConfig struct {
 	Enabled       bool   `json:"enabled"`
-	ProviderName  string `json:"provider_name"`  // "keycloak", "auth0", "okta", "azure", "google", etc.
-	ProviderURL   string `json:"provider_url"`   // Issuer URL
+	ProviderName  string `json:"provider_name"` // "keycloak", "auth0", "okta", "azure", "google", etc.
+	ProviderURL   string `json:"provider_url"`  // Issuer URL
 	ClientID      string `json:"client_id"`
 	ClientSecret  string `json:"client_secret"`
 	RedirectURI   string `json:"redirect_uri"`
-	Scopes        string `json:"scopes"`         // Space-separated list
-	GroupsClaim   string `json:"groups_claim"`   // Where to find groups/roles in the token
-	TenantIDClaim string `json:"tenant_id_claim"`// Where to find tenant ID in the token
+	Scopes        string `json:"scopes"`          // Space-separated list
+	GroupsClaim   string `json:"groups_claim"`    // Where to find groups/roles in the token
+	TenantIDClaim string `json:"tenant_id_claim"` // Where to find tenant ID in the token
 }
 
 // OIDCState represents state for OIDC flow
 type OIDCState struct {
-	StateID       string    `json:"state_id"`
-	TenantID      string    `json:"tenant_id"`
-	OriginalURL   string    `json:"original_url"`
-	CreatedAt     time.Time `json:"created_at"`
+	StateID     string    `json:"state_id"`
+	TenantID    string    `json:"tenant_id"`
+	OriginalURL string    `json:"original_url"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // OIDCManager handles OIDC operations
@@ -76,15 +77,14 @@ func (m *OIDCManager) GetOIDCConfig(ctx context.Context, tenantID string) (*OIDC
 		}
 		return nil, err
 	}
-	
+
 	var config OIDCConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-	
+
 	// Ensure sensitive fields are not returned to clients
 	if strings.HasPrefix(config.ClientSecret, "*****") {
-		secretLen := len(config.ClientSecret)
 		actualSecret, err := m.client.Get(ctx, fmt.Sprintf("vf:tenant:%s:oidc_secret", tenantID)).Result()
 		if err == nil && actualSecret != "" {
 			config.ClientSecret = actualSecret
@@ -93,7 +93,7 @@ func (m *OIDCManager) GetOIDCConfig(ctx context.Context, tenantID string) (*OIDC
 			config.ClientSecret = ""
 		}
 	}
-	
+
 	return &config, nil
 }
 
@@ -105,7 +105,7 @@ func (m *OIDCManager) SetOIDCConfig(ctx context.Context, tenantID string, config
 		if err != nil {
 			return err
 		}
-		
+
 		// Replace actual secret with placeholder in the main config
 		displaySecret := "*****"
 		if len(config.ClientSecret) > 5 {
@@ -113,12 +113,12 @@ func (m *OIDCManager) SetOIDCConfig(ctx context.Context, tenantID string, config
 		}
 		config.ClientSecret = displaySecret
 	}
-	
+
 	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
-	
+
 	return m.client.Set(ctx, fmt.Sprintf("vf:tenant:%s:oidc_config", tenantID), data, 0).Err()
 }
 
@@ -128,21 +128,21 @@ func (m *OIDCManager) GetProvider(ctx context.Context, tenantID string) (*OIDCPr
 	m.providerMu.RLock()
 	provider, exists := m.providers[tenantID]
 	m.providerMu.RUnlock()
-	
+
 	if exists {
 		return provider, nil
 	}
-	
+
 	// Get OIDC configuration for tenant
 	config, err := m.GetOIDCConfig(ctx, tenantID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if !config.Enabled {
 		return nil, errors.New("OIDC is not enabled for this tenant")
 	}
-	
+
 	// Get client secret
 	clientSecret := config.ClientSecret
 	if strings.HasPrefix(clientSecret, "*****") {
@@ -153,44 +153,44 @@ func (m *OIDCManager) GetProvider(ctx context.Context, tenantID string) (*OIDCPr
 		clientSecret = secret
 		config.ClientSecret = secret // Update the config with the actual secret
 	}
-	
+
 	// Create provider based on provider type
-	provider, err = m.createOIDCProviderByType(ctx, config)
+	oidcProvider, err := m.createOIDCProviderByType(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
 	}
-	
+
 	// Configure OAuth2
 	scopes := strings.Split(config.Scopes, " ")
 	if len(scopes) == 0 || (len(scopes) == 1 && scopes[0] == "") {
 		scopes = []string{oidc.ScopeOpenID, "profile", "email"}
 	}
-	
+
 	oauth2Config := oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  config.RedirectURI,
-		Endpoint:     oidcProvider.Endpoint(),
+		Endpoint:     oidcProvider.Provider.Endpoint(),
 		Scopes:       scopes,
 	}
-	
+
 	// Create verifier
-	verifier := oidcProvider.Verifier(&oidc.Config{
+	verifier := oidcProvider.Provider.Verifier(&oidc.Config{
 		ClientID: config.ClientID,
 	})
-	
+
 	// Create provider
 	provider = &OIDCProvider{
-		Provider:     oidcProvider,
+		Provider:     oidcProvider.Provider,
 		OAuth2Config: oauth2Config,
 		Verifier:     verifier,
 	}
-	
+
 	// Store provider
 	m.providerMu.Lock()
 	m.providers[tenantID] = provider
 	m.providerMu.Unlock()
-	
+
 	return provider, nil
 }
 
@@ -200,7 +200,7 @@ func (m *OIDCManager) CreateAuthURL(ctx context.Context, tenantID string, origin
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Generate state
 	stateID := uuid.New().String()
 	state := OIDCState{
@@ -209,18 +209,18 @@ func (m *OIDCManager) CreateAuthURL(ctx context.Context, tenantID string, origin
 		OriginalURL: originalURL,
 		CreatedAt:   time.Now(),
 	}
-	
+
 	// Store state in Redis
 	stateData, err := json.Marshal(state)
 	if err != nil {
 		return "", err
 	}
-	
+
 	err = m.client.Set(ctx, fmt.Sprintf("vf:oidc_state:%s", stateID), stateData, 10*time.Minute).Err()
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Generate authorization URL
 	authURL := provider.OAuth2Config.AuthCodeURL(stateID, oauth2.AccessTypeOffline)
 	return authURL, nil
@@ -235,12 +235,12 @@ func (m *OIDCManager) GetStateByID(ctx context.Context, stateID string) (*OIDCSt
 		}
 		return nil, err
 	}
-	
+
 	var state OIDCState
 	if err := json.Unmarshal(data, &state); err != nil {
 		return nil, err
 	}
-	
+
 	return &state, nil
 }
 
@@ -251,53 +251,53 @@ func (m *OIDCManager) HandleCallback(ctx context.Context, stateID string, code s
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	// Get provider
 	provider, err := m.GetProvider(ctx, state.TenantID)
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	// Exchange code for token
 	oauth2Token, err := provider.OAuth2Config.Exchange(ctx, code)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to exchange token: %w", err)
 	}
-	
+
 	// Extract ID token
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		return nil, "", errors.New("no ID token in token response")
 	}
-	
+
 	// Verify ID token
 	idToken, err := provider.Verifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to verify ID token: %w", err)
 	}
-	
+
 	// Get claims
 	var claims map[string]interface{}
 	if err := idToken.Claims(&claims); err != nil {
 		return nil, "", fmt.Errorf("failed to parse claims: %w", err)
 	}
-	
+
 	// Get OIDC configuration to find claim mappings
 	oidcConfig, err := m.GetOIDCConfig(ctx, state.TenantID)
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	// Extract user info from claims
 	userInfo := &tenant.UserInfo{
 		TenantID: state.TenantID,
 		Role:     tenant.RoleMember,
 	}
-	
+
 	// Map standard claims
 	email, _ := claims["email"].(string)
 	userInfo.Email = email
-	
+
 	// Try to determine user ID
 	sub, _ := claims["sub"].(string)
 	if sub != "" {
@@ -306,7 +306,7 @@ func (m *OIDCManager) HandleCallback(ctx context.Context, stateID string, code s
 		// Generate a user ID if not found
 		userInfo.UserID = uuid.New().String()
 	}
-	
+
 	// Optional name fields
 	if name, ok := claims["name"].(string); ok {
 		parts := strings.Split(name, " ")
@@ -324,7 +324,7 @@ func (m *OIDCManager) HandleCallback(ctx context.Context, stateID string, code s
 			userInfo.LastName = familyName
 		}
 	}
-	
+
 	// Check for role/group membership
 	if oidcConfig.GroupsClaim != "" {
 		if groups, ok := claims[oidcConfig.GroupsClaim].([]interface{}); ok {
@@ -340,7 +340,7 @@ func (m *OIDCManager) HandleCallback(ctx context.Context, stateID string, code s
 			}
 		}
 	}
-	
+
 	// Ensure user exists in the tenant
 	existingUser, err := m.tenantManager.GetUserByEmail(ctx, userInfo.Email)
 	if err == nil && existingUser != nil && existingUser.TenantID == state.TenantID {
@@ -354,10 +354,10 @@ func (m *OIDCManager) HandleCallback(ctx context.Context, stateID string, code s
 			return nil, "", fmt.Errorf("failed to add user to tenant: %w", err)
 		}
 	}
-	
+
 	// Delete the state now that we've processed it
 	m.client.Del(ctx, fmt.Sprintf("vf:oidc_state:%s", stateID))
-	
+
 	return userInfo, state.OriginalURL, nil
 }
 
@@ -370,14 +370,14 @@ func (m *OIDCManager) OIDCMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Check if OIDC is enabled for this tenant
 		oidcConfig, err := m.GetOIDCConfig(r.Context(), tenantID)
 		if err != nil || !oidcConfig.Enabled {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Check if user is already authenticated
 		token := extractBearerToken(r)
 		if token != "" {
@@ -390,21 +390,21 @@ func (m *OIDCManager) OIDCMiddleware(next http.Handler) http.Handler {
 					return []byte(m.config.JWTSecret), nil
 				},
 			)
-			
+
 			if err == nil && claims.TenantID == tenantID {
 				// Token is valid, proceed
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
-		
+
 		// User not authenticated, redirect to OIDC login
 		authURL, err := m.CreateAuthURL(r.Context(), tenantID, r.URL.String())
 		if err != nil {
 			http.Error(w, "Authentication error", http.StatusInternalServerError)
 			return
 		}
-		
+
 		http.Redirect(w, r, authURL, http.StatusFound)
 	})
 }
@@ -415,14 +415,14 @@ func extractTenantID(r *http.Request) string {
 	if tenantID := r.PathValue("tenant_id"); tenantID != "" {
 		return tenantID
 	}
-	
+
 	// Try to get from subdomain
 	host := r.Host
 	parts := strings.Split(host, ".")
 	if len(parts) > 2 {
 		return parts[0]
 	}
-	
+
 	return ""
 }
 
@@ -432,11 +432,11 @@ func extractBearerToken(r *http.Request) string {
 	if authHeader == "" {
 		return ""
 	}
-	
+
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
 		return ""
 	}
-	
+
 	return parts[1]
 }
