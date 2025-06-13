@@ -17,15 +17,18 @@ export const Login = () => {
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !pass) {
       toast({ title: 'Login failed', description: 'Username and password required', variant: 'destructive' });
       return;
     }
-    const token = btoa(`${user}:${pass}`);
-    login(token);
-    navigate(from, { replace: true });
+    try {
+      await login(user, pass);
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      toast({ title: 'Login failed', description: err.message || 'Invalid credentials', variant: 'destructive' });
+    }
   };
 
   return (
