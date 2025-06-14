@@ -30,8 +30,20 @@ export interface OrchestrationStatus {
   last_updated: string;
 }
 
+export interface EventItem {
+  type: string;
+  reason: string;
+  message: string;
+  timestamp: string;
+  count?: number;
+  source?: {
+    component: string;
+    host?: string;
+  };
+}
+
 export interface DetailedStatus {
-  events: any[];
+  events: EventItem[];
   metrics: {
     cpu_utilization: number;
     memory_utilization: number;

@@ -1,27 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
 import { TokenService } from '@/lib/tokenService';
 import { safeApiFetch } from '@/lib/csrfToken';
-
-interface UserInfo {
-  user_id: string;
-  tenant_id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  role?: string;
-}
-
-interface AuthContextProps {
-  token: string | null;
-  user: UserInfo | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateProfile: (first: string, last: string) => Promise<void>;
-  refreshToken: () => Promise<boolean>;
-}
-
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+import { AuthContext, UserInfo, AuthContextProps } from './auth-context';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(TokenService.getToken());
