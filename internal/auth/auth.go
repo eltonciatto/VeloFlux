@@ -685,6 +685,23 @@ func (a *Authenticator) UpdateEmailProvider(provider *EmailProvider) {
 	a.emailProvider = provider
 }
 
+// GetClaimsFromRequest extracts JWT claims from HTTP request
+func (a *Authenticator) GetClaimsFromRequest(r *http.Request) (*Claims, error) {
+	// Get the Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return nil, fmt.Errorf("authorization header missing")
+	}
+
+	// Check if it's a Bearer token
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return nil, fmt.Errorf("invalid authorization header format")
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	return a.VerifyToken(tokenString)
+}
+
 // authSMTPConfigToSMTPConfig converts AuthSMTPConfig to SMTPConfig
 func authSMTPConfigToSMTPConfig(config AuthSMTPConfig) SMTPConfig {
 	return SMTPConfig{

@@ -153,6 +153,8 @@ type AuthConfig struct {
 	OIDCClientID    string        `yaml:"oidc_client_id"`
 	OIDCRedirectURI string        `yaml:"oidc_redirect_uri"`
 	OIDC            OIDCConfig    `yaml:"oidc"`
+	SMTPEnabled     bool          `yaml:"smtp_enabled"`
+	SMTPConfig      SMTPConfig    `yaml:"smtp"`
 }
 
 // OIDCConfig holds OIDC-specific configuration
@@ -169,6 +171,19 @@ type Tenant struct {
 	Description string   `yaml:"description"`
 	Enabled     bool     `yaml:"enabled"`
 	Policies     []string `yaml:"policies"`
+}
+
+// SMTPConfig holds SMTP configuration for email services
+type SMTPConfig struct {
+	Host         string `yaml:"host"`
+	Port         int    `yaml:"port"`
+	Username     string `yaml:"username"`
+	Password     string `yaml:"password"`
+	FromEmail    string `yaml:"from_email"`
+	FromName     string `yaml:"from_name"`
+	UseTLS       bool   `yaml:"use_tls"`
+	TemplatesDir string `yaml:"templates_dir"`
+	AppDomain    string `yaml:"app_domain"`
 }
 
 func Load(path string) (*Config, error) {

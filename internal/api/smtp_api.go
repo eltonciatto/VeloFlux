@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/eltonciatto/veloflux/internal/auth"
+	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -66,10 +67,10 @@ func (a *API) handleGetSMTPSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// In a real implementation, these settings would be fetched from the tenant's configuration
-	// For now, we'll return the global SMTP settings if any
+	// In a real implementation, these settings would be fetched from the tenant's configuration	// For now, we'll return the global SMTP settings if any
 	var response SMTPSettingsResponse
-	if a.config.Auth.SMTPEnabled {		response = SMTPSettingsResponse{
+	if a.config.Auth.SMTPEnabled {
+		response = SMTPSettingsResponse{
 			Enabled:   a.config.Auth.SMTPEnabled,
 			Host:      a.config.Auth.SMTPConfig.Host,
 			Port:      a.config.Auth.SMTPConfig.Port,
@@ -180,7 +181,6 @@ func (a *API) handleTestSMTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
-
 	// Create temporary email provider with test settings
 	testConfig := auth.SMTPConfig{
 		Host:      req.Config.Host,
@@ -215,4 +215,19 @@ func (a *API) handleTestSMTP(w http.ResponseWriter, r *http.Request) {
 		"status":  "success",
 		"message": "Test email sent successfully",
 	})
+}
+
+// convertConfigSMTPToAuthSMTP converts config.SMTPConfig to auth.SMTPConfig
+func convertConfigSMTPToAuthSMTP(config config.SMTPConfig) auth.SMTPConfig {
+	return auth.SMTPConfig{
+		Host:         config.Host,
+		Port:         config.Port,
+		Username:     config.Username,
+		Password:     config.Password,
+		FromEmail:    config.FromEmail,
+		FromName:     config.FromName,
+		UseTLS:       config.UseTLS,
+		TemplatesDir: config.TemplatesDir,
+		AppDomain:    config.AppDomain,
+	}
 }
