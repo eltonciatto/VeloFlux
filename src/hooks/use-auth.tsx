@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
 import { TokenService } from '@/lib/tokenService';
 import { safeApiFetch } from '@/lib/csrfToken';
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loginAttempts, setLoginAttempts] = useState<Record<string, number>>({});
   const [lastLoginAttempt, setLastLoginAttempt] = useState<Record<string, number>>({});
 
-  const fetchProfile = async (tok: string) => {
+  const fetchProfile = useCallback(async (tok: string) => {
     try {
       const profile = await safeApiFetch('/api/profile', {
         headers: { Authorization: `Bearer ${tok}` },
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       logout();
     }
-  };
+  }, []);
 
   useEffect(() => {
     const storedToken = TokenService.getToken();
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 10 * 60 * 1000); // Refresh every 10 minutes
     
     return () => clearInterval(refreshInterval);
-  }, []);
+  }, [fetchProfile, refreshToken]);
 
   const login = async (email: string, password: string) => {
     // Implement login throttling
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const refreshToken = async (): Promise<boolean> => {
+  const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
       if (!token) return false;
       
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Failed to refresh token', error);
       return false;
     }
-  };
+  }, [token]);
 
   const updateProfile = async (first: string, last: string) => {
     const updated = await safeApiFetch('/api/profile', {

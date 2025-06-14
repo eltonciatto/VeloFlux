@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Check, ChevronDown, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,8 +26,7 @@ export const TenantSelector: React.FC<TenantSelectorProps> = ({ onTenantChange }
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fetchTenants = async () => {
+  const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiFetch('/api/tenants');
@@ -48,10 +47,9 @@ export const TenantSelector: React.FC<TenantSelectorProps> = ({ onTenantChange }
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => {
+  }, [user]);useEffect(() => {
     fetchTenants();
-  }, [user, selectedTenantId]);  const handleTenantSelect = (tenant: Tenant) => {
+  }, [user, selectedTenantId, fetchTenants]);const handleTenantSelect = (tenant: Tenant) => {
     setCurrentTenant(tenant);
     // Update tenant context
     setSelectedTenantId(tenant.id);

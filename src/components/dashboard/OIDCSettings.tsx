@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,8 +31,7 @@ const OIDCSettings = () => {
   
   const [isEditingSecret, setIsEditingSecret] = useState(false);
   const [testLoginURL, setTestLoginURL] = useState('');
-  
-  const fetchOIDCConfig = async () => {
+  const fetchOIDCConfig = useCallback(async () => {
     setLoading(true);
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
@@ -57,7 +56,7 @@ const OIDCSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, token, toast]);
   
   const saveOIDCConfig = async () => {
     setLoading(true);
@@ -136,12 +135,11 @@ const OIDCSettings = () => {
       groups_claim: groupsClaim
     }));
   };
-  
-  useEffect(() => {
+    useEffect(() => {
     if (tenantId && token) {
       fetchOIDCConfig();
     }
-  }, [tenantId, token]);
+  }, [tenantId, token, fetchOIDCConfig]);
   
   // Generate a suggested redirect URI
   useEffect(() => {

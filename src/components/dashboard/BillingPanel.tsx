@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,8 +22,7 @@ const BillingPanel = () => {
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   const [usageData, setUsageData] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  
-  const fetchBillingInfo = async () => {
+    const fetchBillingInfo = useCallback(async () => {
     setLoading(true);
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/billing`, {
@@ -42,9 +41,8 @@ const BillingPanel = () => {
     } finally {
       setLoading(false);
     }
-  };
-  
-  const fetchPlans = async () => {
+  }, [tenantId, token, toast]);
+    const fetchPlans = useCallback(async () => {
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/billing/plans`, {
         headers: {
@@ -55,9 +53,8 @@ const BillingPanel = () => {
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
-  };
-  
-  const fetchUsageData = async () => {
+  }, [tenantId, token]);
+    const fetchUsageData = useCallback(async () => {
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/billing/usage`, {
         headers: {
@@ -68,7 +65,7 @@ const BillingPanel = () => {
     } catch (error) {
       console.error('Error fetching usage data:', error);
     }
-  };
+  }, [tenantId, token]);
   
   const createCheckoutSession = async (planType) => {
     setLoading(true);
@@ -105,14 +102,13 @@ const BillingPanel = () => {
       setLoading(false);
     }
   };
-  
-  useEffect(() => {
+    useEffect(() => {
     if (tenantId && token) {
       fetchBillingInfo();
       fetchPlans();
       fetchUsageData();
     }
-  }, [tenantId, token]);
+  }, [tenantId, token, fetchBillingInfo, fetchPlans, fetchUsageData]);
   
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
