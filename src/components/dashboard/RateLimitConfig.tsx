@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -8,36 +8,27 @@ import { Slider } from '@/components/ui/slider';
 import { Gauge, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
-
-interface RateLimitConfigProps {
-  tenantId?: string;
-}
+import { RateLimitConfigProps, RateLimitConfig as RateLimitConfigType } from './RateLimitUtils';
 
 export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) => {
   const { toast } = useToast();
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<RateLimitConfigType>({
     enabled: true,
     requestsPerSecond: 100,
     burstSize: 200,
     ipBasedLimiting: true,
     responseCode: 429,
-    excludePaths: [] as string[],
-    excludeIps: [] as string[]
+    excludePaths: [],
+    excludeIps: []
   });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [newExcludePath, setNewExcludePath] = useState('');
+  const [saving, setSaving] = useState(false);  const [newExcludePath, setNewExcludePath] = useState('');
   const [newExcludeIp, setNewExcludeIp] = useState('');
 
-  useEffect(() => {
-    fetchRateLimitConfig();
-  }, [tenantId]);
-
-  const fetchRateLimitConfig = async () => {
+  const fetchRateLimitConfig = useCallback(async () => {
     try {
       setLoading(true);
       let endpoint = '/api/rate-limit';
-      
       if (tenantId) {
         endpoint = `/api/tenants/${tenantId}/rate-limit`;
       }
@@ -54,9 +45,8 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateConfig = async () => {
+  }, [tenantId, toast]);
+  const updateConfig = useCallback(async () => {
     try {
       setSaving(true);
       let endpoint = '/api/rate-limit';
@@ -84,16 +74,16 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
     } finally {
       setSaving(false);
     }
-  };
+  }, [tenantId, config, toast]);
 
-  const handleToggleChange = (field: string) => (checked: boolean) => {
+  const handleToggleChange = useCallback((field: string) => (checked: boolean) => {
     setConfig(prev => ({
       ...prev,
       [field]: checked
     }));
-  };
+  }, []);
 
-  const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value > 0) {
       setConfig(prev => ({
@@ -101,16 +91,15 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
         [field]: value
       }));
     }
-  };
+  }, []);
 
-  const handleSliderChange = (field: string) => (value: number[]) => {
+  const handleSliderChange = useCallback((field: string) => (value: number[]) => {
     setConfig(prev => ({
       ...prev,
       [field]: value[0]
     }));
-  };
-
-  const addExcludePath = () => {
+  }, []);
+  const addExcludePath = useCallback(() => {
     if (newExcludePath && !config.excludePaths.includes(newExcludePath)) {
       setConfig(prev => ({
         ...prev,
@@ -118,16 +107,16 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
       }));
       setNewExcludePath('');
     }
-  };
+  }, [newExcludePath, config.excludePaths]);
 
-  const removeExcludePath = (path: string) => {
+  const removeExcludePath = useCallback((path: string) => {
     setConfig(prev => ({
       ...prev,
       excludePaths: prev.excludePaths.filter(p => p !== path)
     }));
-  };
+  }, []);
 
-  const addExcludeIp = () => {
+  const addExcludeIp = useCallback(() => {
     if (newExcludeIp && !config.excludeIps.includes(newExcludeIp)) {
       setConfig(prev => ({
         ...prev,
@@ -135,14 +124,18 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
       }));
       setNewExcludeIp('');
     }
-  };
+  }, [newExcludeIp, config.excludeIps]);
 
-  const removeExcludeIp = (ip: string) => {
+  const removeExcludeIp = useCallback((ip: string) => {
     setConfig(prev => ({
       ...prev,
       excludeIps: prev.excludeIps.filter(i => i !== ip)
     }));
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRateLimitConfig();
+  }, [fetchRateLimitConfig]);
 
   if (loading) {
     return (

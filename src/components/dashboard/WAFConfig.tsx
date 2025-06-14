@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -13,14 +13,11 @@ import {
 import { AlertCircle, Info, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
-
-interface WAFConfigProps {
-  tenantId?: string;
-}
+import { WAFConfigProps, WAFConfigType } from './WAFUtils';
 
 export const WAFConfig: React.FC<WAFConfigProps> = ({ tenantId }) => {
   const { toast } = useToast();
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<WAFConfigType>({
     enabled: true,
     level: 'standard',
     customRules: [],
@@ -30,11 +27,7 @@ export const WAFConfig: React.FC<WAFConfigProps> = ({ tenantId }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchWAFConfig();
-  }, [tenantId]);
-
-  const fetchWAFConfig = async () => {
+  const fetchWAFConfig = useCallback(async () => {
     try {
       setLoading(true);
       let endpoint = '/api/waf/config';
@@ -55,7 +48,11 @@ export const WAFConfig: React.FC<WAFConfigProps> = ({ tenantId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, toast]);
+  
+  useEffect(() => {
+    fetchWAFConfig();
+  }, [fetchWAFConfig]);
 
   const updateConfig = async () => {
     try {

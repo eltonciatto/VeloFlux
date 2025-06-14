@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,38 +16,22 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiFetch } from '@/lib/api';
 import Header from '@/components/Header';
-
-// Types for tenants
-interface Tenant {
-  id: string;
-  name: string;
-  plan: string;
-  active: boolean;
-  contact_email: string;
-  custom_domain?: string;
-  created_at: string;
-}
+import { Tenant, NewTenant } from './tenant-utils';
 
 export const TenantManagement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
-  const [newTenant, setNewTenant] = useState({
+  const [newTenant, setNewTenant] = useState<NewTenant>({
     id: '',
     name: '',
     plan: 'free',
     contact_email: '',
     custom_domain: '',
-  });
-  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-
-  // Fetch tenants on component mount
-  React.useEffect(() => {
-    fetchTenants();
-  }, []);
-
-  const fetchTenants = async () => {
+  });  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  
+  const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiFetch('/api/tenants');
@@ -62,9 +46,12 @@ export const TenantManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch tenants on component mount
+  useEffect(() => {
+    fetchTenants();
+  }, [fetchTenants]);  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (editingTenant) {
       setEditingTenant({
@@ -77,9 +64,8 @@ export const TenantManagement = () => {
         [name]: value,
       });
     }
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
+  }, [editingTenant, newTenant]);
+  const handleSelectChange = useCallback((name: string, value: string) => {
     if (editingTenant) {
       setEditingTenant({
         ...editingTenant,
@@ -91,9 +77,7 @@ export const TenantManagement = () => {
         [name]: value,
       });
     }
-  };
-
-  const addTenant = async () => {
+  }, [editingTenant, newTenant]);  const addTenant = useCallback(async () => {
     try {
       await apiFetch('/api/tenants', {
         method: 'POST',
@@ -119,9 +103,7 @@ export const TenantManagement = () => {
         variant: 'destructive',
       });
     }
-  };
-
-  const updateTenant = async () => {
+  }, [newTenant, toast, fetchTenants]);  const updateTenant = useCallback(async () => {
     if (!editingTenant) return;
     
     try {
@@ -143,9 +125,7 @@ export const TenantManagement = () => {
         variant: 'destructive',
       });
     }
-  };
-
-  const deleteTenant = async (id: string) => {
+  }, [editingTenant, toast, fetchTenants]);  const deleteTenant = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this tenant? This action cannot be undone.')) {
       return;
     }
@@ -167,7 +147,7 @@ export const TenantManagement = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [toast, fetchTenants]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">

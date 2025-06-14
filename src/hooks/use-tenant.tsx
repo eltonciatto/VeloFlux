@@ -1,12 +1,6 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useAuth } from './use-auth';
-
-interface TenantContextProps {
-  selectedTenantId: string | null;
-  setSelectedTenantId: (id: string | null) => void;
-}
-
-const TenantContext = createContext<TenantContextProps | undefined>(undefined);
+import { TenantContext } from './tenant-context';
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();

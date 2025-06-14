@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -79,9 +79,8 @@ const OrchestrationSettings = () => {
     'error': 'bg-red-600',
     'not_deployed': 'bg-gray-600'
   };
-
   // Fetch config
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     setLoading(true);
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/orchestration`, {
@@ -100,10 +99,9 @@ const OrchestrationSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [tenantId, token, toast]);
   // Fetch status
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/orchestration/status`, {
         headers: {
@@ -114,10 +112,9 @@ const OrchestrationSettings = () => {
     } catch (error) {
       console.error('Error fetching deployment status:', error);
     }
-  };
-
+  }, [tenantId, token]);
   // Fetch detailed status
-  const fetchDetailedStatus = async () => {
+  const fetchDetailedStatus = useCallback(async () => {
     try {
       const response = await safeApiFetch(`/api/tenants/${tenantId}/orchestration/detailed_status`, {
         headers: {
@@ -128,7 +125,7 @@ const OrchestrationSettings = () => {
     } catch (error) {
       console.error('Error fetching detailed status:', error);
     }
-  };
+  }, [tenantId, token]);
 
   // Save config
   const saveConfig = async () => {
@@ -413,7 +410,6 @@ const OrchestrationSettings = () => {
       });
     }
   };
-
   // Load initial data and setup polling
   useEffect(() => {
     fetchConfig();
@@ -430,14 +426,13 @@ const OrchestrationSettings = () => {
     }, 5000);
 
     return () => clearInterval(statusInterval);
-  }, [tenantId, token, showDetailedStatus, status.status, status.mode]);
-
+  }, [tenantId, token, showDetailedStatus, status.status, status.mode, fetchConfig, fetchStatus, fetchDetailedStatus]);
   // When switching to detailed status, fetch it immediately
   useEffect(() => {
     if (showDetailedStatus && status.mode === 'dedicated') {
       fetchDetailedStatus();
     }
-  }, [showDetailedStatus]);
+  }, [showDetailedStatus, status.mode, fetchDetailedStatus]);
 
   // Initialize scaling replicas based on current count
   useEffect(() => {
