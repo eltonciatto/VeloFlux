@@ -125,7 +125,7 @@ type TenantConfig struct {
 
 // BillingConfig holds billing configuration
 type BillingConfig struct {
-	Provider            string `yaml:"provider"` // "stripe" or "gerencianet" 
+	Provider            string `yaml:"provider"` // "stripe" or "gerencianet"
 	Enabled             bool   `yaml:"enabled"`
 	StripeAPIKey        string `yaml:"stripe_api_key"`
 	StripeWebhookKey    string `yaml:"stripe_webhook_key"`
@@ -170,7 +170,7 @@ type Tenant struct {
 	Name        string   `yaml:"name"`
 	Description string   `yaml:"description"`
 	Enabled     bool     `yaml:"enabled"`
-	Policies     []string `yaml:"policies"`
+	Policies    []string `yaml:"policies"`
 }
 
 // SMTPConfig holds SMTP configuration for email services

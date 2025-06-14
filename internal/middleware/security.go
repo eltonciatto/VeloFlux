@@ -13,37 +13,37 @@ func SecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// HSTS (HTTP Strict Transport Security)
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-		
+
 		// Content Security Policy
 		csp := buildCSP()
 		c.Header("Content-Security-Policy", csp)
-		
+
 		// X-Frame-Options to prevent clickjacking
 		c.Header("X-Frame-Options", "DENY")
-		
+
 		// X-Content-Type-Options to prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
-		
+
 		// X-XSS-Protection
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// Referrer Policy
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		
+
 		// Permissions Policy (formerly Feature Policy)
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		
+
 		// Remove server information
 		c.Header("Server", "")
 		c.Header("X-Powered-By", "")
-		
+
 		// Cache control for sensitive pages
 		if isSensitivePath(c.Request.URL.Path) {
 			c.Header("Cache-Control", "no-cache, no-store, must-revalidate, private")
 			c.Header("Pragma", "no-cache")
 			c.Header("Expires", "0")
 		}
-		
+
 		c.Next()
 	}
 }
@@ -52,25 +52,25 @@ func SecurityHeaders() gin.HandlerFunc {
 func SecureCORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// Allow only specific origins in production
 		allowedOrigins := getAllowedOrigins()
-		
+
 		if isAllowedOrigin(origin, allowedOrigins) {
 			c.Header("Access-Control-Allow-Origin", origin)
 		}
-		
+
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400") // 24 hours
-		
+
 		// Handle preflight requests
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -80,11 +80,11 @@ func RateLimiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
 		path := c.Request.URL.Path
-		
+
 		// Different rate limits for different endpoints
 		var limit int
 		var window time.Duration
-		
+
 		switch {
 		case strings.HasPrefix(path, "/auth/login"):
 			limit = 5 // 5 login attempts
@@ -99,16 +99,16 @@ func RateLimiter() gin.HandlerFunc {
 			limit = 200 // 200 general requests
 			window = time.Minute
 		}
-		
+
 		if !checkRateLimit(clientIP, path, limit, window) {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded",
+				"error":       "Rate limit exceeded",
 				"retry_after": window.Seconds(),
 			})
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -124,7 +124,7 @@ func InputSanitizer() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// Check for common attack patterns in URL
 		if containsSuspiciousPatterns(c.Request.URL.Path) {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -133,7 +133,7 @@ func InputSanitizer() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -163,7 +163,7 @@ func isSensitivePath(path string) bool {
 		"/api/billing",
 		"/api/tenants",
 	}
-	
+
 	for _, sensitive := range sensitivePaths {
 		if strings.HasPrefix(path, sensitive) {
 			return true
@@ -186,7 +186,7 @@ func isAllowedOrigin(origin string, allowed []string) bool {
 	if origin == "" {
 		return false
 	}
-	
+
 	for _, allowedOrigin := range allowed {
 		if origin == allowedOrigin {
 			return true
@@ -199,10 +199,10 @@ func checkRateLimit(clientIP, path string, limit int, window time.Duration) bool
 	// This is a simplified implementation
 	// In production, use Redis or another distributed store
 	// for rate limiting across multiple instances
-	
+
 	// Implementation would track requests per IP per endpoint
 	// and return false if limit is exceeded
-	
+
 	return true // Placeholder
 }
 
@@ -221,7 +221,7 @@ func containsSuspiciousPatterns(path string) bool {
 		"insert into",
 		"delete from",
 	}
-	
+
 	lowerPath := strings.ToLower(path)
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(lowerPath, pattern) {

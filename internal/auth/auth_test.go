@@ -22,7 +22,7 @@ func TestJWTTokenGeneration(t *testing.T) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},	}
+		}}
 
 	token, err := manager.GenerateToken(claims)
 	require.NoError(t, err)

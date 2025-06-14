@@ -16,19 +16,19 @@ import (
 
 // Config for authentication
 type Config struct {
-	JWTSecret            string        `yaml:"jwt_secret"`
-	JWTIssuer            string        `yaml:"jwt_issuer"`
-	JWTAudience          string        `yaml:"jwt_audience"`
-	TokenValidity        time.Duration `yaml:"token_validity"`
-	OIDCEnabled          bool          `yaml:"oidc_enabled"`
-	OIDCIssuerURL        string        `yaml:"oidc_issuer_url"`
-	OIDCClientID         string        `yaml:"oidc_client_id"`
-	OIDCRedirectURI      string        `yaml:"oidc_redirect_uri"`
-	MaxLoginAttempts     int           `yaml:"max_login_attempts"`
-	LoginLockoutMinutes  int           `yaml:"login_lockout_minutes"`
+	JWTSecret           string        `yaml:"jwt_secret"`
+	JWTIssuer           string        `yaml:"jwt_issuer"`
+	JWTAudience         string        `yaml:"jwt_audience"`
+	TokenValidity       time.Duration `yaml:"token_validity"`
+	OIDCEnabled         bool          `yaml:"oidc_enabled"`
+	OIDCIssuerURL       string        `yaml:"oidc_issuer_url"`
+	OIDCClientID        string        `yaml:"oidc_client_id"`
+	OIDCRedirectURI     string        `yaml:"oidc_redirect_uri"`
+	MaxLoginAttempts    int           `yaml:"max_login_attempts"`
+	LoginLockoutMinutes int           `yaml:"login_lockout_minutes"`
 	// SMTP Email Provider Configuration
-	SMTPEnabled          bool          `yaml:"smtp_enabled"`
-	SMTPConfig           AuthSMTPConfig `yaml:"smtp"`
+	SMTPEnabled bool           `yaml:"smtp_enabled"`
+	SMTPConfig  AuthSMTPConfig `yaml:"smtp"`
 }
 
 // AuthSMTPConfig holds the configuration for the SMTP email provider
@@ -428,15 +428,14 @@ func (m *Manager) IsLoginAllowed(userID string) bool {
 		return true
 	}
 
-	// Check if the lockout period has expired
-	if time.Now().After(attempt.LockedUntil) {
-		// Reset attempts if lockout has expired
-		m.ResetLoginAttempts(userID)
-		return true
-	}
-
 	// Check if user is currently locked out
 	if attempt.Count >= m.config.MaxLoginAttempts {
+		// Check if the lockout period has expired (only if LockedUntil is set)
+		if !attempt.LockedUntil.IsZero() && time.Now().After(attempt.LockedUntil) {
+			// Reset attempts if lockout has expired
+			m.ResetLoginAttempts(userID)
+			return true
+		}
 		return false
 	}
 
@@ -705,14 +704,14 @@ func (a *Authenticator) GetClaimsFromRequest(r *http.Request) (*Claims, error) {
 // authSMTPConfigToSMTPConfig converts AuthSMTPConfig to SMTPConfig
 func authSMTPConfigToSMTPConfig(config AuthSMTPConfig) SMTPConfig {
 	return SMTPConfig{
-		Host:        config.Host,
-		Port:        config.Port,
-		Username:    config.User,
-		Password:    config.Password,
-		FromEmail:   config.Sender,
-		FromName:    "VeloFlux",
-		UseTLS:      true,
-		AppDomain:   "veloflux.io",
+		Host:         config.Host,
+		Port:         config.Port,
+		Username:     config.User,
+		Password:     config.Password,
+		FromEmail:    config.Sender,
+		FromName:     "VeloFlux",
+		UseTLS:       true,
+		AppDomain:    "veloflux.io",
 		TemplatesDir: "",
 	}
 }

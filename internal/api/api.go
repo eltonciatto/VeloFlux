@@ -182,7 +182,7 @@ func (a *API) setupRoutes() {
 		// Mount /auth and /api tenant endpoints
 		a.router.PathPrefix("/auth").Handler(tenantAPI.Handler())
 		a.router.PathPrefix("/api").Handler(tenantAPI.Handler())
-		
+
 		// Register SMTP routes
 		a.RegisterSMTPRoutes(apiRouter.PathPrefix("/v1").Subrouter())
 	}

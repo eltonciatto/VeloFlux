@@ -67,7 +67,7 @@ func (bm *BackupManager) Start() error {
 
 	// Start periodic backups
 	bm.scheduler = time.NewTicker(bm.config.Interval)
-	
+
 	go func() {
 		// Perform initial backup
 		if err := bm.performBackup(); err != nil {
@@ -85,7 +85,7 @@ func (bm *BackupManager) Start() error {
 	// Start cleanup routine
 	go bm.cleanupOldBackups()
 
-	bm.logger.Info("Backup manager started", 
+	bm.logger.Info("Backup manager started",
 		zap.Duration("interval", bm.config.Interval),
 		zap.String("backup_dir", bm.config.BackupDir))
 
@@ -102,11 +102,11 @@ func (bm *BackupManager) Stop() {
 func (bm *BackupManager) performBackup() error {
 	ctx := context.Background()
 	timestamp := time.Now()
-	
+
 	bm.logger.Info("Starting backup", zap.Time("timestamp", timestamp))
 
 	// Create backup filename
-	filename := fmt.Sprintf("veloflux-backup-%s.json", 
+	filename := fmt.Sprintf("veloflux-backup-%s.json",
 		timestamp.Format("20060102-150405"))
 	backupPath := filepath.Join(bm.config.BackupDir, filename)
 
@@ -119,17 +119,17 @@ func (bm *BackupManager) performBackup() error {
 	// Create backup data
 	backupData := make(map[string]interface{})
 	tenantCount := 0
-	
+
 	for _, key := range keys {
 		value, err := bm.getKeyValue(ctx, key)
 		if err != nil {
-			bm.logger.Warn("Failed to get key value", 
+			bm.logger.Warn("Failed to get key value",
 				zap.String("key", key), zap.Error(err))
 			continue
 		}
-		
+
 		backupData[key] = value
-		
+
 		// Count tenants
 		if isValidTenantKey(key) {
 			tenantCount++
@@ -169,7 +169,7 @@ func (bm *BackupManager) performBackup() error {
 
 func (bm *BackupManager) RestoreFromBackup(backupPath string) error {
 	ctx := context.Background()
-	
+
 	bm.logger.Info("Starting restore from backup", zap.String("path", backupPath))
 
 	// Read and parse backup file
@@ -190,7 +190,7 @@ func (bm *BackupManager) RestoreFromBackup(backupPath string) error {
 	for key, value := range backupData {
 		// Set key value based on type
 		if err := bm.setKeyValue(ctx, pipeline, key, value); err != nil {
-			bm.logger.Warn("Failed to restore key", 
+			bm.logger.Warn("Failed to restore key",
 				zap.String("key", key), zap.Error(err))
 			continue
 		}
@@ -223,7 +223,7 @@ func (bm *BackupManager) cleanupOldBackups() {
 
 func (bm *BackupManager) removeOldBackups() error {
 	cutoff := time.Now().AddDate(0, 0, -bm.config.RetentionDays)
-	
+
 	files, err := filepath.Glob(filepath.Join(bm.config.BackupDir, "veloflux-backup-*.json*"))
 	if err != nil {
 		return err
@@ -238,7 +238,7 @@ func (bm *BackupManager) removeOldBackups() error {
 
 		if info.ModTime().Before(cutoff) {
 			if err := os.Remove(file); err != nil {
-				bm.logger.Warn("Failed to remove old backup", 
+				bm.logger.Warn("Failed to remove old backup",
 					zap.String("file", file), zap.Error(err))
 				continue
 			}
@@ -247,7 +247,7 @@ func (bm *BackupManager) removeOldBackups() error {
 	}
 
 	if removedCount > 0 {
-		bm.logger.Info("Cleaned up old backups", 
+		bm.logger.Info("Cleaned up old backups",
 			zap.Int("removed_count", removedCount),
 			zap.Time("cutoff_date", cutoff))
 	}

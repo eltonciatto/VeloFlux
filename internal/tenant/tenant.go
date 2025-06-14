@@ -54,8 +54,8 @@ type Tenant struct {
 	ContactEmail string      `json:"contact_email"`
 	CustomDomain string      `json:"custom_domain,omitempty"`
 	Document     string      `json:"document,omitempty"`     // For Brazilian CPF/CNPJ
-	BirthDate    string      `json:"birth_date,omitempty"`  // Format: YYYY-MM-DD
-	Email        string      `json:"email,omitempty"`       // Additional email for billing/notifications
+	BirthDate    string      `json:"birth_date,omitempty"`   // Format: YYYY-MM-DD
+	Email        string      `json:"email,omitempty"`        // Additional email for billing/notifications
 	PhoneNumber  string      `json:"phone_number,omitempty"` // Customer phone number for billing
 }
 

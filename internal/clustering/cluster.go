@@ -17,10 +17,10 @@ import (
 type StateType string
 
 const (
-	StateBackend     StateType = "backend"
-	StateRoute       StateType = "route"
-	StateConfig      StateType = "config"
-        StatePool        StateType = "pool"
+	StateBackend StateType = "backend"
+	StateRoute   StateType = "route"
+	StateConfig  StateType = "config"
+	StatePool    StateType = "pool"
 )
 
 // ClusterRole represents the role of a node in the cluster
@@ -41,22 +41,22 @@ type ClusterEvent struct {
 
 // ClusterNode represents a node in the cluster
 type ClusterNode struct {
-	ID        string     `json:"id"`
-	Address   string     `json:"address"`
+	ID        string      `json:"id"`
+	Address   string      `json:"address"`
 	Role      ClusterRole `json:"role"`
-	LastSeen  time.Time  `json:"last_seen"`
-	IsHealthy bool       `json:"is_healthy"`
+	LastSeen  time.Time   `json:"last_seen"`
+	IsHealthy bool        `json:"is_healthy"`
 }
 
 // ClusterConfig contains the configuration for clustering
 type ClusterConfig struct {
-	Enabled        bool          `yaml:"enabled"`
-	RedisAddress   string        `yaml:"redis_address"`
-	RedisPassword  string        `yaml:"redis_password"`
-	RedisDB        int           `yaml:"redis_db"`
-	NodeID         string        `yaml:"node_id"`
+	Enabled           bool          `yaml:"enabled"`
+	RedisAddress      string        `yaml:"redis_address"`
+	RedisPassword     string        `yaml:"redis_password"`
+	RedisDB           int           `yaml:"redis_db"`
+	NodeID            string        `yaml:"node_id"`
 	HeartbeatInterval time.Duration `yaml:"heartbeat_interval"`
-	LeaderTimeout  time.Duration `yaml:"leader_timeout"`
+	LeaderTimeout     time.Duration `yaml:"leader_timeout"`
 }
 
 // Cluster handles cluster state synchronization and leader election
@@ -140,7 +140,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	// Register this node
 	node := &ClusterNode{
 		ID:        c.nodeID,
-		Address:   "",  // Will be filled by caller
+		Address:   "", // Will be filled by caller
 		Role:      RoleFollower,
 		LastSeen:  time.Now(),
 		IsHealthy: true,
@@ -148,7 +148,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 	// Subscribe to cluster events
 	c.pubsub = c.client.Subscribe(ctx, "veloflux:events")
-	
+
 	// Start background goroutines
 	go c.heartbeatLoop()
 	go c.leaderElectionLoop()
@@ -157,7 +157,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	// Register node in cluster
 	c.registerNode(node)
 
-	c.logger.Info("Cluster node started", 
+	c.logger.Info("Cluster node started",
 		zap.String("node_id", c.nodeID),
 		zap.String("role", string(c.role)))
 
@@ -171,25 +171,25 @@ func (c *Cluster) Stop() error {
 	}
 
 	c.cancel()
-	
+
 	// Unregister from cluster
 	c.client.HDel(c.ctx, "veloflux:nodes", c.nodeID)
-	
+
 	// Publish leave event
 	event := ClusterEvent{
 		Type:      "node_leave",
 		Timestamp: time.Now(),
 		NodeID:    c.nodeID,
 	}
-	
+
 	data, _ := json.Marshal(event)
 	c.client.Publish(c.ctx, "veloflux:events", data)
-	
+
 	// Close connections
 	if c.pubsub != nil {
 		c.pubsub.Close()
 	}
-	
+
 	if c.client != nil {
 		c.client.Close()
 	}
@@ -501,22 +501,22 @@ func (c *Cluster) handleEvent(payload string) {
 	switch event.Type {
 	case "heartbeat":
 		// Node heartbeat received, will be handled by checkNodes()
-		
+
 	case "node_leave":
 		// Node left the cluster
 		c.nodesMutex.Lock()
 		delete(c.nodes, event.NodeID)
 		c.nodesMutex.Unlock()
-		
+
 		c.logger.Info("Node left cluster", zap.String("node_id", event.NodeID))
-		
+
 	case "leader_elected":
 		// New leader was elected
 		if event.NodeID != c.nodeID {
 			c.role = RoleFollower
 			c.logger.Info("New leader elected", zap.String("leader_id", event.NodeID))
 		}
-		
+
 	case "state_change":
 		// State changed, notify listeners
 		payload, ok := event.Payload.(map[string]interface{})
@@ -524,26 +524,26 @@ func (c *Cluster) handleEvent(payload string) {
 			c.logger.Error("Invalid state change payload")
 			return
 		}
-		
+
 		stateType, ok := payload["state_type"].(string)
 		if !ok {
 			c.logger.Error("Invalid state type in payload")
 			return
 		}
-		
+
 		key, ok := payload["key"].(string)
 		if !ok {
 			c.logger.Error("Invalid key in payload")
 			return
 		}
-		
+
 		// Get the updated value from Redis
 		value, err := c.GetState(StateType(stateType), key)
 		if err != nil {
 			c.logger.Error("Failed to get state value", zap.Error(err))
 			return
 		}
-		
+
 		// Notify listeners
 		c.notifyStateListeners(StateType(stateType), key, value)
 	}

@@ -79,16 +79,16 @@ func (p *EmailProvider) SendPasswordReset(email, token string, expiresAt time.Ti
 		domain = "veloflux.io"
 	}
 	resetURL := fmt.Sprintf("https://%s/reset-password?token=%s", domain, token)
-	
+
 	// Prepare template data
 	data := struct {
-		ResetURL string
+		ResetURL  string
 		ExpiresAt string
 	}{
-		ResetURL: resetURL,
+		ResetURL:  resetURL,
 		ExpiresAt: expiresAt.Format("02/01/2006 15:04"),
 	}
-	
+
 	// Execute the template
 	var body bytes.Buffer
 	tmpl, err := template.New("resetPassword").Parse(templateStr)
@@ -96,12 +96,12 @@ func (p *EmailProvider) SendPasswordReset(email, token string, expiresAt time.Ti
 		p.logger.Error("Failed to parse email template", zap.Error(err))
 		return err
 	}
-	
+
 	if err := tmpl.Execute(&body, data); err != nil {
 		p.logger.Error("Failed to execute email template", zap.Error(err))
 		return err
 	}
-	
+
 	// Send the email
 	return p.sendEmail(email, subject, body.String())
 }
@@ -147,14 +147,14 @@ func (p *EmailProvider) SendVerificationEmail(email, token string) error {
 		domain = "veloflux.io"
 	}
 	verificationURL := fmt.Sprintf("https://%s/verify-email?token=%s", domain, token)
-	
+
 	// Prepare template data
 	data := struct {
 		VerificationURL string
 	}{
 		VerificationURL: verificationURL,
 	}
-	
+
 	// Execute the template
 	var body bytes.Buffer
 	tmpl, err := template.New("verifyEmail").Parse(templateStr)
@@ -162,12 +162,12 @@ func (p *EmailProvider) SendVerificationEmail(email, token string) error {
 		p.logger.Error("Failed to parse email template", zap.Error(err))
 		return err
 	}
-	
+
 	if err := tmpl.Execute(&body, data); err != nil {
 		p.logger.Error("Failed to execute email template", zap.Error(err))
 		return err
 	}
-	
+
 	// Send the email
 	return p.sendEmail(email, subject, body.String())
 }
@@ -214,7 +214,7 @@ func (p *EmailProvider) SendWelcomeEmail(email, firstName, tenantName string) er
 	if domain == "" {
 		domain = "veloflux.io"
 	}
-	
+
 	data := struct {
 		FirstName    string
 		TenantName   string
@@ -224,7 +224,7 @@ func (p *EmailProvider) SendWelcomeEmail(email, firstName, tenantName string) er
 		TenantName:   tenantName,
 		DashboardURL: fmt.Sprintf("%s/dashboard", domain),
 	}
-	
+
 	// Execute the template
 	var body bytes.Buffer
 	tmpl, err := template.New("welcome").Parse(templateStr)
@@ -232,12 +232,12 @@ func (p *EmailProvider) SendWelcomeEmail(email, firstName, tenantName string) er
 		p.logger.Error("Failed to parse email template", zap.Error(err))
 		return err
 	}
-	
+
 	if err := tmpl.Execute(&body, data); err != nil {
 		p.logger.Error("Failed to execute email template", zap.Error(err))
 		return err
 	}
-	
+
 	// Send the email
 	return p.sendEmail(email, subject, body.String())
 }
@@ -297,7 +297,7 @@ func (p *EmailProvider) SendTestEmail(email string) error {
 		FromEmail: p.config.FromEmail,
 		DateTime:  time.Now().Format("02/01/2006 15:04:05"),
 	}
-	
+
 	// Execute the template
 	var body bytes.Buffer
 	tmpl, err := template.New("testEmail").Parse(templateStr)
@@ -305,12 +305,12 @@ func (p *EmailProvider) SendTestEmail(email string) error {
 		p.logger.Error("Failed to parse email template", zap.Error(err))
 		return err
 	}
-	
+
 	if err := tmpl.Execute(&body, data); err != nil {
 		p.logger.Error("Failed to execute email template", zap.Error(err))
 		return err
 	}
-	
+
 	// Send the email
 	return p.sendEmail(email, subject, body.String())
 }
@@ -318,7 +318,7 @@ func (p *EmailProvider) SendTestEmail(email string) error {
 // sendEmail sends an email using the configured SMTP server
 func (p *EmailProvider) sendEmail(to, subject, htmlBody string) error {
 	from := fmt.Sprintf("%s <%s>", p.config.FromName, p.config.FromEmail)
-	
+
 	// Setup headers
 	headers := make(map[string]string)
 	headers["From"] = from

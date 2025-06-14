@@ -138,7 +138,7 @@ func (am *AlertManager) Start() error {
 	}
 
 	ticker := time.NewTicker(am.config.CheckInterval)
-	
+
 	go func() {
 		for range ticker.C {
 			am.checkRules()
@@ -155,7 +155,7 @@ func (am *AlertManager) Start() error {
 
 func (am *AlertManager) checkRules() {
 	ctx := context.Background()
-	
+
 	for _, rule := range am.rules {
 		value, err := am.evaluateRule(rule)
 		if err != nil {
@@ -167,23 +167,23 @@ func (am *AlertManager) checkRules() {
 		}
 
 		shouldFire := am.evaluateThreshold(value, rule.config.Threshold, rule.config.Operator)
-		
+
 		if shouldFire && !rule.active {
 			// Rule started firing
 			alert := am.createAlert(rule, value)
 			am.fireAlert(ctx, alert, rule)
 			rule.active = true
 			rule.lastFired = &alert.StartsAt
-			
+
 			alertsTotal.WithLabelValues(rule.config.Name, rule.config.Severity).Inc()
 			alertsActive.WithLabelValues(rule.config.Name, rule.config.Severity).Inc()
-			
+
 		} else if !shouldFire && rule.active {
 			// Rule resolved
 			alert := am.createResolvedAlert(rule, value)
 			am.resolveAlert(ctx, alert, rule)
 			rule.active = false
-			
+
 			alertsActive.WithLabelValues(rule.config.Name, rule.config.Severity).Dec()
 		}
 	}
@@ -238,7 +238,7 @@ func (am *AlertManager) resolveAlert(ctx context.Context, alert *Alert, rule *Al
 func (am *AlertManager) evaluateRule(rule *AlertRule) (float64, error) {
 	// This would integrate with Prometheus or other metric sources
 	// For now, we'll implement basic metric evaluation
-	
+
 	switch rule.config.Query {
 	case "backend_health":
 		return am.getBackendHealthMetric(), nil
@@ -364,7 +364,7 @@ func NewSlackChannel(name string, config map[string]interface{}) (*SlackChannel,
 	if !ok || webhookURL == "" {
 		return nil, fmt.Errorf("slack channel configuration missing webhook_url")
 	}
-	
+
 	return &SlackChannel{
 		name:       name,
 		webhookURL: webhookURL,
@@ -396,14 +396,14 @@ func NewEmailChannel(name string, config map[string]interface{}) (*EmailChannel,
 	if !ok || len(recipients) == 0 {
 		return nil, fmt.Errorf("email channel configuration missing recipients")
 	}
-	
+
 	to := make([]string, 0, len(recipients))
 	for _, r := range recipients {
 		if s, ok := r.(string); ok {
 			to = append(to, s)
 		}
 	}
-	
+
 	return &EmailChannel{
 		name: name,
 		to:   to,
@@ -434,7 +434,7 @@ func NewWebhookChannel(name string, config map[string]interface{}) (*WebhookChan
 	if !ok || url == "" {
 		return nil, fmt.Errorf("webhook channel configuration missing url")
 	}
-	
+
 	return &WebhookChannel{
 		name: name,
 		url:  url,
@@ -465,7 +465,7 @@ func NewPagerDutyChannel(name string, config map[string]interface{}) (*PagerDuty
 	if !ok || key == "" {
 		return nil, fmt.Errorf("pagerduty channel configuration missing integration_key")
 	}
-	
+
 	return &PagerDutyChannel{
 		name:           name,
 		integrationKey: key,

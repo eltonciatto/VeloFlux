@@ -109,7 +109,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		CancelURL:           cfg.Billing.CancelURL,
 	}
 	billingManager := billing.NewBillingManager(billingCfg, redisClient, tenantManager, logger)
-	
+
 	// Initialize auth config for OIDC
 	authConfig := &auth.Config{
 		JWTSecret:       cfg.Auth.JWTSecret,
@@ -188,7 +188,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 		Handler: metrics.Handler(),
 	}
 
-	// These managers are already initialized in the New function, 
+	// These managers are already initialized in the New function,
 	// so we'll use the existing instances instead of creating new ones
 
 	// Create API server

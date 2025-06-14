@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"golang.org/x/oauth2"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 )
 
 // KeycloakOIDCProvider is a specialized OIDC provider for Keycloak
@@ -20,13 +20,13 @@ type KeycloakOIDCProvider struct {
 func NewKeycloakProvider(ctx context.Context, oidcConfig *OIDCConfig, logger *zap.Logger) (*KeycloakOIDCProvider, error) {
 	// Extract realm from provider URL if not specified
 	realm := "master" // Default realm
-	
+
 	// Create base provider
 	baseProvider, err := newOIDCProvider(ctx, oidcConfig)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &KeycloakOIDCProvider{
 		baseProvider: baseProvider,
 		realm:        realm,
@@ -37,10 +37,10 @@ func NewKeycloakProvider(ctx context.Context, oidcConfig *OIDCConfig, logger *za
 func (p *KeycloakOIDCProvider) ConfigureOAuthFlow(oidcConfig *OIDCConfig, redirectURI string) {
 	// Add Keycloak-specific scopes
 	scopes := []string{"openid", "email", "profile"}
-	
+
 	// Add roles scope for access to user roles
 	scopes = append(scopes, "roles")
-	
+
 	// Configure OAuth
 	p.baseProvider.OAuth2Config = oauth2.Config{
 		ClientID:     oidcConfig.ClientID,
@@ -67,7 +67,7 @@ func (p *KeycloakOIDCProvider) ExtractTenantInfo(ctx context.Context, token *oau
 
 	// Extract claims
 	var claims struct {
-		Email         string   `json:"email"`
+		Email          string `json:"email"`
 		ResourceAccess map[string]struct {
 			Roles []string `json:"roles"`
 		} `json:"resource_access"`
@@ -98,10 +98,10 @@ func (p *KeycloakOIDCProvider) ExtractTenantInfo(ctx context.Context, token *oau
 
 	// Extract roles
 	var roles []string
-	
+
 	// Add realm roles
 	roles = append(roles, claims.RealmAccess.Roles...)
-	
+
 	// Add client roles for the current client
 	if clientRoles, ok := claims.ResourceAccess[p.baseProvider.OAuth2Config.ClientID]; ok {
 		roles = append(roles, clientRoles.Roles...)
@@ -120,13 +120,13 @@ type Auth0OIDCProvider struct {
 func NewAuth0Provider(ctx context.Context, oidcConfig *OIDCConfig, logger *zap.Logger) (*Auth0OIDCProvider, error) {
 	// Extract domain from provider URL
 	domain := oidcConfig.ProviderURL
-	
+
 	// Create base provider
 	baseProvider, err := newOIDCProvider(ctx, oidcConfig)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &Auth0OIDCProvider{
 		baseProvider: baseProvider,
 		domain:       domain,
@@ -137,7 +137,7 @@ func NewAuth0Provider(ctx context.Context, oidcConfig *OIDCConfig, logger *zap.L
 func (p *Auth0OIDCProvider) ConfigureOAuthFlow(oidcConfig *OIDCConfig, redirectURI string) {
 	// Add Auth0-specific scopes
 	scopes := []string{"openid", "email", "profile"}
-	
+
 	// Configure OAuth
 	p.baseProvider.OAuth2Config = oauth2.Config{
 		ClientID:     oidcConfig.ClientID,

@@ -70,10 +70,10 @@ func (a *API) handleGetSMTPSettings(w http.ResponseWriter, r *http.Request) {
 	var response SMTPSettingsResponse
 	if a.config.Auth.SMTPEnabled {
 		response = SMTPSettingsResponse{
-			Enabled:   a.config.Auth.SMTPEnabled,
-			Host:      a.config.Auth.SMTPConfig.Host,
-			Port:      a.config.Auth.SMTPConfig.Port,
-			Username:  a.config.Auth.SMTPConfig.Username,
+			Enabled:  a.config.Auth.SMTPEnabled,
+			Host:     a.config.Auth.SMTPConfig.Host,
+			Port:     a.config.Auth.SMTPConfig.Port,
+			Username: a.config.Auth.SMTPConfig.Username,
 			// Don't return actual password, just indicate if one exists
 			Password:  "********",
 			FromEmail: a.config.Auth.SMTPConfig.FromEmail,
