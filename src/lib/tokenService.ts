@@ -1,6 +1,16 @@
 // Token storage service
 import Cookies from 'js-cookie';
 
+// Interface for user information
+export interface UserInfo {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  tenantId?: string;
+  [key: string]: unknown;
+}
+
 export class TokenService {
   private static readonly TOKEN_KEY = 'vf_auth_token';
   private static readonly USER_KEY = 'vf_user_info';
@@ -32,19 +42,19 @@ export class TokenService {
   }
   
   // Get user info from localStorage
-  static getUserInfo(): any {
+  static getUserInfo(): UserInfo | null {
     const userJson = localStorage.getItem(this.USER_KEY);
     if (!userJson) return null;
     
     try {
-      return JSON.parse(userJson);
+      return JSON.parse(userJson) as UserInfo;
     } catch (e) {
       return null;
     }
   }
   
   // Set user info in localStorage
-  static setUserInfo(user: any): void {
+  static setUserInfo(user: UserInfo): void {
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
   

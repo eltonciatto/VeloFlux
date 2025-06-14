@@ -2,14 +2,14 @@ export const API_BASE = import.meta.env.VITE_API_URL || '';
 export const ADMIN_BASE = import.meta.env.VITE_ADMIN_URL || '';
 
 // Simple sanitizer for input data to prevent XSS attacks
-export function sanitizeInput(data: any): any {
+export function sanitizeInput<T>(data: T): T {
   if (typeof data === 'string') {
     // Basic sanitization of HTML tags
     return data
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/'/g, '&#39;') as unknown as T;
   }
   
   if (typeof data !== 'object' || data === null) {
@@ -17,15 +17,15 @@ export function sanitizeInput(data: any): any {
   }
   
   if (Array.isArray(data)) {
-    return data.map(item => sanitizeInput(item));
+    return data.map(item => sanitizeInput(item)) as unknown as T;
   }
   
-  const sanitizedObj: Record<string, any> = {};
-  for (const [key, value] of Object.entries(data)) {
+  const sanitizedObj: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
     sanitizedObj[key] = sanitizeInput(value);
   }
   
-  return sanitizedObj;
+  return sanitizedObj as unknown as T;
 }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
