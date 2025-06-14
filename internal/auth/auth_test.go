@@ -15,7 +15,6 @@ func TestJWTTokenGeneration(t *testing.T) {
 	}
 
 	manager := NewManager(config, nil, nil)
-
 	claims := &Claims{
 		UserID:   "user123",
 		TenantID: "tenant456",
@@ -24,7 +23,9 @@ func TestJWTTokenGeneration(t *testing.T) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-	}	token, err := manager.GenerateToken(claims)
+	}
+
+	token, err := manager.GenerateToken(claims)
 	require.NoError(t, err)
 	assert.NotEmpty(t, token)
 
