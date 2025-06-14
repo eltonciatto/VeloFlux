@@ -260,17 +260,17 @@ func GetTenantIDFromContext(ctx context.Context) (string, error) {
 
 // Manager handles authentication operations
 type Manager struct {
-	config          *Config
-	logger          *zap.Logger
-	tenantSvc       tenant.Service
-	oidcClient      *OIDCClient
-	loginAttempts   map[string]*LoginAttempt
-	attemptsMutex   sync.RWMutex
+	config        *Config
+	logger        *zap.Logger
+	tenantSvc     tenant.Service
+	oidcClient    *OIDCClient
+	loginAttempts map[string]*LoginAttempt
+	attemptsMutex sync.RWMutex
 }
 
 // LoginAttempt tracks failed login attempts for throttling
 type LoginAttempt struct {
-	Count     int
+	Count       int
 	LastAttempt time.Time
 	LockedUntil time.Time
 }
