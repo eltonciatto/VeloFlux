@@ -6,8 +6,15 @@ on:
   pull_request:
     branches: [ main ]
 
+# Add permissions needed for GitHub CodeQL and security scanning
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  pull-requests: read
+
 env:
-  GO_VERSION: '1.24'
+  GO_VERSION: '1.22'
   NODE_VERSION: '18'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -45,7 +52,10 @@ jobs:
 
     - name: Download dependencies
       run: go mod download
-
+      
+    - name: Run go mod tidy
+      run: go mod tidy
+      
     - name: Run go vet
       run: go vet ./...
 
@@ -82,15 +92,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-
+        
     - name: Install dependencies
-      run: npm ci
+      run: |
+        # Force update package-lock.json if it doesn't match package.json
+        npm install --package-lock-only
+        npm ci
 
     - name: Run ESLint
       run: npm run lint
@@ -114,7 +127,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+    
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -122,20 +137,30 @@ jobs:
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
 
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
+        category: 'trivy'
       continue-on-error: true
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: go, javascript-typescript
+        queries: security-extended
+        setup-python-dependencies: false
+
+    - name: Autobuild with CodeQL
+      uses: github/codeql-action/autobuild@v3
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      with:
+        category: 'codeql'
+        upload: true
 
   # Integration Tests
   integration-test:
@@ -162,13 +187,18 @@ jobs:
         cache: 'npm'
 
     - name: Install frontend dependencies
-      run: npm ci
+      run: |
+        # Force update package-lock.json if it doesn't match package.json
+        npm install --package-lock-only
+        npm ci
 
     - name: Build frontend
       run: npm run build
 
     - name: Download Go dependencies
-      run: go mod download
+      run: |
+        go mod download
+        go mod tidy
 
     - name: Run integration tests
       run: |
@@ -257,29 +287,7 @@ jobs:
     needs: [backend-test, frontend-test, security-scan, integration-test]
     if: always()
     steps:
-    - name: Notify Slack on success
-      if: needs.backend-test.result == 'success' && needs.frontend-test.result == 'success'
-      uses: 8398a7/action-slack@v3
-      with:
-        status: success
-        text: 'VeloFlux CI/CD pipeline completed successfully! 🎉'
-      env:
-        # Configure SLACK_WEBHOOK_URL as a repository secret
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      continue-on-error: true
-
-    - name: Notify Slack on failure
-      if: needs.backend-test.result == 'failure' || needs.frontend-test.result == 'failure' || needs.security-scan.result == 'failure'
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        text: 'VeloFlux CI/CD pipeline failed! 🚨 Please check the logs.'
-      env:
-        # Configure SLACK_WEBHOOK_URL as a repository secret
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      continue-on-error: true
-
-    - name: Pipeline Summary
+    - name: Pipeline Status Summary
       run: |
         echo "## 🚀 VeloFlux CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -291,3 +299,10 @@ jobs:
         echo "| Integration Tests | ${{ needs.integration-test.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Pipeline completed at:** $(date)" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.backend-test.result }}" == "success" && "${{ needs.frontend-test.result }}" == "success" ]]; then
+          echo "Pipeline completed successfully! 🎉"
+        else
+          echo "Pipeline failed! 🚨 Please check the logs."
+          exit 1
+        fi

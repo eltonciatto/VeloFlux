@@ -1,8 +1,6 @@
 module github.com/eltonciatto/veloflux
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.22.0
 
 require (
 	github.com/corazawaf/coraza/v3 v3.3.3
