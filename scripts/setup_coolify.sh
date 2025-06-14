@@ -16,6 +16,29 @@ else
   echo "✅ Diretório .coolify já existe"
 fi
 
+# Criar script de pré-build
+echo "🔄 Criando script de pré-build..."
+cat > .coolify/pre-build.sh << 'EOF'
+#!/bin/bash
+# Script de pré-build para Coolify
+# Este script será executado antes da compilação do projeto
+# É útil para resolver problemas comuns de build
+
+set -e
+
+echo "🔧 Executando pré-build para VeloFlux no Coolify..."
+
+# Verificar e corrigir dependências Go
+echo "📦 Verificando dependências Go..."
+go mod tidy
+go mod verify
+
+echo "✅ Pré-build concluído com sucesso!"
+EOF
+
+chmod +x .coolify/pre-build.sh
+echo "✅ Script de pré-build criado em .coolify/pre-build.sh"
+
 # Verificar se o Dockerfile personalizado existe
 if [ ! -f ".coolify/Dockerfile" ]; then
   echo "⚠️ Dockerfile personalizado não encontrado"
@@ -39,6 +62,9 @@ RUN go mod download
 
 # Copiar código-fonte
 COPY . .
+
+# Executar go mod tidy para garantir consistência das dependências
+RUN go mod tidy
 
 # Build da interface web
 RUN npm ci && npm run build

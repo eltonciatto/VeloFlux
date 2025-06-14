@@ -487,6 +487,42 @@ RUN mkdir -p /etc/veloflux && chmod 777 /etc/veloflux
 mkdir -p /etc/veloflux && chmod 777 /etc/veloflux
 ```
 
+### Erro de "go mod tidy"
+
+Se você encontrar o erro:
+
+```
+go: updates to go.mod needed; to update it:
+	go mod tidy
+```
+
+**Solução:**
+
+1. Modifique o Dockerfile para incluir o comando `go mod tidy` antes da compilação:
+   ```dockerfile
+   # Copiar código-fonte
+   COPY . .
+   
+   # Executar go mod tidy para garantir consistência das dependências
+   RUN go mod tidy
+   
+   # Build da interface web
+   RUN npm ci && npm run build
+   ```
+
+2. Esta etapa garante que as dependências do Go estejam consistentes antes de compilar o projeto
+
+3. Se o problema persistir, você também pode adicionar um comando pré-build no Coolify:
+   ```
+   go mod tidy && go mod verify
+   ```
+
+4. Alternativamente, execute o script de configuração atualizado:
+   ```bash
+   bash scripts/setup_coolify.sh
+   ```
+   que já inclui essa correção no Dockerfile gerado
+
 ### Otimizando o Build no Coolify
 
 Para acelerar o processo de build no Coolify:
@@ -566,3 +602,71 @@ Um workflow do GitHub Actions foi configurado em `.github/workflows/coolify-buil
 5. Configure o volume para o arquivo de configuração usando o modelo em `.coolify/config.example.yaml`
 
 Esses arquivos garantem que o VeloFlux SaaS seja construído e executado corretamente no ambiente Coolify, minimizando erros comuns de deploy
+
+## Scripts Auxiliares para Troubleshooting
+
+Para ajudar na resolução de problemas durante o deploy, alguns scripts auxiliares foram criados:
+
+### Script de Pré-build
+
+O script `.coolify/pre-build.sh` pode ser configurado no Coolify para executar antes do build:
+
+```bash
+#!/bin/bash
+# Script de pré-build para Coolify
+
+set -e
+
+echo "🔧 Executando pré-build para VeloFlux no Coolify..."
+
+# Verificar e corrigir dependências Go
+echo "📦 Verificando dependências Go..."
+go mod tidy
+go mod verify
+
+echo "✅ Pré-build concluído com sucesso!"
+```
+
+Para usar este script no Coolify:
+1. Vá para as configurações do seu serviço
+2. Em "Build & Deploy" → "Pre Build Command", adicione:
+   ```
+   bash .coolify/pre-build.sh
+   ```
+
+### Script de Verificação de Deploy
+
+O script `scripts/verify_coolify_deploy.sh` pode ser executado localmente antes de enviar as alterações para verificar se o projeto está pronto para deploy:
+
+```bash
+# Execute este script para verificar se o projeto está pronto para deploy
+bash scripts/verify_coolify_deploy.sh
+```
+
+Este script verifica:
+- Se as dependências Go estão consistentes
+- Se o frontend constrói corretamente
+- Se o backend compila sem erros
+- Se os diretórios necessários existem
+
+### Fluxo de Trabalho Recomendado
+
+Para minimizar problemas de deploy:
+
+1. Execute o script de verificação localmente:
+   ```bash
+   bash scripts/verify_coolify_deploy.sh
+   ```
+
+2. Execute o script de configuração do Coolify:
+   ```bash
+   bash scripts/setup_coolify.sh
+   ```
+
+3. Faça commit e push das alterações
+
+4. Configure o Coolify para usar:
+   - Dockerfile: `.coolify/Dockerfile`
+   - Pre-Build Command: `bash .coolify/pre-build.sh`
+
+Este fluxo de trabalho elimina a maioria dos problemas comuns de deploy.

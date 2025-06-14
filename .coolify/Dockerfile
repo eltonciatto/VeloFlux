@@ -16,6 +16,9 @@ RUN go mod download
 # Copiar código-fonte
 COPY . .
 
+# Executar go mod tidy para garantir consistência das dependências
+RUN go mod tidy
+
 # Build da interface web
 RUN npm ci && npm run build
 
