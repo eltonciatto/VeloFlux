@@ -269,6 +269,17 @@ func NewManager(config *Config, logger *zap.Logger, tenantSvc tenant.Service) *M
 		logger, _ = zap.NewProduction()
 	}
 
+	// Set default values
+	if config.TokenValidity == 0 {
+		config.TokenValidity = 24 * time.Hour
+	}
+	if config.JWTIssuer == "" {
+		config.JWTIssuer = "veloflux"
+	}
+	if config.JWTAudience == "" {
+		config.JWTAudience = "veloflux-api"
+	}
+
 	manager := &Manager{
 		config:    config,
 		logger:    logger,
@@ -331,4 +342,77 @@ func (c *OIDCClient) ExchangeCode(ctx context.Context, code string) (string, err
 	// 3. Extract user information
 	// For now, return a placeholder
 	return "", errors.New("OIDC token exchange not implemented")
+}
+
+// GenerateToken generates a JWT token from claims
+func (m *Manager) GenerateToken(claims *Claims) (string, error) {
+	// Set default values if not provided
+	if claims.RegisteredClaims.IssuedAt == nil {
+		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
+	}
+	if claims.RegisteredClaims.ExpiresAt == nil {
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(m.config.TokenValidity))
+	}
+	if claims.RegisteredClaims.Issuer == "" {
+		claims.RegisteredClaims.Issuer = m.config.JWTIssuer
+	}
+	if len(claims.RegisteredClaims.Audience) == 0 {
+		claims.RegisteredClaims.Audience = []string{m.config.JWTAudience}
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(m.config.JWTSecret))
+}
+
+// ValidateToken validates a JWT token and returns claims
+func (m *Manager) ValidateToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (interface{}, error) {
+			// Validate the signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(m.config.JWTSecret), nil
+		},
+		jwt.WithAudience(m.config.JWTAudience),
+		jwt.WithIssuer(m.config.JWTIssuer),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
+}
+
+// GenerateTokenForUser generates a JWT token for a user
+func (m *Manager) GenerateTokenForUser(user *tenant.UserInfo) (string, error) {
+	expirationTime := time.Now().Add(m.config.TokenValidity)
+
+	claims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    m.config.JWTIssuer,
+			Subject:   user.UserID,
+			Audience:  []string{m.config.JWTAudience},
+		},
+		UserID:    user.UserID,
+		Email:     user.Email,
+		TenantID:  user.TenantID,
+		Role:      user.Role,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+
+	return m.GenerateToken(claims)
 }
