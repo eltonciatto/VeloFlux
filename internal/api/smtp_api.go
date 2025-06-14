@@ -129,10 +129,10 @@ func (a *API) handleUpdateSMTPSettings(w http.ResponseWriter, r *http.Request) {
 	a.config.Auth.SMTPEnabled = req.Enabled
 	a.config.Auth.SMTPConfig.Host = req.Host
 	a.config.Auth.SMTPConfig.Port = req.Port
-	a.config.Auth.SMTPConfig.Username = req.Username
-	if req.Password != "" && req.Password != "********" {
+	a.config.Auth.SMTPConfig.Username = req.Username	if req.Password != "" && req.Password != "********" {
 		a.config.Auth.SMTPConfig.Password = req.Password
-	}	a.config.Auth.SMTPConfig.FromEmail = req.FromEmail
+	}
+	a.config.Auth.SMTPConfig.FromEmail = req.FromEmail
 	a.config.Auth.SMTPConfig.FromName = req.FromName
 	a.config.Auth.SMTPConfig.UseTLS = req.UseTLS
 	a.config.Auth.SMTPConfig.AppDomain = req.AppDomain
@@ -181,7 +181,8 @@ func (a *API) handleTestSMTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create temporary email provider with test settings	testConfig := auth.SMTPConfig{
+	// Create temporary email provider with test settings
+	testConfig := auth.SMTPConfig{
 		Host:      req.Config.Host,
 		Port:      req.Config.Port,
 		Username:  req.Config.Username,
