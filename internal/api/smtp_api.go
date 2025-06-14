@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/eltonciatto/veloflux/internal/auth"
 	"github.com/eltonciatto/veloflux/internal/config"
@@ -137,10 +136,10 @@ func (a *API) handleUpdateSMTPSettings(w http.ResponseWriter, r *http.Request) {
 	a.config.Auth.SMTPConfig.FromName = req.FromName
 	a.config.Auth.SMTPConfig.UseTLS = req.UseTLS
 	a.config.Auth.SMTPConfig.AppDomain = req.AppDomain
-
 	// If SMTP is enabled, reinitialize the email provider
 	if a.config.Auth.SMTPEnabled {
-		a.authenticator.UpdateEmailProvider(auth.NewEmailProvider(a.config.Auth.SMTPConfig, a.logger))
+		authSMTPConfig := convertConfigSMTPToAuthSMTP(a.config.Auth.SMTPConfig)
+		a.authenticator.UpdateEmailProvider(auth.NewEmailProvider(authSMTPConfig, a.logger))
 	}
 
 	// Return success
