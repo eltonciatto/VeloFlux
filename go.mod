@@ -18,9 +18,9 @@ require (
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/time v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.29.1
-	k8s.io/apimachinery v0.29.1
-	k8s.io/client-go v0.29.1
+	k8s.io/api v0.28.4
+	k8s.io/apimachinery v0.28.4
+	k8s.io/client-go v0.28.4
 )
 
 require (
