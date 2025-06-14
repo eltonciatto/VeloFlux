@@ -123,13 +123,13 @@ func (a *API) handleUpdateSMTPSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 	// In a real implementation, this would update the tenant's configuration in Redis
 	// For now, we'll update the global SMTP settings
 	a.config.Auth.SMTPEnabled = req.Enabled
 	a.config.Auth.SMTPConfig.Host = req.Host
 	a.config.Auth.SMTPConfig.Port = req.Port
-	a.config.Auth.SMTPConfig.Username = req.Username	if req.Password != "" && req.Password != "********" {
+	a.config.Auth.SMTPConfig.Username = req.Username
+	if req.Password != "" && req.Password != "********" {
 		a.config.Auth.SMTPConfig.Password = req.Password
 	}
 	a.config.Auth.SMTPConfig.FromEmail = req.FromEmail
