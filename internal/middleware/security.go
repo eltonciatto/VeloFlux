@@ -173,7 +173,8 @@ func isSensitivePath(path string) bool {
 }
 
 func getAllowedOrigins() []string {
-	// In production, this should come from configuration	return []string{
+	// In production, this should come from configuration
+	return []string{
 		"https://veloflux.io",
 		"https://admin.veloflux.io",
 		"https://app.veloflux.io",

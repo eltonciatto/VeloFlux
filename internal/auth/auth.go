@@ -74,7 +74,9 @@ func New(config *Config, tenantManager *tenant.Manager, logger *zap.Logger) *Aut
 
 	// Initialize email provider if SMTP is enabled
 	if config.SMTPEnabled {
-		auth.emailProvider = NewEmailProvider(config.SMTPConfig, logger)
+		// Convert AuthSMTPConfig to SMTPConfig
+		smtpConfig := authSMTPConfigToSMTPConfig(config.SMTPConfig)
+		auth.emailProvider = NewEmailProvider(smtpConfig, logger)
 	}
 
 	return auth
@@ -611,7 +613,7 @@ func (a *Authenticator) SendWelcomeEmail(ctx context.Context, userID, tenantID s
 	}
 
 	// Get the user info
-	user, err := a.tenantManager.GetUser(ctx, userID)
+	user, err := a.tenantManager.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -681,4 +683,19 @@ func (a *Authenticator) generateVerificationToken(user *tenant.UserInfo) (string
 // UpdateEmailProvider updates the email provider at runtime
 func (a *Authenticator) UpdateEmailProvider(provider *EmailProvider) {
 	a.emailProvider = provider
+}
+
+// authSMTPConfigToSMTPConfig converts AuthSMTPConfig to SMTPConfig
+func authSMTPConfigToSMTPConfig(config AuthSMTPConfig) SMTPConfig {
+	return SMTPConfig{
+		Host:        config.Host,
+		Port:        config.Port,
+		Username:    config.User,
+		Password:    config.Password,
+		FromEmail:   config.Sender,
+		FromName:    "VeloFlux",
+		UseTLS:      true,
+		AppDomain:   "veloflux.io",
+		TemplatesDir: "",
+	}
 }
