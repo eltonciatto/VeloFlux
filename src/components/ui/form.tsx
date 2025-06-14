@@ -29,16 +29,7 @@ const FormField = <
   )
 }
 
-const useFormField = () => {
-  const { getFieldState, formState } = useFormContext()
-  const baseFieldProps = useBaseFormField()
-  const fieldState = getFieldState(baseFieldProps.name, formState)
-
-  return {
-    ...baseFieldProps,
-    ...fieldState,
-  }
-}
+// Use useFormField from form-utils.ts directly
 
 type FormItemContextValue = {
   id: string
@@ -66,7 +57,7 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
+  const { error, formItemId } = useBaseFormField()
 
   return (
     <Label
@@ -83,7 +74,7 @@ const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  const { error, formItemId, formDescriptionId, formMessageId } = useBaseFormField()
 
   return (
     <Slot
@@ -105,7 +96,7 @@ const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {
-  const { formDescriptionId } = useFormField()
+  const { formDescriptionId } = useBaseFormField()
 
   return (
     <p
@@ -122,7 +113,7 @@ const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
-  const { error, formMessageId } = useFormField()
+  const { error, formMessageId } = useBaseFormField()
   const body = error ? String(error?.message) : children
 
   if (!body) {
@@ -143,7 +134,6 @@ const FormMessage = React.forwardRef<
 FormMessage.displayName = "FormMessage"
 
 export {
-  useFormField,
   Form,
   FormItem,
   FormLabel,
