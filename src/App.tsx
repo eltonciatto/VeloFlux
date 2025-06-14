@@ -12,8 +12,8 @@ import Profile from '@/pages/Profile';
 import TenantManagement from '@/pages/TenantManagement';
 import UserManager from '@/pages/UserManager';
 import Docs from '@/pages/Docs';
-import { AuthProvider } from '@/hooks/use-auth';
-import { TenantProvider } from '@/hooks/use-tenant';
+import { AuthProvider } from '@/hooks/auth-provider';
+import { TenantProvider } from '@/hooks/tenant-provider';
 import { RequireAuth } from '@/components/RequireAuth';
 
 const queryClient = new QueryClient();

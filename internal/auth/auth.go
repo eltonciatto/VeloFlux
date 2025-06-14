@@ -258,12 +258,12 @@ func GetTenantIDFromContext(ctx context.Context) (string, error) {
 type Manager struct {
 	config     *Config
 	logger     *zap.Logger
-	tenantSvc  *tenant.Service
+	tenantSvc  tenant.Service
 	oidcClient *OIDCClient
 }
 
 // NewManager creates a new authentication manager
-func NewManager(config *Config, logger *zap.Logger, tenantSvc *tenant.Service) *Manager {
+func NewManager(config *Config, logger *zap.Logger, tenantSvc tenant.Service) *Manager {
 	if logger == nil {
 		// Create a default logger if none provided
 		logger, _ = zap.NewProduction()
@@ -286,4 +286,49 @@ func NewManager(config *Config, logger *zap.Logger, tenantSvc *tenant.Service) *
 	}
 
 	return manager
+}
+
+// OIDCClient handles OIDC authentication operations
+type OIDCClient struct {
+	issuerURL   string
+	clientID    string
+	redirectURI string
+	// In a real implementation, this would include more fields like:
+	// provider    *oidc.Provider
+	// oauth2Config *oauth2.Config
+}
+
+// NewOIDCClient creates a new OIDC client
+func NewOIDCClient(issuerURL, clientID, redirectURI string) (*OIDCClient, error) {
+	if issuerURL == "" || clientID == "" || redirectURI == "" {
+		return nil, errors.New("OIDC configuration incomplete: issuerURL, clientID, and redirectURI are required")
+	}
+
+	// In a real implementation, you would:
+	// 1. Create an OIDC provider using the issuer URL
+	// 2. Set up OAuth2 configuration
+	// 3. Validate the OIDC provider's configuration
+
+	return &OIDCClient{
+		issuerURL:   issuerURL,
+		clientID:    clientID,
+		redirectURI: redirectURI,
+	}, nil
+}
+
+// GetAuthURL returns the OIDC authentication URL
+func (c *OIDCClient) GetAuthURL(state string) string {
+	// In a real implementation, this would generate a proper OAuth2 auth URL
+	return fmt.Sprintf("%s/auth?client_id=%s&redirect_uri=%s&state=%s",
+		c.issuerURL, c.clientID, c.redirectURI, state)
+}
+
+// ExchangeCode exchanges an authorization code for tokens
+func (c *OIDCClient) ExchangeCode(ctx context.Context, code string) (string, error) {
+	// In a real implementation, this would:
+	// 1. Exchange the code for tokens using OAuth2
+	// 2. Verify the ID token
+	// 3. Extract user information
+	// For now, return a placeholder
+	return "", errors.New("OIDC token exchange not implemented")
 }

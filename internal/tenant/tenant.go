@@ -88,6 +88,24 @@ func NewManager(redisClient *redis.Client, logger *zap.Logger) *Manager {
 	}
 }
 
+// Service interface for tenant operations
+type Service interface {
+	GetTenant(ctx context.Context, id string) (*Tenant, error)
+	ListTenants(ctx context.Context) ([]*Tenant, error)
+	CreateTenant(ctx context.Context, tenant *Tenant) error
+	UpdateTenant(ctx context.Context, tenant *Tenant) error
+	DeleteTenant(ctx context.Context, id string) error
+	GetUserByID(ctx context.Context, userID string) (*UserInfo, error)
+	GetUserByEmail(ctx context.Context, email string) (*UserInfo, error)
+	GetTenantUsers(ctx context.Context, tenantID string) ([]UserInfo, error)
+	AddUser(ctx context.Context, user *UserInfo) error
+	UpdateUser(ctx context.Context, user *UserInfo) error
+	RemoveUser(ctx context.Context, userID, tenantID string) error
+}
+
+// Ensure Manager implements Service interface
+var _ Service = (*Manager)(nil)
+
 // GetTenant retrieves a tenant by ID
 func (m *Manager) GetTenant(ctx context.Context, id string) (*Tenant, error) {
 	// Check cache first
@@ -353,7 +371,6 @@ func (m *Manager) AddUser(ctx context.Context, user *UserInfo) error {
 		return err
 	}
 
-	// Add user to tenant's user set
 	if err := m.client.SAdd(ctx, fmt.Sprintf("vf:tenant:%s:users", user.TenantID), user.UserID).Err(); err != nil {
 		return err
 	}
