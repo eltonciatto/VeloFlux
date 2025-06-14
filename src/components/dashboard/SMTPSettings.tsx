@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ const SMTPSettings = () => {
   const [loading, setLoading] = useState(true);
   const [isTesting, setIsTesting] = useState(false);
   const [testEmail, setTestEmail] = useState('');
-    const [config, setConfig] = useState({
+  const [config, setConfig] = useState({
     enabled: false,
     host: '',
     port: 587,
@@ -29,14 +29,8 @@ const SMTPSettings = () => {
     use_tls: true,
     app_domain: 'veloflux.io'
   });
-
-  useEffect(() => {
-    if (token) {
-      fetchConfig();
-    }
-  }, [token, tenantId]);
-
-  const fetchConfig = async () => {
+  
+  const fetchConfig = useCallback(async () => {
     try {
       setLoading(true);
       const response = await safeApiFetch(`/api/v1/tenant/${tenantId}/smtp-settings`, {
@@ -48,7 +42,8 @@ const SMTPSettings = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();        setConfig({
+        const data = await response.json();
+        setConfig({
           enabled: data.enabled || false,
           host: data.host || '',
           port: data.port || 587,
@@ -70,7 +65,13 @@ const SMTPSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, token, toast]);
+
+  useEffect(() => {
+    if (token) {
+      fetchConfig();
+    }
+  }, [token, fetchConfig]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;

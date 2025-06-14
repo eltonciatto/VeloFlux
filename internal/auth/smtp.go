@@ -209,8 +209,8 @@ func (p *EmailProvider) SendWelcomeEmail(email, firstName, tenantName string) er
 </body>
 </html>
 `
-
-	// Prepare template data	domain := p.config.AppDomain
+	// Prepare template data
+	domain := p.config.AppDomain
 	if domain == "" {
 		domain = "veloflux.io"
 	}

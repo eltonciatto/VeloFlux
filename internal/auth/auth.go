@@ -28,11 +28,11 @@ type Config struct {
 	LoginLockoutMinutes  int           `yaml:"login_lockout_minutes"`
 	// SMTP Email Provider Configuration
 	SMTPEnabled          bool          `yaml:"smtp_enabled"`
-	SMTPConfig           SMTPConfig    `yaml:"smtp"`
+	SMTPConfig           AuthSMTPConfig `yaml:"smtp"`
 }
 
-// SMTPConfig holds the configuration for the SMTP email provider
-type SMTPConfig struct {
+// AuthSMTPConfig holds the configuration for the SMTP email provider
+type AuthSMTPConfig struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	User     string `yaml:"user"`
@@ -588,7 +588,7 @@ func (a *Authenticator) SendVerificationEmail(ctx context.Context, userID string
 	}
 
 	// Get the user info
-	user, err := a.tenantManager.GetUser(ctx, userID)
+	user, err := a.tenantManager.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
