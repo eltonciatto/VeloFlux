@@ -26,6 +26,18 @@ type Config struct {
 	OIDCRedirectURI      string        `yaml:"oidc_redirect_uri"`
 	MaxLoginAttempts     int           `yaml:"max_login_attempts"`
 	LoginLockoutMinutes  int           `yaml:"login_lockout_minutes"`
+	// SMTP Email Provider Configuration
+	SMTPEnabled          bool          `yaml:"smtp_enabled"`
+	SMTPConfig           SMTPConfig    `yaml:"smtp"`
+}
+
+// SMTPConfig holds the configuration for the SMTP email provider
+type SMTPConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Sender   string `yaml:"sender"`
 }
 
 // Claims represents the JWT claims
@@ -44,6 +56,7 @@ type Authenticator struct {
 	config        *Config
 	logger        *zap.Logger
 	tenantManager *tenant.Manager
+	emailProvider *EmailProvider
 }
 
 // New creates a new authenticator
@@ -53,11 +66,18 @@ func New(config *Config, tenantManager *tenant.Manager, logger *zap.Logger) *Aut
 		config.TokenValidity = 24 * time.Hour
 	}
 
-	return &Authenticator{
+	auth := &Authenticator{
 		config:        config,
 		logger:        logger,
 		tenantManager: tenantManager,
 	}
+
+	// Initialize email provider if SMTP is enabled
+	if config.SMTPEnabled {
+		auth.emailProvider = NewEmailProvider(config.SMTPConfig, logger)
+	}
+
+	return auth
 }
 
 // GenerateToken generates a JWT token for a user
@@ -525,4 +545,140 @@ func IsValidRole(role string) bool {
 	default:
 		return false
 	}
+}
+
+// SendPasswordResetEmail sends a password reset email
+func (a *Authenticator) SendPasswordResetEmail(ctx context.Context, email string) error {
+	// Check if SMTP is enabled
+	if !a.config.SMTPEnabled || a.emailProvider == nil {
+		return fmt.Errorf("email provider is not configured")
+	}
+
+	// Find the user by email
+	user, err := a.tenantManager.GetUserByEmail(ctx, email)
+	if err != nil {
+		// Don't expose whether the email exists or not for security reasons
+		a.logger.Info("Password reset requested for non-existent email", zap.String("email", email))
+		return nil
+	}
+
+	// Generate a reset token (this could be a JWT or a random string)
+	// Here we'll use a JWT with a short expiration
+	token, err := a.generateResetToken(user)
+	if err != nil {
+		return err
+	}
+
+	// Store the token in Redis with expiration
+	// This would typically be done by the tenant manager
+	// For now we'll just send the email
+
+	// Calculate token expiration time (e.g., 1 hour from now)
+	expiresAt := time.Now().Add(1 * time.Hour)
+
+	// Send the email
+	return a.emailProvider.SendPasswordReset(email, token, expiresAt)
+}
+
+// SendVerificationEmail sends an email verification link to a new user
+func (a *Authenticator) SendVerificationEmail(ctx context.Context, userID string) error {
+	// Check if SMTP is enabled
+	if !a.config.SMTPEnabled || a.emailProvider == nil {
+		return fmt.Errorf("email provider is not configured")
+	}
+
+	// Get the user info
+	user, err := a.tenantManager.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Generate a verification token
+	token, err := a.generateVerificationToken(user)
+	if err != nil {
+		return err
+	}
+
+	// Send the verification email
+	return a.emailProvider.SendVerificationEmail(user.Email, token)
+}
+
+// SendWelcomeEmail sends a welcome email to a new user
+func (a *Authenticator) SendWelcomeEmail(ctx context.Context, userID, tenantID string) error {
+	// Check if SMTP is enabled
+	if !a.config.SMTPEnabled || a.emailProvider == nil {
+		return fmt.Errorf("email provider is not configured")
+	}
+
+	// Get the user info
+	user, err := a.tenantManager.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Get the tenant info
+	tenant, err := a.tenantManager.GetTenant(ctx, tenantID)
+	if err != nil {
+		return err
+	}
+
+	// Send the welcome email
+	return a.emailProvider.SendWelcomeEmail(user.Email, user.FirstName, tenant.Name)
+}
+
+// generateResetToken creates a JWT token for password reset
+func (a *Authenticator) generateResetToken(user *tenant.UserInfo) (string, error) {
+	expirationTime := time.Now().Add(1 * time.Hour)
+
+	// Create claims for the reset token
+	claims := &jwt.RegisteredClaims{
+		Subject:   user.UserID,
+		ExpiresAt: jwt.NewNumericDate(expirationTime),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Issuer:    a.config.JWTIssuer,
+		ID:        fmt.Sprintf("reset-%s", user.UserID),
+	}
+
+	// Create a new token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token
+	tokenString, err := token.SignedString([]byte(a.config.JWTSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// generateVerificationToken creates a JWT token for email verification
+func (a *Authenticator) generateVerificationToken(user *tenant.UserInfo) (string, error) {
+	expirationTime := time.Now().Add(48 * time.Hour)
+
+	// Create claims for the verification token
+	claims := &jwt.RegisteredClaims{
+		Subject:   user.UserID,
+		ExpiresAt: jwt.NewNumericDate(expirationTime),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Issuer:    a.config.JWTIssuer,
+		ID:        fmt.Sprintf("verify-%s", user.UserID),
+	}
+
+	// Create a new token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token
+	tokenString, err := token.SignedString([]byte(a.config.JWTSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// UpdateEmailProvider updates the email provider at runtime
+func (a *Authenticator) UpdateEmailProvider(provider *EmailProvider) {
+	a.emailProvider = provider
 }

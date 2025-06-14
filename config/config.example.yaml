@@ -46,6 +46,17 @@ auth:
   oidc_issuer_url: "https://auth.example.com/realms/veloflux"
   oidc_client_id: "veloflux-admin"
   oidc_redirect_uri: "https://admin.veloflux.example.com/auth/callback"
+  # SMTP Email Provider Configuration
+  smtp_enabled: false
+  smtp:
+    host: "smtp.example.com"
+    port: 587
+    username: "veloflux@example.com"
+    password: "your-smtp-password"
+    from_email: "veloflux@example.com"
+    from_name: "VeloFlux"
+    use_tls: true
+    app_domain: "${APP_DOMAIN:-veloflux.io}" # Domain para links em emails, usa env ou valor padrão
 
 # Clustering Configuration
 cluster:

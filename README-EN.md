@@ -341,7 +341,6 @@ JWT_SECRET=your-secret-key
 # Optional
 OIDC_CLIENT_SECRET=your-oidc-secret
 SLACK_WEBHOOK_URL=your-slack-webhook
-DATABASE_URL=postgres://user:pass@localhost/veloflux
 ```
 
 ## 🤝 Contributing
