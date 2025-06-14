@@ -149,13 +149,6 @@ auth:
   oidc_client_id: "${OIDC_CLIENT_ID}"
   oidc_redirect_uri: "${OIDC_REDIRECT_URI}"
 
-database:
-  enabled: true
-  url: "${DATABASE_URL}"
-  auto_migrate: true
-  pool_size: 10
-  max_idle_conn: 5
-
 cluster:
   enabled: true
   redis_address: "${REDIS_ADDRESS}"
@@ -203,9 +196,6 @@ ADMIN_PASSWORD=senha-segura-para-admin
 OIDC_ISSUER_URL=https://auth.veloflux.io/realms/veloflux
 OIDC_CLIENT_ID=veloflux-admin
 OIDC_REDIRECT_URI=https://admin.veloflux.io/auth/callback
-
-# Banco de Dados
-DATABASE_URL=postgresql://user:password@database:5432/veloflux
 
 # Redis
 REDIS_ADDRESS=redis:6379

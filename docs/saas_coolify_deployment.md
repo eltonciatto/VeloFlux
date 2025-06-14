@@ -28,9 +28,43 @@ A implementação do VeloFlux SaaS no Coolify consiste em:
 
 ## Configuração Passo a Passo
 
-### 1. Configurar Serviço de Autenticação
+### 1. Configuração de Autenticação
 
-É recomendado configurar primeiro o serviço de autenticação:
+Para a autenticação, você pode escolher entre duas abordagens:
+
+#### Opção A: Autenticação baseada em Redis (Recomendada)
+
+Esta é a abordagem nativa do VeloFlux, mais simples e sem dependências externas:
+
+1. Configure apenas o Redis:
+   ```
+   Name: veloflux-redis
+   Image: redis:7-alpine
+   ```
+   
+2. Configure o VeloFlux para usar autenticação nativa:
+   ```yaml
+   auth:
+     enabled: true
+     jwt_secret: "${JWT_SECRET}"
+     jwt_issuer: "veloflux-lb"
+     jwt_audience: "veloflux-admin"
+     token_validity: "24h"
+     oidc_enabled: false  # Desativar OIDC
+     redis_url: "${REDIS_ADDRESS}"
+     redis_password: "${REDIS_PASSWORD}"
+   ```
+
+3. Defina variáveis de ambiente para credenciais de administrador:
+   ```
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=senha-segura
+   JWT_SECRET=chave-secreta-muito-segura
+   ```
+
+#### Opção B: Autenticação com Keycloak (Para integrações corporativas)
+
+Para casos que exigem federação de identidade ou integração com sistemas externos:
 
 1. No Coolify, crie um novo serviço para Keycloak:
    ```
@@ -56,13 +90,16 @@ A implementação do VeloFlux SaaS no Coolify consiste em:
    - Um novo cliente chamado "veloflux-admin"
    - Configure o redirect URI para "https://admin.veloflux.io/auth/callback"
 
-### 2. Configurar Banco de Dados
+### 2. Configurar Redis
 
-1. No Coolify, adicione um recurso PostgreSQL:
-   - Nome: veloflux-db
-   - Versão: 15 ou superior
+O VeloFlux utiliza Redis como seu banco de dados principal para armazenamento de estado, configurações, autenticação e dados de tenant, eliminando a necessidade de um banco de dados relacional como PostgreSQL.
 
-2. Anote as credenciais geradas automaticamente
+1. No Coolify, adicione um recurso Redis:
+   - Nome: veloflux-redis
+   - Versão: 7 ou superior
+   - Habilite persistência (AOF)
+
+2. Anote o endereço e a senha gerada automaticamente
 
 ### 3. Configurar Redis
 
@@ -97,7 +134,6 @@ A implementação do VeloFlux SaaS no Coolify consiste em:
    OIDC_REDIRECT_URI=https://admin.veloflux.io/auth/callback
    REDIS_ADDRESS=veloflux-redis:6379
    REDIS_PASSWORD=senha-redis-gerada-pelo-coolify
-   DATABASE_URL=postgresql://user:password@veloflux-db:5432/veloflux
    ```
 
 4. Configure domínios personalizados:
@@ -157,14 +193,6 @@ auth:
   oidc_issuer_url: "${OIDC_ISSUER_URL}"
   oidc_client_id: "${OIDC_CLIENT_ID}"
   oidc_redirect_uri: "${OIDC_REDIRECT_URI}"
-
-# Database Configuration
-database:
-  enabled: true
-  url: "${DATABASE_URL}"
-  auto_migrate: true
-  pool_size: 10
-  max_idle_conn: 5
 
 # Clustering Configuration
 cluster:
