@@ -1,10 +1,10 @@
-# 📜 **VeloFlux Public Source License (VPSL) v1.0**
+# VeloFlux Public Source License (VPSL) v1.0
 
-Copyright (c) 2024 - **Elton Ciatto | VeloFlux**
+Copyright (c) 2025 - Elton Ciatto | VeloFlux. All Rights Reserved.
 
 ---
 
-## 🔒 **License Overview**
+## License Overview
 
 This software is released under the **VeloFlux Public Source License (VPSL)**. It is an **open-source, source-available license with restrictions on commercial use**.
 
@@ -14,126 +14,113 @@ By using, copying, modifying, or distributing this software, you agree to comply
 
 ---
 
-## ✅ **Permitted Usage**
+## Permitted Usage
 
 You are allowed to:
 
-* ✔️ Use this software for **personal, internal, educational, or non-commercial purposes**.
-* ✔️ Modify, fork, and run the software for private use.
-* ✔️ Study and learn from the source code.
-* ✔️ Deploy the software in your own internal infrastructure as long as it is **not offered as a commercial service to third parties**.
+- ✅ Use this software for **personal, internal, educational, or non-commercial purposes**.
+- ✅ Modify, fork, and run the software for private use.
+- ✅ Study and learn from the source code.
+- ✅ Deploy the software in your own infrastructure for internal use only.
 
 ---
 
-## 🚫 **Prohibited Usage Without a Commercial License**
+## Prohibited Usage Without a Commercial License
 
 You are **NOT allowed to**:
 
-* ❌ Offer this software as a commercial service, including but not limited to **Software as a Service (SaaS)**, managed services, hosted platforms, or public APIs.
-* ❌ Sell, resell, rent, lease, sublicense, or redistribute this software, modified or unmodified, in any form for commercial purposes.
-* ❌ Remove, alter, or obscure the **“VeloFlux”** name, logo, copyrights, credits, or any attribution notices within the code, UI, or API.
-* ❌ Use this software or its derivatives to build **competing products or services**.
-* ❌ Use the name **“VeloFlux”**, the logo, or any associated branding for any purpose without written permission.
+- ❌ Offer this software as a commercial service, including but not limited to **SaaS, API, managed hosting, or white-label solutions**.
+- ❌ Sell, rent, lease, sublicense, or redistribute this software, modified or unmodified, for commercial purposes.
+- ❌ Remove, alter, or obscure the **“VeloFlux”** name, logo, copyrights, credits, or attribution notices.
+- ❌ Use this software or derivatives to create **competing products or services**.
+- ❌ Use the **“VeloFlux”** brand, logo, or identity without written permission.
 
 ---
 
-## 🏢 **Commercial Use Requires a Paid License**
+## Commercial Use Requires a Paid License
 
 If you wish to:
 
-* ✔️ Offer VeloFlux as a **SaaS**, API, or any hosted commercial service.
-* ✔️ Include it as part of a commercial product, platform, or offering.
-* ✔️ Sell, rent, or monetize the software in any form.
+- ✅ Offer VeloFlux as a **SaaS**, API, or hosted product.
+- ✅ Include it in commercial platforms, services, or offerings.
+- ✅ Sell, rent, sublicense, or monetize this software.
 
-You must obtain a **Commercial License**.
+You must purchase a **Commercial License**.
 
-📩 Contact for licensing: **[contact@veloflux.com](mailto:contact@veloflux.com)**
-
----
-
-## ⚖️ **Brand and Trademark Protection**
-
-* The **“VeloFlux”** name, logo, domain, and visual identity are **protected trademarks**.
-* Unauthorized use of the brand is **strictly prohibited** and may result in **legal action**, including:
-
-  * 🏛️ Civil lawsuits for damages.
-  * 🔐 Intellectual property enforcement (including domain takedowns).
-  * 🚫 Cease-and-desist orders.
-  * 💼 Criminal or administrative penalties where applicable.
+📩 Contact for licensing: **contact@veloflux.com**
 
 ---
 
-## 🔥 **Forks and Derivatives**
+## Brand and Trademark Protection
+
+- The **“VeloFlux”** name, logo, domain, and visual identity are **protected trademarks**.
+- Unauthorized use of the brand is prohibited and may result in **legal action**, including:
+  - 🏛️ Civil lawsuits for damages.
+  - 🚫 Cease-and-desist orders.
+  - 🔐 Intellectual property enforcement.
+  - 💼 Criminal or administrative penalties where applicable.
+
+---
+
+## Forks and Derivatives
 
 You may:
 
-* ✔️ Fork and modify the software for **personal, educational, or internal use only**.
+- ✅ Fork and modify the software for **personal, educational, or internal use only**.
 
 You may not:
 
-* ❌ Publish forks with names, logos, or branding that could cause confusion with **VeloFlux**.
-* ❌ Offer forks as SaaS, APIs, or commercial services without a paid license.
-* ❌ Remove attribution or any reference to **VeloFlux** and its authors.
+- ❌ Publish forks with names, logos, or branding that could cause confusion with **VeloFlux**.
+- ❌ Offer forks as SaaS, APIs, or commercial services without a commercial license.
+- ❌ Remove attribution or references to **VeloFlux** and its authors.
 
 ---
 
-## 🚀 **Liability and Warranty Disclaimer**
+## Liability and Warranty Disclaimer
 
 This software is provided **“as is”**, without warranties of any kind, express or implied, including but not limited to:
 
-* 🔧 No guarantees of merchantability.
-* 🔧 No guarantees of fitness for a particular purpose.
-* 🔧 No guarantee of error-free operation.
+- 🔧 No guarantees of merchantability.
+- 🔧 No guarantees of fitness for a particular purpose.
+- 🔧 No guarantee of error-free operation.
 
 The authors are **not liable** for any damages, losses, or issues arising from the use, misuse, or inability to use this software.
 
 ---
 
-## 🏛️ **Governing Law and Jurisdiction**
+## Governing Law and Jurisdiction
 
-* This license is governed by the laws of the **Federative Republic of Brazil**.
-* Any disputes shall be resolved in the court of **Natal, RN, Brazil**, with both parties consenting to this exclusive jurisdiction.
-
----
-
-## 📑 **Attribution Requirement**
-
-All copies, modifications, and deployments of VeloFlux **must include**:
-
-* 📄 This license file (`LICENSE`).
-* 🔗 A visible credit in the user interface (dashboard) and API responses:
-  **“Powered by VeloFlux”** linking to **[https://veloflux.com](https://veloflux.com)**
+- This license is governed by the laws of the **Federative Republic of Brazil**.
+- Any disputes shall be resolved in the court of **Natal, RN, Brazil**, with both parties consenting to this exclusive jurisdiction.
 
 ---
 
-## 💼 **Commercial License Benefits**
+## Attribution Requirement
 
-A commercial license includes:
+All copies, modifications, and deployments of VeloFlux must include:
 
-* ✅ Legal permission to run VeloFlux as a SaaS, API, or commercial product.
-* ✅ Priority support and Service Level Agreements (SLA).
-* ✅ Access to premium features (e.g., WAF, geo-load balancing, DDoS protection, monitoring).
-* ✅ Early access to updates and feature releases.
-* ✅ White-label options (remove VeloFlux branding under contract terms).
+- 📄 This license file (`LICENSE`).
+- 🔗 A visible credit in the user interface (dashboard) and API responses:  
+**“Powered by VeloFlux”** with a link to **https://veloflux.com**.
 
 ---
 
-## ✔️ **Quick Summary Table**
+## Summary Table
 
-| 🟢 **Allowed**                          | 🔴 **Not Allowed Without License** |
-| --------------------------------------- | ---------------------------------- |
-| Personal, internal, and educational use | Offering as SaaS                   |
-| Private modifications and forks         | Selling or sublicensing            |
-| Deploy in your own infrastructure       | Public APIs, commercial hosting    |
-| Study and contribute to open-source     | Removing branding or attribution   |
-| Use with proper attribution             | Creating commercial competitors    |
-
----
-
-## 🛡️ **Final Notice**
-
-> **“VeloFlux is an open-source, source-available software with a protected brand. Commercial usage, resale, SaaS, or redistribution is strictly prohibited without a commercial license. The VeloFlux name, logo, and identity are protected by international intellectual property laws.”**
+| ✅ Allowed                              | ❌ Not Allowed Without License          |
+|------------------------------------------|------------------------------------------|
+| Personal, internal, and educational use  | Offering as SaaS                        |
+| Private modifications and forks          | Selling or sublicensing                 |
+| Deploy in your own infrastructure        | Public APIs, commercial hosting         |
+| Study and contribute to open-source      | Removing branding or attribution        |
+| Use with proper attribution              | Creating commercial competitors         |
 
 ---
 
-## 📜 **End of License**
+## Final Notice
+
+**“VeloFlux is an open-source, source-available software with a protected brand. Commercial usage, resale, SaaS, or redistribution is strictly prohibited without a commercial license. The VeloFlux name, logo, and identity are protected by international intellectual property laws.”**
+
+---
+
+Version 1.0 — Published: June 2025
