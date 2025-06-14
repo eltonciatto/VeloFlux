@@ -186,23 +186,9 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 
 	// These managers are already initialized in the New function, 
 	// so we'll use the existing instances instead of creating new ones
-		authConfig := &auth.Config{
-			JWTSecret:       cfg.Auth.JWTSecret,
-			JWTIssuer:       cfg.Auth.JWTIssuer,
-			JWTAudience:     cfg.Auth.JWTAudience,
-			TokenValidity:   cfg.Auth.TokenValidity,
-			OIDCEnabled:     cfg.Auth.OIDC.Enabled,
-			OIDCIssuerURL:   cfg.Auth.OIDC.IssuerURL,
-			OIDCClientID:    cfg.Auth.OIDC.ClientID,
-			OIDCRedirectURI: cfg.Auth.OIDC.RedirectURI,
-		}
-		oidcManager = auth.NewOIDCManager(authConfig, tenantManager, redisClient, logger)
-	}
-
-	// Orchestrator is already initialized in the New function
 
 	// Create API server
-	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, oidcManager, orchestrator, logger)
+	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, authenticator, oidcManager, orchestrator, logger)
 
 	// Create Admin server
 	adminServer := admin.New(cfg, bal, clusterManager, logger)
