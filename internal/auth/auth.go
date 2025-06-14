@@ -2,14 +2,12 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/eltonciatto/veloflux/internal/tenant"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
 	"sync"
