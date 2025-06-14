@@ -2,26 +2,32 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/eltonciatto/veloflux/internal/tenant"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Config for authentication
 type Config struct {
-	JWTSecret       string        `yaml:"jwt_secret"`
-	JWTIssuer       string        `yaml:"jwt_issuer"`
-	JWTAudience     string        `yaml:"jwt_audience"`
-	TokenValidity   time.Duration `yaml:"token_validity"`
-	OIDCEnabled     bool          `yaml:"oidc_enabled"`
-	OIDCIssuerURL   string        `yaml:"oidc_issuer_url"`
-	OIDCClientID    string        `yaml:"oidc_client_id"`
-	OIDCRedirectURI string        `yaml:"oidc_redirect_uri"`
+	JWTSecret            string        `yaml:"jwt_secret"`
+	JWTIssuer            string        `yaml:"jwt_issuer"`
+	JWTAudience          string        `yaml:"jwt_audience"`
+	TokenValidity        time.Duration `yaml:"token_validity"`
+	OIDCEnabled          bool          `yaml:"oidc_enabled"`
+	OIDCIssuerURL        string        `yaml:"oidc_issuer_url"`
+	OIDCClientID         string        `yaml:"oidc_client_id"`
+	OIDCRedirectURI      string        `yaml:"oidc_redirect_uri"`
+	MaxLoginAttempts     int           `yaml:"max_login_attempts"`
+	LoginLockoutMinutes  int           `yaml:"login_lockout_minutes"`
 }
 
 // Claims represents the JWT claims
@@ -256,10 +262,19 @@ func GetTenantIDFromContext(ctx context.Context) (string, error) {
 
 // Manager handles authentication operations
 type Manager struct {
-	config     *Config
-	logger     *zap.Logger
-	tenantSvc  tenant.Service
-	oidcClient *OIDCClient
+	config          *Config
+	logger          *zap.Logger
+	tenantSvc       tenant.Service
+	oidcClient      *OIDCClient
+	loginAttempts   map[string]*LoginAttempt
+	attemptsMutex   sync.RWMutex
+}
+
+// LoginAttempt tracks failed login attempts for throttling
+type LoginAttempt struct {
+	Count     int
+	LastAttempt time.Time
+	LockedUntil time.Time
 }
 
 // NewManager creates a new authentication manager
@@ -279,11 +294,18 @@ func NewManager(config *Config, logger *zap.Logger, tenantSvc tenant.Service) *M
 	if config.JWTAudience == "" {
 		config.JWTAudience = "veloflux-api"
 	}
+	if config.MaxLoginAttempts == 0 {
+		config.MaxLoginAttempts = 5
+	}
+	if config.LoginLockoutMinutes == 0 {
+		config.LoginLockoutMinutes = 15
+	}
 
 	manager := &Manager{
-		config:    config,
-		logger:    logger,
-		tenantSvc: tenantSvc,
+		config:        config,
+		logger:        logger,
+		tenantSvc:     tenantSvc,
+		loginAttempts: make(map[string]*LoginAttempt),
 	}
 
 	// Initialize OIDC if enabled
@@ -297,6 +319,147 @@ func NewManager(config *Config, logger *zap.Logger, tenantSvc tenant.Service) *M
 	}
 
 	return manager
+}
+
+// GenerateToken generates a JWT token from claims
+func (m *Manager) GenerateToken(claims *Claims) (string, error) {
+	if claims.RegisteredClaims.ExpiresAt == nil {
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(m.config.TokenValidity))
+	}
+	if claims.RegisteredClaims.IssuedAt == nil {
+		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
+	}
+	if claims.RegisteredClaims.NotBefore == nil {
+		claims.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
+	}
+	if claims.RegisteredClaims.Issuer == "" {
+		claims.RegisteredClaims.Issuer = m.config.JWTIssuer
+	}
+	if len(claims.RegisteredClaims.Audience) == 0 {
+		claims.RegisteredClaims.Audience = []string{m.config.JWTAudience}
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(m.config.JWTSecret))
+
+	return tokenString, err
+}
+
+// GenerateTokenForUser generates a JWT token for a user
+func (m *Manager) GenerateTokenForUser(user *tenant.UserInfo) (string, error) {
+	expirationTime := time.Now().Add(m.config.TokenValidity)
+
+	claims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    m.config.JWTIssuer,
+			Subject:   user.UserID,
+			Audience:  []string{m.config.JWTAudience},
+		},
+		UserID:    user.UserID,
+		Email:     user.Email,
+		TenantID:  user.TenantID,
+		Role:      user.Role,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+
+	return m.GenerateToken(claims)
+}
+
+// ValidateToken validates a JWT token and returns the claims
+func (m *Manager) ValidateToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (interface{}, error) {
+			// Validate the signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(m.config.JWTSecret), nil
+		},
+		jwt.WithAudience(m.config.JWTAudience),
+		jwt.WithIssuer(m.config.JWTIssuer),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
+}
+
+// IsLoginAllowed checks if a user is allowed to attempt login (not throttled)
+func (m *Manager) IsLoginAllowed(userID string) bool {
+	m.attemptsMutex.RLock()
+	attempt, exists := m.loginAttempts[userID]
+	m.attemptsMutex.RUnlock()
+
+	if !exists {
+		return true
+	}
+
+	// Check if the lockout period has expired
+	if time.Now().After(attempt.LockedUntil) {
+		// Reset attempts if lockout has expired
+		m.ResetLoginAttempts(userID)
+		return true
+	}
+
+	// Check if user is currently locked out
+	if attempt.Count >= m.config.MaxLoginAttempts {
+		return false
+	}
+
+	return true
+}
+
+// RecordFailedLogin records a failed login attempt and applies throttling if necessary
+func (m *Manager) RecordFailedLogin(userID string) {
+	m.attemptsMutex.Lock()
+	defer m.attemptsMutex.Unlock()
+
+	now := time.Now()
+	attempt, exists := m.loginAttempts[userID]
+
+	if !exists {
+		attempt = &LoginAttempt{
+			Count:       0,
+			LastAttempt: now,
+		}
+		m.loginAttempts[userID] = attempt
+	}
+
+	attempt.Count++
+	attempt.LastAttempt = now
+
+	// If max attempts reached, set lockout time
+	if attempt.Count >= m.config.MaxLoginAttempts {
+		lockoutDuration := time.Duration(m.config.LoginLockoutMinutes) * time.Minute
+		attempt.LockedUntil = now.Add(lockoutDuration)
+
+		m.logger.Warn("User locked out due to failed login attempts",
+			zap.String("user_id", userID),
+			zap.Int("attempts", attempt.Count),
+			zap.Time("locked_until", attempt.LockedUntil))
+	}
+}
+
+// ResetLoginAttempts resets the failed login attempt counter for a user
+func (m *Manager) ResetLoginAttempts(userID string) {
+	m.attemptsMutex.Lock()
+	defer m.attemptsMutex.Unlock()
+
+	delete(m.loginAttempts, userID)
 }
 
 // OIDCClient handles OIDC authentication operations
@@ -344,75 +507,24 @@ func (c *OIDCClient) ExchangeCode(ctx context.Context, code string) (string, err
 	return "", errors.New("OIDC token exchange not implemented")
 }
 
-// GenerateToken generates a JWT token from claims
-func (m *Manager) GenerateToken(claims *Claims) (string, error) {
-	// Set default values if not provided
-	if claims.RegisteredClaims.IssuedAt == nil {
-		claims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
-	}
-	if claims.RegisteredClaims.ExpiresAt == nil {
-		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(m.config.TokenValidity))
-	}
-	if claims.RegisteredClaims.Issuer == "" {
-		claims.RegisteredClaims.Issuer = m.config.JWTIssuer
-	}
-	if len(claims.RegisteredClaims.Audience) == 0 {
-		claims.RegisteredClaims.Audience = []string{m.config.JWTAudience}
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.config.JWTSecret))
+// HashPassword creates a bcrypt hash of the password
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
 }
 
-// ValidateToken validates a JWT token and returns claims
-func (m *Manager) ValidateToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
-
-	token, err := jwt.ParseWithClaims(
-		tokenString,
-		claims,
-		func(token *jwt.Token) (interface{}, error) {
-			// Validate the signing method
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(m.config.JWTSecret), nil
-		},
-		jwt.WithAudience(m.config.JWTAudience),
-		jwt.WithIssuer(m.config.JWTIssuer),
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	return claims, nil
+// CheckPasswordHash compares a password with its hash
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
-// GenerateTokenForUser generates a JWT token for a user
-func (m *Manager) GenerateTokenForUser(user *tenant.UserInfo) (string, error) {
-	expirationTime := time.Now().Add(m.config.TokenValidity)
-
-	claims := &Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    m.config.JWTIssuer,
-			Subject:   user.UserID,
-			Audience:  []string{m.config.JWTAudience},
-		},
-		UserID:    user.UserID,
-		Email:     user.Email,
-		TenantID:  user.TenantID,
-		Role:      user.Role,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+// IsValidRole checks if a role is valid
+func IsValidRole(role string) bool {
+	switch tenant.Role(role) {
+	case tenant.RoleOwner, tenant.RoleAdmin, tenant.RoleMember, tenant.RoleViewer:
+		return true
+	default:
+		return false
 	}
-
-	return m.GenerateToken(claims)
 }
