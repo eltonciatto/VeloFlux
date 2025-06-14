@@ -1,0 +1,27 @@
+name: VeloFlux Coolify Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        
+    - name: Test Go Build
+      run: |
+        go mod download
+        go build -o veloflux-lb ./cmd/velofluxlb
+        
+    - name: Test Docker Build
+      run: docker build -t veloflux-test -f .coolify/Dockerfile .

@@ -145,3 +145,11 @@ For a complete management experience, access the Web UI at `http://localhost:900
 - WAF and rate limit configuration
 - User and permission management
 
+## Deployment Options
+
+VeloFlux offers various deployment options to fit your needs:
+
+- [Docker Compose](deployment.md#docker-compose) - for local development and simple setups
+- [Kubernetes/Helm](deployment.md#kubernetes--helm) - for scalable, production deployments
+- [Coolify](coolify_deployment.md) - for simplified deployment on self-hosted infrastructure
+

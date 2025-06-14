@@ -2,6 +2,13 @@
 
 This document outlines common deployment scenarios for VeloFlux in both single-tenant and multi-tenant SaaS contexts.
 
+## Deployment Options
+
+VeloFlux provides multiple deployment methods to suit different needs:
+- **Docker Compose**: Simple local development and testing
+- **Kubernetes/Helm**: Production-ready scalable deployments
+- **Coolify**: Simplified self-hosted PaaS deployment (see [Coolify Deployment Guide](coolify_deployment.md))
+
 ## Docker Compose
 
 For local development or single-tenant deployments, the provided `docker-compose.yml` starts VeloFlux, Redis and auxiliary services.

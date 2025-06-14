@@ -330,3 +330,10 @@ Antes de ir para produção, verifique:
 ## Suporte
 
 Para suporte, consulte os canais disponíveis no repositório principal ou entre em contato com a equipe de manutenção.
+
+## Opções de Deployment SaaS
+
+Para implantar o VeloFlux SaaS em ambiente de produção, temos várias opções:
+
+- **Kubernetes/Helm**: Ideal para implantações escaláveis em clusters Kubernetes ([detalhes](deployment.md#kubernetes--helm))
+- **Coolify**: Plataforma simples para configurar e gerenciar o VeloFlux SaaS ([guia detalhado](saas_coolify_deployment.md))
