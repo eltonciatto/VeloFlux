@@ -1,6 +1,6 @@
 🚫 **Not for Commercial Use Without License**  
 📜 Licensed under **VeloFlux Public Source License (VPSL) v1.0** — See [`LICENSE`](./LICENSE) for details.  
-💼 For commercial licensing, visit **https://veloflux.com** or contact **contact@veloflux.com**.
+💼 For commercial licensing, visit **https://veloflux.io** or contact **contact@veloflux.io**.
 
 # VeloFlux Load Balancer
 
@@ -127,7 +127,7 @@ VeloFlux supports complete multi-tenancy with:
 
 ### Example: Creating a Tenant
 ```bash
-curl -X POST "https://api.veloflux.com/tenants" \
+curl -X POST "https://api.veloflux.io/tenants" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -286,23 +286,23 @@ k6 run scripts/load-test.js
 ### Authentication
 ```bash
 # Login
-curl -X POST "https://api.veloflux.com/auth/login" \
+curl -X POST "https://api.veloflux.io/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password"}'
 
 # Get profile
-curl -X GET "https://api.veloflux.com/api/profile" \
+curl -X GET "https://api.veloflux.io/api/profile" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Tenant Management
 ```bash
 # List tenants
-curl -X GET "https://api.veloflux.com/api/tenants" \
+curl -X GET "https://api.veloflux.io/api/tenants" \
   -H "Authorization: Bearer $TOKEN"
 
 # Update tenant
-curl -X PUT "https://api.veloflux.com/api/tenants/tenant-id" \
+curl -X PUT "https://api.veloflux.io/api/tenants/tenant-id" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name": "Updated Name"}'
@@ -311,10 +311,10 @@ curl -X PUT "https://api.veloflux.com/api/tenants/tenant-id" \
 ### Monitoring
 ```bash
 # Get metrics
-curl -X GET "https://api.veloflux.com/metrics"
+curl -X GET "https://api.veloflux.io/metrics"
 
 # Get tenant usage
-curl -X GET "https://api.veloflux.com/api/tenants/tenant-id/usage" \
+curl -X GET "https://api.veloflux.io/api/tenants/tenant-id/usage" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -323,7 +323,7 @@ curl -X GET "https://api.veloflux.com/api/tenants/tenant-id/usage" \
 ### Production Deployment
 ```bash
 # Using Helm
-helm repo add veloflux https://charts.veloflux.com
+helm repo add veloflux https://charts.veloflux.io
 helm install veloflux veloflux/veloflux \
   --set global.domain=yourdomain.com \
   --set redis.auth.enabled=true
@@ -369,8 +369,8 @@ VeloFlux is released under the MIT License. See [LICENSE](LICENSE) file for deta
 
 ## 🔗 Links
 
-- [Documentation](https://docs.veloflux.com)
-- [API Reference](https://api.veloflux.com/docs)
+- [Documentation](https://docs.veloflux.io)
+- [API Reference](https://api.veloflux.io/docs)
 - [Community Discord](https://discord.gg/veloflux)
 - [GitHub Issues](https://github.com/eltonciatto/VeloFlux/issues)
 

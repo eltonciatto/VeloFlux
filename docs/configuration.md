@@ -85,7 +85,7 @@ auth:
     
     auth0:
       domain: "veloflux.auth0.com"
-      audience: "https://api.veloflux.com"
+      audience: "https://api.veloflux.io"
       management_api_token: "your-management-token"
 
 # Multi-tenant configuration

@@ -25,7 +25,7 @@ Commercial licensing is available via annual or monthly subscriptions based on:
 - Geographic distribution (regions/nodes).
 - Feature tier selected (Basic, Pro, Enterprise).
 
-📩 Contact for pricing: **contact@veloflux.com**
+📩 Contact for pricing: **contact@veloflux.io**
 
 ---
 
@@ -47,8 +47,8 @@ Commercial licensing is available via annual or monthly subscriptions based on:
 ## Contact
 
 For licensing, support, or enterprise inquiries, contact:  
-📧 **contact@veloflux.com**  
-🌐 **https://veloflux.com**
+📧 **contact@veloflux.io**  
+🌐 **https://veloflux.io**
 
 ---
 

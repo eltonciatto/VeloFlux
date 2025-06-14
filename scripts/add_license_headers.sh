@@ -5,19 +5,19 @@
 
 LICENSE_TEXT="// 🚫 Not for Commercial Use Without License
 // 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
-// 💼 For commercial licensing, visit https://veloflux.com or contact contact@veloflux.com
+// 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 "
 
 HTML_LICENSE_TEXT="<!-- 
 🚫 Not for Commercial Use Without License
 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
-💼 For commercial licensing, visit https://veloflux.com or contact contact@veloflux.com
+💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 -->"
 
 CSS_LICENSE_TEXT="/* 
 🚫 Not for Commercial Use Without License
 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
-💼 For commercial licensing, visit https://veloflux.com or contact contact@veloflux.com
+💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 */"
 
 # Função para adicionar cabeçalho a um arquivo
