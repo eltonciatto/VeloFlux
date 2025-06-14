@@ -253,3 +253,37 @@ func GetTenantIDFromContext(ctx context.Context) (string, error) {
 	}
 	return tenantID, nil
 }
+
+// Manager handles authentication operations
+type Manager struct {
+	config     *Config
+	logger     *zap.Logger
+	tenantSvc  *tenant.Service
+	oidcClient *OIDCClient
+}
+
+// NewManager creates a new authentication manager
+func NewManager(config *Config, logger *zap.Logger, tenantSvc *tenant.Service) *Manager {
+	if logger == nil {
+		// Create a default logger if none provided
+		logger, _ = zap.NewProduction()
+	}
+
+	manager := &Manager{
+		config:    config,
+		logger:    logger,
+		tenantSvc: tenantSvc,
+	}
+
+	// Initialize OIDC if enabled
+	if config.OIDCEnabled {
+		oidcClient, err := NewOIDCClient(config.OIDCIssuerURL, config.OIDCClientID, config.OIDCRedirectURI)
+		if err != nil {
+			logger.Error("Failed to initialize OIDC client", zap.Error(err))
+		} else {
+			manager.oidcClient = oidcClient
+		}
+	}
+
+	return manager
+}

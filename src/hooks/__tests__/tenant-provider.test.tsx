@@ -10,12 +10,12 @@ const mockLocalStorage = {
 };
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
+import { safeApiFetch } from '@/lib/csrfToken';
+
 // Mock do safeApiFetch
 jest.mock('@/lib/csrfToken', () => ({
   safeApiFetch: jest.fn(),
 }));
-
-const { safeApiFetch } = require('@/lib/csrfToken');
 
 describe('TenantProvider', () => {
   beforeEach(() => {

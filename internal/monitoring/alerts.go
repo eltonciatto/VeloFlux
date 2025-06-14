@@ -351,3 +351,135 @@ func createAlertChannel(name string, config AlertChannelConfig) (AlertChannel, e
 		return nil, fmt.Errorf("unknown alert channel type: %s", config.Type)
 	}
 }
+
+// SlackChannel implements AlertChannel for Slack notifications
+type SlackChannel struct {
+	name       string
+	webhookURL string
+}
+
+// NewSlackChannel creates a new Slack alert channel
+func NewSlackChannel(name string, config map[string]interface{}) (*SlackChannel, error) {
+	webhookURL, ok := config["webhook_url"].(string)
+	if !ok || webhookURL == "" {
+		return nil, fmt.Errorf("slack channel configuration missing webhook_url")
+	}
+	
+	return &SlackChannel{
+		name:       name,
+		webhookURL: webhookURL,
+	}, nil
+}
+
+// Send implements AlertChannel
+func (c *SlackChannel) Send(ctx context.Context, alert *Alert) error {
+	// In a real implementation, this would send a message to Slack
+	// For now, just log it
+	// TODO: Implement actual Slack API integration
+	return nil
+}
+
+// Name implements AlertChannel
+func (c *SlackChannel) Name() string {
+	return c.name
+}
+
+// EmailChannel implements AlertChannel for email notifications
+type EmailChannel struct {
+	name string
+	to   []string
+}
+
+// NewEmailChannel creates a new Email alert channel
+func NewEmailChannel(name string, config map[string]interface{}) (*EmailChannel, error) {
+	recipients, ok := config["to"].([]interface{})
+	if !ok || len(recipients) == 0 {
+		return nil, fmt.Errorf("email channel configuration missing recipients")
+	}
+	
+	to := make([]string, 0, len(recipients))
+	for _, r := range recipients {
+		if s, ok := r.(string); ok {
+			to = append(to, s)
+		}
+	}
+	
+	return &EmailChannel{
+		name: name,
+		to:   to,
+	}, nil
+}
+
+// Send implements AlertChannel
+func (c *EmailChannel) Send(ctx context.Context, alert *Alert) error {
+	// In a real implementation, this would send an email
+	// TODO: Implement actual email sending
+	return nil
+}
+
+// Name implements AlertChannel
+func (c *EmailChannel) Name() string {
+	return c.name
+}
+
+// WebhookChannel implements AlertChannel for webhook notifications
+type WebhookChannel struct {
+	name string
+	url  string
+}
+
+// NewWebhookChannel creates a new Webhook alert channel
+func NewWebhookChannel(name string, config map[string]interface{}) (*WebhookChannel, error) {
+	url, ok := config["url"].(string)
+	if !ok || url == "" {
+		return nil, fmt.Errorf("webhook channel configuration missing url")
+	}
+	
+	return &WebhookChannel{
+		name: name,
+		url:  url,
+	}, nil
+}
+
+// Send implements AlertChannel
+func (c *WebhookChannel) Send(ctx context.Context, alert *Alert) error {
+	// In a real implementation, this would send a POST request to the webhook URL
+	// TODO: Implement actual webhook calling
+	return nil
+}
+
+// Name implements AlertChannel
+func (c *WebhookChannel) Name() string {
+	return c.name
+}
+
+// PagerDutyChannel implements AlertChannel for PagerDuty notifications
+type PagerDutyChannel struct {
+	name           string
+	integrationKey string
+}
+
+// NewPagerDutyChannel creates a new PagerDuty alert channel
+func NewPagerDutyChannel(name string, config map[string]interface{}) (*PagerDutyChannel, error) {
+	key, ok := config["integration_key"].(string)
+	if !ok || key == "" {
+		return nil, fmt.Errorf("pagerduty channel configuration missing integration_key")
+	}
+	
+	return &PagerDutyChannel{
+		name:           name,
+		integrationKey: key,
+	}, nil
+}
+
+// Send implements AlertChannel
+func (c *PagerDutyChannel) Send(ctx context.Context, alert *Alert) error {
+	// In a real implementation, this would trigger a PagerDuty incident
+	// TODO: Implement actual PagerDuty integration
+	return nil
+}
+
+// Name implements AlertChannel
+func (c *PagerDutyChannel) Name() string {
+	return c.name
+}

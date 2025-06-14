@@ -14,13 +14,14 @@ jest.mock('@/lib/tokenService', () => ({
   },
 }));
 
+import { safeApiFetch } from '@/lib/csrfToken';
+
 // Mock do safeApiFetch
 jest.mock('@/lib/csrfToken', () => ({
   safeApiFetch: jest.fn(),
 }));
 
 const mockTokenService = TokenService as jest.Mocked<typeof TokenService>;
-const { safeApiFetch } = require('@/lib/csrfToken');
 
 describe('AuthProvider', () => {
   beforeEach(() => {
