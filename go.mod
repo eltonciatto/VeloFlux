@@ -13,6 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/prometheus/client_golang v1.17.0
+	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v72 v72.122.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.36.0
