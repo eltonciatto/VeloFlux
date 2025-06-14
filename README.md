@@ -1,4 +1,8 @@
 
+🚫 **Not for Commercial Use Without License**  
+📜 Licensed under **VeloFlux Public Source License (VPSL) v1.0** — See [`LICENSE`](./LICENSE) for details.  
+💼 For commercial licensing, visit **https://veloflux.com** or contact **contact@veloflux.com**.
+
 # VeloFlux LB - Container-Native Global Load Balancer
 
 A production-grade, container-native load balancer built in Go with SSL termination, HTTP/3 support, automatic health checks, and geo-aware routing.

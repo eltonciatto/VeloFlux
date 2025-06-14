@@ -1,9 +1,13 @@
+🚫 **Not for Commercial Use Without License**  
+📜 Licensed under **VeloFlux Public Source License (VPSL) v1.0** — See [`LICENSE`](./LICENSE) for details.  
+💼 For commercial licensing, visit **https://veloflux.com** or contact **contact@veloflux.com**.
+
 # VeloFlux Load Balancer
 
 [![CI/CD Pipeline](https://github.com/eltonciatto/VeloFlux/workflows/VeloFlux%20CI/CD%20Pipeline/badge.svg)](https://github.com/eltonciatto/VeloFlux/actions)
 [![Security Scan](https://github.com/eltonciatto/VeloFlux/workflows/Security%20Scan/badge.svg)](https://github.com/eltonciatto/VeloFlux/security)
 [![Go Report Card](https://goreportcard.com/badge/github.com/eltonciatto/VeloFlux)](https://goreportcard.com/report/github.com/eltonciatto/VeloFlux)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: VPSL](https://img.shields.io/badge/License-VPSL-blue.svg)](./LICENSE)
 
 ## Overview
 
