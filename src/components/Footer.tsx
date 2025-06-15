@@ -32,7 +32,7 @@ export const Footer = () => {
 
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold shadow-lg"
               onClick={() => window.open('https://github.com/eltonciatto/VeloFlux', '_blank')}
             >
               <Github className="w-5 h-5 mr-2" />
@@ -40,7 +40,7 @@ export const Footer = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20 px-6 py-3"
+              className="border-2 border-blue-400/60 text-blue-100 hover:bg-blue-600/30 bg-slate-800/50 px-6 py-3 font-semibold"
               onClick={() => window.open('https://github.com/eltonciatto/VeloFlux/releases', '_blank')}
             >
               <Download className="w-5 h-5 mr-2" />
@@ -48,7 +48,7 @@ export const Footer = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="border-blue-400/50 text-blue-100 hover:bg-blue-600/20 px-6 py-3"
+              className="border-2 border-blue-400/60 text-blue-100 hover:bg-blue-600/30 bg-slate-800/50 px-6 py-3 font-semibold"
               onClick={() => window.open('https://veloflux.io/docs', '_blank')}
             >
               <BookOpen className="w-5 h-5 mr-2" />
@@ -56,7 +56,7 @@ export const Footer = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="border-purple-400/50 text-purple-100 hover:bg-purple-600/20 px-6 py-3"
+              className="border-2 border-purple-400/60 text-purple-100 hover:bg-purple-600/30 bg-slate-800/50 px-6 py-3 font-semibold"
               onClick={() => window.open('https://veloflux.io', '_blank')}
             >
               <ExternalLink className="w-5 h-5 mr-2" />
@@ -248,7 +248,7 @@ export const Footer = () => {
               <div className="text-2xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
                 VeloFlux LB
               </div>
-              <Badge className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 border-purple-400/30">
+              <Badge className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-3 py-1 inline-flex items-center rounded-full">
                 v0.0.6 - AI Edition
               </Badge>
             </div>

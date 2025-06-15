@@ -41,7 +41,7 @@ export const Performance = () => {
     <section className="py-20 px-4 bg-black/20">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-200 border-purple-400/30">
+          <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Brain className="w-4 h-4 mr-2" />
             AI-Enhanced Performance
           </Badge>
@@ -56,21 +56,21 @@ export const Performance = () => {
         {/* AI Performance Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {aiMetrics.map((metric, index) => (
-            <Card key={index} className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-400/30 backdrop-blur-sm p-6 text-center">
+            <Card key={index} className="bg-slate-800/90 border-purple-400/60 backdrop-blur-sm p-6 text-center hover:bg-slate-800 transition-all duration-300 shadow-lg">
               <Target className="w-8 h-8 text-purple-400 mx-auto mb-3" />
               <div className="text-3xl font-bold text-white mb-1">{metric.value}%</div>
-              <div className="text-sm text-purple-200">{metric.metric}</div>
+              <div className="text-sm text-purple-200 font-medium">{metric.metric}</div>
             </Card>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
+          <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-6 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Throughput Performance</h3>
               <div className="flex gap-2">
-                <Badge className="bg-blue-100/10 text-blue-300">Traditional: 50k RPS</Badge>
-                <Badge className="bg-purple-100/10 text-purple-300">AI-Enhanced: 59.5k RPS</Badge>
+                <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">Traditional: 50k RPS</Badge>
+                <Badge className="bg-purple-600/30 text-purple-100 border-purple-400/50 font-semibold">AI-Enhanced: 59.5k RPS</Badge>
               </div>
             </div>
             
@@ -94,23 +94,23 @@ export const Performance = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-green-400">50k</div>
-                <div className="text-sm text-blue-200">Requests/sec</div>
+                <div className="text-sm text-green-200 font-medium">Requests/sec</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-400">100k</div>
-                <div className="text-sm text-blue-200">Connections</div>
+                <div className="text-sm text-blue-200 font-medium">Connections</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-purple-400">2 vCPU</div>
-                <div className="text-sm text-blue-200">Resource Usage</div>
+                <div className="text-sm text-purple-200 font-medium">Resource Usage</div>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
+          <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-6 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Response Latency</h3>
-              <Badge className="bg-blue-100/10 text-blue-300">P99 under 10ms</Badge>
+              <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">P99 under 10ms</Badge>
             </div>
             
             <div className="h-64 mb-4">
@@ -127,51 +127,51 @@ export const Performance = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-green-400">1.2ms</div>
-                <div className="text-sm text-blue-200">Median (P50)</div>
+                <div className="text-sm text-green-200 font-medium">Median (P50)</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-400">4.1ms</div>
-                <div className="text-sm text-blue-200">P95 Latency</div>
+                <div className="text-sm text-yellow-200 font-medium">P95 Latency</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-red-400">8.5ms</div>
-                <div className="text-sm text-blue-200">P99 Latency</div>
+                <div className="text-sm text-red-200 font-medium">P99 Latency</div>
               </div>
             </div>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
+          <Card className="bg-slate-800/80 border-yellow-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">99.99%</div>
-            <div className="text-sm text-blue-200">Uptime SLA</div>
-            <div className="text-xs text-green-300 mt-1">Under 53 min/year downtime</div>
+            <div className="text-sm text-yellow-200 font-medium">Uptime SLA</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">Under 53 min/year downtime</div>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
+          <Card className="bg-slate-800/80 border-green-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">5.2M</div>
-            <div className="text-sm text-blue-200">Requests/Hour</div>
-            <div className="text-xs text-green-300 mt-1">Peak sustained load</div>
+            <div className="text-sm text-green-200 font-medium">Requests/Hour</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">Peak sustained load</div>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
+          <Card className="bg-slate-800/80 border-blue-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Server className="w-8 h-8 text-blue-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">45MB</div>
-            <div className="text-sm text-blue-200">Container Size</div>
-            <div className="text-xs text-green-300 mt-1">Optimized binary</div>
+            <div className="text-sm text-blue-200 font-medium">Container Size</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">Optimized binary</div>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 text-center">
+          <Card className="bg-slate-800/80 border-purple-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Clock className="w-8 h-8 text-purple-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">Under 1 s</div>
-            <div className="text-sm text-blue-200">Startup Time</div>
-            <div className="text-xs text-green-300 mt-1">Cold start to ready</div>
+            <div className="text-sm text-purple-200 font-medium">Startup Time</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">Cold start to ready</div>
           </Card>
         </div>
 
-        <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-8">
+        <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-8 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
           <h3 className="text-2xl font-bold text-white mb-6 text-center">Resource Efficiency</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -187,16 +187,16 @@ export const Performance = () => {
                     }}
                   />
                 </div>
-                <div className="text-sm text-blue-200">{resource.usage}% utilized</div>
+                <div className="text-sm text-slate-200 font-medium">{resource.usage}% utilized</div>
               </div>
             ))}
           </div>
           
           <div className="mt-8 text-center">
-            <p className="text-blue-200 mb-4">
+            <p className="text-slate-200 mb-4 font-medium">
               Tested on DigitalOcean Premium Intel droplet (2 vCPU, 2GB RAM)
             </p>
-            <Badge className="bg-green-100/10 text-green-300">
+            <Badge className="bg-green-600/30 text-green-100 border-green-400/50 font-semibold">
               Efficient resource utilization with room for growth
             </Badge>
           </div>

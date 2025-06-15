@@ -102,7 +102,7 @@ export const Features = () => {
       <div className="max-w-7xl mx-auto">
         {/* AI/ML Features Section */}
         <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-200 border-purple-400/30">
+          <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Brain className="w-4 h-4 mr-2" />
             AI/ML Intelligence
           </Badge>
@@ -116,19 +116,18 @@ export const Features = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
           {aiFeatures.map((feature, index) => (
-            <Card key={index} className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-400/30 backdrop-blur-sm p-6 hover:from-purple-800/30 hover:to-blue-800/30 transition-all duration-300 group">
+            <Card key={index} className="bg-slate-800/90 border-purple-400/60 backdrop-blur-sm p-6 hover:bg-slate-800 hover:border-purple-400/80 transition-all duration-300 group shadow-xl">
               <div className="mb-4">
                 <feature.icon className="w-12 h-12 text-purple-400 mb-4 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-purple-200 text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                <p className="text-slate-200 text-sm leading-relaxed">{feature.description}</p>
               </div>
               
               <div className="flex flex-wrap gap-2">
                 {feature.badges.map((badge, badgeIndex) => (
                   <Badge 
                     key={badgeIndex} 
-                    variant="secondary" 
-                    className="bg-purple-100/10 text-purple-300 border-purple-400/30 text-xs"
+                    className="bg-purple-600/40 text-purple-100 border-purple-400/70 text-xs font-semibold px-2 py-1 inline-flex items-center rounded-full"
                   >
                     {badge}
                   </Badge>
@@ -150,19 +149,18 @@ export const Features = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {coreFeatures.map((feature, index) => (
-            <Card key={index} className="bg-white/5 border-white/10 backdrop-blur-sm p-6 hover:bg-white/10 transition-all duration-300 group">
+            <Card key={index} className="bg-slate-800/90 border-blue-400/60 backdrop-blur-sm p-6 hover:bg-slate-800 hover:border-blue-400/80 transition-all duration-300 group shadow-xl">
               <div className="mb-4">
                 <feature.icon className="w-12 h-12 text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-blue-200 text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                <p className="text-slate-200 text-sm leading-relaxed">{feature.description}</p>
               </div>
               
               <div className="flex flex-wrap gap-2">
                 {feature.badges.map((badge, badgeIndex) => (
                   <Badge 
                     key={badgeIndex} 
-                    variant="secondary" 
-                    className="bg-blue-100/10 text-blue-300 border-blue-400/30 text-xs"
+                    className="bg-blue-600/40 text-blue-100 border-blue-400/70 text-xs font-semibold px-2 py-1 inline-flex items-center rounded-full"
                   >
                     {badge}
                   </Badge>

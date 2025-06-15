@@ -51,28 +51,28 @@ export const AIShowcase = () => {
   const getColorClasses = (color: string) => {
     const colorMap = {
       purple: {
-        bg: "from-purple-900/20 to-purple-800/20",
-        border: "border-purple-400/30",
+        bg: "bg-slate-800/90",
+        border: "border-purple-400/70",
         icon: "text-purple-400",
-        badge: "bg-purple-100/10 text-purple-300 border-purple-400/30"
+        badge: "bg-purple-600/50 text-purple-100 border-purple-400/80"
       },
       blue: {
-        bg: "from-blue-900/20 to-blue-800/20",
-        border: "border-blue-400/30",
+        bg: "bg-slate-800/90",
+        border: "border-blue-400/70",
         icon: "text-blue-400",
-        badge: "bg-blue-100/10 text-blue-300 border-blue-400/30"
+        badge: "bg-blue-600/50 text-blue-100 border-blue-400/80"
       },
       orange: {
-        bg: "from-orange-900/20 to-orange-800/20",
-        border: "border-orange-400/30",
+        bg: "bg-slate-800/90",
+        border: "border-orange-400/70",
         icon: "text-orange-400",
-        badge: "bg-orange-100/10 text-orange-300 border-orange-400/30"
+        badge: "bg-orange-600/50 text-orange-100 border-orange-400/80"
       },
       green: {
-        bg: "from-green-900/20 to-green-800/20",
-        border: "border-green-400/30",
+        bg: "bg-slate-800/90",
+        border: "border-green-400/70",
         icon: "text-green-400",
-        badge: "bg-green-100/10 text-green-300 border-green-400/30"
+        badge: "bg-green-600/50 text-green-100 border-green-400/80"
       }
     };
     return colorMap[color as keyof typeof colorMap];
@@ -84,7 +84,7 @@ export const AIShowcase = () => {
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-200 border-purple-400/30">
+          <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Sparkles className="w-4 h-4 mr-2" />
             Powered by Artificial Intelligence
           </Badge>
@@ -107,17 +107,17 @@ export const AIShowcase = () => {
             return (
               <Card 
                 key={index} 
-                className={`bg-gradient-to-br ${colors.bg} ${colors.border} backdrop-blur-sm p-8 hover:scale-105 transition-all duration-300 group`}
+                className={`${colors.bg} ${colors.border} backdrop-blur-sm p-8 hover:scale-105 hover:border-opacity-100 transition-all duration-300 group shadow-xl`}
               >
                 <div className="flex items-start gap-4 mb-6">
                   <capability.icon className={`w-12 h-12 ${colors.icon} group-hover:scale-110 transition-transform duration-300`} />
                   <div className="flex-1">
-                    <h3 className="text-2xl font-semibold text-white mb-2">{capability.title}</h3>
-                    <p className="text-blue-200 leading-relaxed">{capability.description}</p>
+                    <h3 className="text-2xl font-semibold text-white mb-3">{capability.title}</h3>
+                    <p className="text-slate-200 leading-relaxed">{capability.description}</p>
                   </div>
                 </div>
                 
-                <Badge className={colors.badge}>
+                <Badge className={`${colors.badge} text-sm font-semibold px-3 py-1 inline-flex items-center rounded-full`}>
                   <Zap className="w-3 h-3 mr-1" />
                   {capability.benefit}
                 </Badge>
@@ -127,13 +127,13 @@ export const AIShowcase = () => {
         </div>
 
         {/* Live Demo Section */}
-        <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-400/30 rounded-2xl p-8 text-center">
+        <div className="bg-slate-800/90 border-2 border-purple-400/70 rounded-2xl p-8 text-center shadow-2xl">
           <div className="mb-6">
             <LineChart className="w-16 h-16 text-purple-400 mx-auto mb-4" />
             <h3 className="text-3xl font-bold text-white mb-4">
               See AI in Action
             </h3>
-            <p className="text-purple-200 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-100 text-lg max-w-2xl mx-auto">
               Experience real-time AI decision making with our interactive dashboard. 
               Watch as machine learning algorithms optimize your traffic routing in real-time.
             </p>
@@ -141,7 +141,7 @@ export const AIShowcase = () => {
           
           <div className="flex flex-wrap justify-center gap-4">
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
               onClick={() => navigate('/dashboard')}
             >
               <Brain className="w-5 h-5 mr-2" />
@@ -150,7 +150,7 @@ export const AIShowcase = () => {
             </Button>
             <Button 
               variant="outline"
-              className="border-purple-400/50 text-purple-100 hover:bg-purple-600/20 px-8 py-3 text-lg"
+              className="border-2 border-purple-400/70 text-purple-100 hover:bg-purple-600/40 bg-slate-800/70 px-8 py-3 text-lg font-semibold"
               onClick={() => window.open('https://veloflux.io/docs/ai-features', '_blank')}
             >
               Learn More About AI
