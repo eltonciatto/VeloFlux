@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eltonciatto/veloflux/internal/ai"
 	"github.com/eltonciatto/veloflux/internal/balancer"
 	"github.com/eltonciatto/veloflux/internal/config"
 	"go.uber.org/zap"
@@ -124,9 +123,12 @@ func processRequest(ab *balancer.AdaptiveBalancer, req simulatedRequest, reqNum 
 	httpReq.ContentLength = req.size
 
 	// Obter decisão do balanceador adaptativo
-	backend, err := ab.SelectBackend(httpReq)
-	if err != nil {
+	backendObj, err := ab.SelectBackend(httpReq)
+	var backend string
+	if err != nil || backendObj == nil {
 		backend = "fallback-backend"
+	} else {
+		backend = backendObj.Address
 	}
 	algorithm := ab.GetCurrentStrategy()
 	confidence := 0.85 // Simulated confidence
@@ -148,12 +150,8 @@ func processRequest(ab *balancer.AdaptiveBalancer, req simulatedRequest, reqNum 
 	
 	// Log adaptativo (apenas para requisições importantes)
 	if reqNum%20 == 0 || confidence < 0.5 {
-		backendStr := "unknown"
-		if backend != nil {
-			backendStr = backend.Address
-		}
 		fmt.Printf("   🎯 Req %d: %s -> Backend:%s, Algo:%s, Conf:%.2f, RT:%.0fms\n",
-			reqNum, req.path, backendStr, algorithm, confidence, responseTime)
+			reqNum, req.path, backend, algorithm, confidence, responseTime)
 	}
 }
 

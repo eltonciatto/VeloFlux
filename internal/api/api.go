@@ -26,18 +26,19 @@ import (
 
 // API handles dynamic configuration endpoints
 type API struct {
-	config         *config.Config
-	balancer       *balancer.Balancer
-	cluster        *clustering.Cluster
-	logger         *zap.Logger
-	router         *mux.Router
-	server         *http.Server
-	configMu       sync.RWMutex
-	tenantManager  *tenant.Manager
-	billingManager *billing.BillingManager
-	authenticator  *auth.Authenticator
-	oidcManager    *auth.OIDCManager
-	orchestrator   *orchestration.Orchestrator
+	config           *config.Config
+	balancer         *balancer.Balancer
+	adaptiveBalancer *balancer.AdaptiveBalancer
+	cluster          *clustering.Cluster
+	logger           *zap.Logger
+	router           *mux.Router
+	server           *http.Server
+	configMu         sync.RWMutex
+	tenantManager    *tenant.Manager
+	billingManager   *billing.BillingManager
+	authenticator    *auth.Authenticator
+	oidcManager      *auth.OIDCManager
+	orchestrator     *orchestration.Orchestrator
 }
 
 // BackendRequest represents a request to add/update a backend
@@ -77,22 +78,23 @@ type ClusterResponse struct {
 }
 
 // New creates a new API server
-func New(cfg *config.Config, bal *balancer.Balancer, cl *clustering.Cluster,
+func New(cfg *config.Config, bal *balancer.Balancer, adaptiveBal *balancer.AdaptiveBalancer, cl *clustering.Cluster,
 	tenantManager *tenant.Manager, billingManager *billing.BillingManager,
 	authenticator *auth.Authenticator, oidcManager *auth.OIDCManager,
 	orchestrator *orchestration.Orchestrator, logger *zap.Logger) *API {
 
 	a := &API{
-		config:         cfg,
-		balancer:       bal,
-		cluster:        cl,
-		logger:         logger,
-		router:         mux.NewRouter(),
-		tenantManager:  tenantManager,
-		billingManager: billingManager,
-		authenticator:  authenticator,
-		oidcManager:    oidcManager,
-		orchestrator:   orchestrator,
+		config:           cfg,
+		balancer:         bal,
+		adaptiveBalancer: adaptiveBal,
+		cluster:          cl,
+		logger:           logger,
+		router:           mux.NewRouter(),
+		tenantManager:    tenantManager,
+		billingManager:   billingManager,
+		authenticator:    authenticator,
+		oidcManager:      oidcManager,
+		orchestrator:     orchestrator,
 	}
 
 	return a
@@ -203,6 +205,12 @@ func (a *API) setupRoutes() {
 	if a.orchestrator != nil {
 		orchestrationAPI := NewOrchestrationAPI(a.orchestrator, a.tenantManager, a.logger)
 		orchestrationAPI.SetupRoutes(a.router)
+	}
+
+	// AI/ML APIs
+	if a.config.Global.AI.Enabled && a.adaptiveBalancer != nil {
+		a.setupAIRoutes()
+		a.logger.Info("AI/ML API routes enabled")
 	}
 }
 

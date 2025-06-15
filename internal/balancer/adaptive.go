@@ -136,10 +136,20 @@ func (ab *AdaptiveBalancer) GetBackendIntelligent(poolName string, clientIP net.
 	
 	// Obter predição da IA
 	prediction, err := ab.aiPredictor.PredictOptimalStrategy()
-	if err != nil || prediction.Confidence < ab.adaptiveConfig.MinConfidenceLevel {
-		ab.logger.Debug("AI prediction failed or low confidence, using fallback", 
-			zap.Error(err), 
-			zap.Float64("confidence", prediction.Confidence))
+	if err != nil {
+		ab.logger.Debug("AI prediction failed, using fallback", 
+			zap.Error(err))
+		return ab.getBackendWithAlgorithm(poolName, clientIP, sessionID, r, 
+			ab.adaptiveConfig.FallbackAlgorithm)
+	}
+	
+	if prediction == nil || prediction.Confidence < ab.adaptiveConfig.MinConfidenceLevel {
+		confidence := 0.0
+		if prediction != nil {
+			confidence = prediction.Confidence
+		}
+		ab.logger.Debug("AI prediction low confidence, using fallback", 
+			zap.Float64("confidence", confidence))
 		return ab.getBackendWithAlgorithm(poolName, clientIP, sessionID, r, 
 			ab.adaptiveConfig.FallbackAlgorithm)
 	}
@@ -779,4 +789,27 @@ func (ab *AdaptiveBalancer) extractSessionID(r *http.Request) string {
 	return "" // Sem sessão
 }
 
-// ...existing code...
+// GetModelPerformance retorna performance dos modelos ML
+func (ab *AdaptiveBalancer) GetModelPerformance() map[string]interface{} {
+	if ab.aiPredictor == nil {
+		return nil
+	}
+	
+	modelPerf := ab.aiPredictor.GetModelPerformance()
+	result := make(map[string]interface{})
+	
+	for key, value := range modelPerf {
+		result[key] = value
+	}
+	
+	return result
+}
+
+// GetAIPrediction obtém a predição atual da IA
+func (ab *AdaptiveBalancer) GetAIPrediction() (*ai.PredictionResult, error) {
+	if ab.aiPredictor == nil {
+		return nil, fmt.Errorf("AI predictor not available")
+	}
+	
+	return ab.aiPredictor.PredictOptimalStrategy()
+}

@@ -42,6 +42,25 @@ type GlobalConfig struct {
 	RateLimit      RateLimitConfig `yaml:"rate_limit"`
 	WAF            WAFConfig       `yaml:"waf"`
 	GeoIP          GeoIPConfig     `yaml:"geoip"`
+	AI             AIConfig        `yaml:"ai"`
+}
+
+// AIConfig holds configuration for AI/ML features
+type AIConfig struct {
+	Enabled              bool          `yaml:"enabled"`
+	ModelType            string        `yaml:"model_type"`
+	TrainingInterval     time.Duration `yaml:"training_interval"`
+	PredictionWindow     time.Duration `yaml:"prediction_window"`
+	HistoryRetention     time.Duration `yaml:"history_retention"`
+	MinDataPoints        int           `yaml:"min_data_points"`
+	ConfidenceThreshold  float64       `yaml:"confidence_threshold"`
+	AdaptiveAlgorithms   bool          `yaml:"adaptive_algorithms"`
+	ApplicationAware     bool          `yaml:"application_aware"`
+	MinConfidenceLevel   float64       `yaml:"min_confidence_level"`
+	FallbackAlgorithm    string        `yaml:"fallback_algorithm"`
+	PredictiveScaling    bool          `yaml:"predictive_scaling"`
+	LearningRate         float64       `yaml:"learning_rate"`
+	ExplorationRate      float64       `yaml:"exploration_rate"`
 }
 
 type TLSConfig struct {

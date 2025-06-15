@@ -94,6 +94,28 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	if geoManager != nil {
 		bal.SetGeoManager(geoManager)
 	}
+	
+	// Create adaptive balancer if AI is enabled
+	var adaptiveBalancer *balancer.AdaptiveBalancer
+	if cfg.Global.AI.Enabled {
+		adaptiveConfig := &balancer.AdaptiveConfig{
+			AIEnabled:           cfg.Global.AI.Enabled,
+			AdaptationInterval:  30 * time.Second,
+			MinConfidenceLevel:  0.7,
+			FallbackAlgorithm:   "round_robin",
+			ApplicationAware:    true,
+			PredictiveScaling:   true,
+			LearningRate:        0.01,
+			ExplorationRate:     0.1,
+		}
+		
+		var err error
+		adaptiveBalancer, err = balancer.NewAdaptiveBalancer(cfg, adaptiveConfig, logger)
+		if err != nil {
+			logger.Error("Failed to create adaptive balancer", zap.Error(err))
+			// Continue without adaptive balancer
+		}
+	}
 
 	// Initialize billing manager
 	// Convert config.BillingConfig to billing.BillingConfig
@@ -192,7 +214,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	// so we'll use the existing instances instead of creating new ones
 
 	// Create API server
-	apiServer := api.New(cfg, bal, clusterManager, tenantManager, billingManager, authenticator, oidcManager, orchestrator, logger)
+	apiServer := api.New(cfg, bal, adaptiveBalancer, clusterManager, tenantManager, billingManager, authenticator, oidcManager, orchestrator, logger)
 
 	// Create Admin server
 	adminServer := admin.New(cfg, bal, clusterManager, logger)

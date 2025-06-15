@@ -20,15 +20,16 @@ import (
 )
 
 type Router struct {
-	config      *config.Config
-	balancer    *balancer.Balancer
-	rateLimiter *ratelimit.Limiter
-	waf         *waf.WAF
-	drain       *drain.Manager
-	redis       *redis.Client
-	nodeID      string
-	logger      *zap.Logger
-	router      *mux.Router
+	config           *config.Config
+	balancer         *balancer.Balancer
+	adaptiveBalancer *balancer.AdaptiveBalancer
+	rateLimiter      *ratelimit.Limiter
+	waf              *waf.WAF
+	drain            *drain.Manager
+	redis            *redis.Client
+	nodeID           string
+	logger           *zap.Logger
+	router           *mux.Router
 }
 
 func New(cfg *config.Config, bal *balancer.Balancer, nodeID string, logger *zap.Logger) *Router {
@@ -46,15 +47,40 @@ func New(cfg *config.Config, bal *balancer.Balancer, nodeID string, logger *zap.
 		})
 	}
 
+	// Initialize adaptive balancer if AI is enabled
+	var adaptiveBal *balancer.AdaptiveBalancer
+	if cfg.Global.AI.Enabled {
+		adaptiveConfig := &balancer.AdaptiveConfig{
+			AIEnabled:           cfg.Global.AI.Enabled,
+			AdaptationInterval:  30 * time.Second,
+			MinConfidenceLevel:  0.7,
+			FallbackAlgorithm:   "round_robin",
+			ApplicationAware:    cfg.Global.AI.ApplicationAware,
+			PredictiveScaling:   true,
+			LearningRate:        0.01,
+			ExplorationRate:     0.1,
+		}
+		
+		var err error
+		adaptiveBal, err = balancer.NewAdaptiveBalancer(cfg, adaptiveConfig, logger)
+		if err != nil {
+			logger.Error("failed to create adaptive balancer", zap.Error(err))
+			adaptiveBal = nil
+		} else {
+			logger.Info("Adaptive AI balancer initialized successfully")
+		}
+	}
+
 	r := &Router{
-		config:      cfg,
-		balancer:    bal,
-		rateLimiter: ratelimit.New(cfg.Global.RateLimit),
-		waf:         wf,
-		redis:       rc,
-		nodeID:      nodeID,
-		logger:      logger,
-		router:      mux.NewRouter(),
+		config:           cfg,
+		balancer:         bal,
+		adaptiveBalancer: adaptiveBal,
+		rateLimiter:      ratelimit.New(cfg.Global.RateLimit),
+		waf:              wf,
+		redis:            rc,
+		nodeID:           nodeID,
+		logger:           logger,
+		router:           mux.NewRouter(),
 	}
 
 	if rc != nil {
@@ -128,12 +154,32 @@ func (r *Router) middleware(next http.Handler) http.Handler {
 
 func (r *Router) createProxyHandler(poolName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		start := time.Now()
 		clientIP := r.getClientIP(req)
 		sessionID := r.getSessionID(req)
 
-		backend, err := r.balancer.GetBackend(poolName, clientIP, sessionID, req)
+		var backend *balancer.Backend
+		var err error
+		var algorithm string = "traditional"
+
+		// Use adaptive balancer if AI is enabled and available
+		if r.adaptiveBalancer != nil && r.config.Global.AI.Enabled {
+			backend, err = r.adaptiveBalancer.SelectBackend(req)
+			algorithm = r.adaptiveBalancer.GetCurrentStrategy()
+			
+			r.logger.Debug("Using AI-powered load balancing",
+				zap.String("algorithm", algorithm),
+				zap.String("pool", poolName))
+		} else {
+			// Fallback to traditional balancer
+			backend, err = r.balancer.GetBackend(poolName, clientIP, sessionID, req)
+			algorithm = r.balancer.GetAlgorithm(poolName)
+		}
+
 		if err != nil {
-			r.logger.Error("Failed to get backend", zap.Error(err))
+			r.logger.Error("Failed to get backend", 
+				zap.Error(err),
+				zap.String("algorithm", algorithm))
 			http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
 			return
 		}
@@ -154,6 +200,33 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 
 		// Customize proxy behavior
 		proxy.ModifyResponse = func(resp *http.Response) error {
+			// Record metrics for AI learning
+			if r.adaptiveBalancer != nil {
+				duration := time.Since(start)
+				errorRate := 0.0
+				if resp.StatusCode >= 400 {
+					errorRate = 1.0
+				}
+				
+				features := map[string]interface{}{
+					"method":        req.Method,
+					"path":          req.URL.Path,
+					"content_type":  req.Header.Get("Content-Type"),
+					"user_agent":    req.Header.Get("User-Agent"),
+					"status_code":   resp.StatusCode,
+					"pool":          poolName,
+					"backend":       backend.Address,
+					"algorithm":     algorithm,
+				}
+				
+				r.adaptiveBalancer.RecordRequestMetrics(
+					1.0, // request rate
+					float64(duration.Milliseconds()), // response time
+					errorRate,
+					features,
+				)
+			}
+
 			// Set sticky session cookie if enabled
 			if r.isStickySessions(poolName) {
 				cookie := &http.Cookie{

@@ -552,3 +552,16 @@ func (b *Balancer) RemoveBackend(poolName, address string) error {
 
 	return fmt.Errorf("backend not found: %s", address)
 }
+
+// GetAlgorithm returns the load balancing algorithm for a pool
+func (b *Balancer) GetAlgorithm(poolName string) string {
+	b.mu.RLock()
+	pool, exists := b.pools[poolName]
+	b.mu.RUnlock()
+
+	if !exists {
+		return "unknown"
+	}
+
+	return string(pool.Algorithm)
+}
