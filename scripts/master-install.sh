@@ -110,8 +110,8 @@ ${YELLOW}ENVIRONMENT VARIABLES:${NC}
 
 ${YELLOW}MORE INFO:${NC}
     Documentation: docs/quickstart.md
-    GitHub: https://github.com/eciatto/VeloFlux
-    Issues: https://github.com/eciatto/VeloFlux/issues
+    GitHub: https://github.com/eltonciatto/VeloFlux
+    Issues: https://github.com/eltonciatto/VeloFlux/issues
 
 EOF
 }

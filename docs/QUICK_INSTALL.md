@@ -16,17 +16,17 @@
 
 ### Para Produção (Requer domínio)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh | bash
 ```
 
 ### Para Teste/Docker (Recomendado para iniciantes)
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
 ```
 
 ### Para Desenvolvimento
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
 ```
 
 ## 🛠️ Métodos de Instalação
@@ -36,7 +36,7 @@ git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/de
 O método mais fácil com assistente inteligente:
 
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/master-install.sh
 ```
@@ -53,7 +53,7 @@ cd VeloFlux
 Para setup imediato com Docker:
 
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/docker-quick-install.sh
 ```
@@ -76,7 +76,7 @@ cd VeloFlux
 Para servidores de produção com domínio:
 
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/super-quick-install.sh --auto-production
 ```
@@ -99,7 +99,7 @@ cd VeloFlux
 Para desenvolvedores locais:
 
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/dev-quick-install.sh
 ```
@@ -122,7 +122,7 @@ cd VeloFlux
 Para plataformas cloud:
 
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/master-install.sh cloud
 ```
@@ -373,17 +373,17 @@ sudo rm -rf /opt/veloflux
 
 ### Opção 1: Uma única linha (Produção)
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh)
 ```
 
 ### Opção 2: Docker Express
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/docker-express.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/docker-express.sh)
 ```
 
 ### Opção 3: Desenvolvimento Express
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/dev-express.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/dev-express.sh)
 ```
 
 ## 🎯 Próximos Passos
@@ -423,10 +423,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/script
 ## 🆘 Suporte
 
 ### Canais de Suporte
-- 🐛 **Issues:** [GitHub Issues](https://github.com/eciatto/VeloFlux/issues)
+- 🐛 **Issues:** [GitHub Issues](https://github.com/eltonciatto/VeloFlux/issues)
 - 💬 **Discord:** [Comunidade VeloFlux](https://discord.gg/veloflux)
 - 📧 **Email:** support@veloflux.com
-- 📖 **Wiki:** [GitHub Wiki](https://github.com/eciatto/VeloFlux/wiki)
+- 📖 **Wiki:** [GitHub Wiki](https://github.com/eltonciatto/VeloFlux/wiki)
 
 ### Antes de Pedir Ajuda
 1. Verifique os logs: `/tmp/veloflux-install.log`

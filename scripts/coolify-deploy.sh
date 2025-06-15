@@ -503,8 +503,8 @@ redis-cli ping
 
 ## Support
 
-- 📚 **Documentation**: https://github.com/eciatto/VeloFlux/docs
-- 🐛 **Issues**: https://github.com/eciatto/VeloFlux/issues
+- 📚 **Documentation**: https://github.com/eltonciatto/VeloFlux/docs
+- 🐛 **Issues**: https://github.com/eltonciatto/VeloFlux/issues
 - 💬 **Discord**: https://discord.gg/veloflux
 
 ## Security Checklist

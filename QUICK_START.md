@@ -11,7 +11,7 @@
 ### 🐳 Docker (Recomendado)
 ```bash
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/docker-quick-install.sh
 ```
@@ -19,7 +19,7 @@ cd VeloFlux
 
 ### 🚀 Produção
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/master-install.sh production -d meudominio.com -e admin@meudominio.com
 ```
@@ -27,7 +27,7 @@ cd VeloFlux
 
 ### 🛠️ Desenvolvimento
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/dev-quick-install.sh
 ```
@@ -35,7 +35,7 @@ cd VeloFlux
 
 ### 🧙‍♂️ Wizard Interativo
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git
+git clone https://github.com/eltonciatto/VeloFlux.git
 cd VeloFlux
 ./scripts/master-install.sh
 ```
@@ -83,7 +83,7 @@ curl http://localhost:8080/health
 
 ### Suporte
 - 📖 [Documentação Completa](docs/QUICK_INSTALL.md)
-- 🐛 [Issues](https://github.com/eciatto/VeloFlux/issues)
+- 🐛 [Issues](https://github.com/eltonciatto/VeloFlux/issues)
 - 💬 [Discord](https://discord.gg/veloflux)
 
 ---

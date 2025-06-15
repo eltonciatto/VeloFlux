@@ -116,7 +116,7 @@ Este documento resume todos os scripts de instalação rápida criados para faci
 ./scripts/one-line-install.sh
 
 # Via curl (produção)
-curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh | bash
 ```
 
 ## 🧪 Scripts de Suporte
@@ -167,22 +167,22 @@ curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-l
 
 **Docker (Recomendado para teste):**
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
 ```
 
 **Desenvolvimento:**
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
 ```
 
 **Produção:**
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com
 ```
 
 **Wizard Interativo:**
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh
 ```
 
 ## 💡 Recomendações

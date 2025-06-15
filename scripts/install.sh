@@ -128,9 +128,9 @@ show_documentation() {
     fi
     
     echo -e "${GREEN}Online Resources:${NC}"
-    echo -e "  🌐 GitHub Repository: https://github.com/eciatto/VeloFlux"
-    echo -e "  📖 Wiki: https://github.com/eciatto/VeloFlux/wiki"
-    echo -e "  🐛 Issues: https://github.com/eciatto/VeloFlux/issues"
+    echo -e "  🌐 GitHub Repository: https://github.com/eltonciatto/VeloFlux"
+    echo -e "  📖 Wiki: https://github.com/eltonciatto/VeloFlux/wiki"
+    echo -e "  🐛 Issues: https://github.com/eltonciatto/VeloFlux/issues"
     echo -e "  💬 Discord: https://discord.gg/veloflux"
     echo ""
     
@@ -252,7 +252,7 @@ show_post_install() {
     echo ""
     echo -e "${YELLOW}Support:${NC}"
     echo -e "  📚 Read documentation in docs/ folder"
-    echo -e "  🐛 Report issues: https://github.com/eciatto/VeloFlux/issues"
+    echo -e "  🐛 Report issues: https://github.com/eltonciatto/VeloFlux/issues"
     echo -e "  💬 Join Discord: https://discord.gg/veloflux"
     echo ""
     echo -e "${GREEN}Happy Load Balancing! 🚀${NC}"

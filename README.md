@@ -15,25 +15,25 @@ A production-grade, container-native SaaS load balancer built in Go with AI inte
 
 ### � Docker (Recommended - Ready in ~5 minutes)
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
 ```
 **Access:** http://localhost | **Admin:** http://localhost:9000 | **Grafana:** http://localhost:3000
 
 ### 🛠️ Development Environment
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
 ```
 **Access:** http://localhost:5173 | **Hot reload enabled**
 
 ### 🚀 Production (with SSL)
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d yourdomain.com -e admin@yourdomain.com
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d yourdomain.com -e admin@yourdomain.com
 ```
 **SSL auto-generated** | **Monitoring included** | **Backups enabled**
 
 ### 🧙‍♂️ Interactive Wizard
 ```bash
-git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh
+git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh
 ```
 **Smart assistant** | **Auto-detection** | **Custom configuration**
 

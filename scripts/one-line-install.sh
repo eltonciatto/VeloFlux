@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🚀 VeloFlux SaaS - One-Line Production Install
-# curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh | bash
 
 set -e
 
@@ -33,7 +33,7 @@ fi
 # Clone repository if not present
 if [ ! -d "VeloFlux" ]; then
     echo -e "${BLUE}Cloning VeloFlux repository...${NC}"
-    git clone https://github.com/eciatto/VeloFlux.git
+    git clone https://github.com/eltonciatto/VeloFlux.git
     cd VeloFlux
 else
     echo -e "${BLUE}Using existing VeloFlux directory...${NC}"

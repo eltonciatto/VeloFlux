@@ -15,7 +15,31 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-echo -e "${PURPLE}${BOLD}🎯 VeloFlux SaaS - Demo de Métodos de Instalação${NC}"
+echo -e "${PURPLE}${BOLD}🎯 VeloFlux Saa    echo -e     echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Desenvolvimento:${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Produção (substitua o domínio):${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Wizard Interativo:${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh${NC}"clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Desenvolvimento:${NC}"
+    echo -e "${GREEN}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Produção (substitua o domínio):${NC}"
+    echo -e "${GREEN}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com${NC}"
+    echo ""
+    
+    echo -e "${GREEN}Wizard Interativo:${NC}"
+    echo -e "${GREEN}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh${NC}"étodos de Instalação${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -180,15 +204,15 @@ demo_one_line_install() {
     echo ""
     
     echo -e "${YELLOW}Para produção:${NC}"
-    echo -e "${GREEN}curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh | bash${NC}"
+    echo -e "${GREEN}curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh | bash${NC}"
     echo ""
     
     echo -e "${YELLOW}Para teste local (Docker):${NC}"
-    echo -e "${GREEN}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
+    echo -e "${GREEN}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
     echo ""
     
     echo -e "${YELLOW}Para desenvolvimento:${NC}"
-    echo -e "${GREEN}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
+    echo -e "${GREEN}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
     echo ""
     
     print_success "One-Line Install demonstrado"
@@ -305,23 +329,23 @@ show_quick_commands() {
     echo ""
     
     echo -e "${GREEN}Docker (Recomendado para teste):${NC}"
-    echo -e "${YELLOW}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh${NC}"
     echo ""
     
     echo -e "${GREEN}Desenvolvimento:${NC}"
-    echo -e "${YELLOW}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh${NC}"
     echo ""
     
     echo -e "${GREEN}Produção (substitua o domínio):${NC}"
-    echo -e "${YELLOW}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d SEUDOMINIO.com -e admin@SEUDOMINIO.com${NC}"
     echo ""
     
     echo -e "${GREEN}Wizard Interativo:${NC}"
-    echo -e "${YELLOW}git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh${NC}"
+    echo -e "${YELLOW}git clone https://github.com/eltonciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh${NC}"
     echo ""
     
     echo -e "${GREEN}One-Line (produção):${NC}"
-    echo -e "${YELLOW}curl -fsSL https://raw.githubusercontent.com/eciatto/VeloFlux/main/scripts/one-line-install.sh | bash${NC}"
+    echo -e "${YELLOW}curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/scripts/one-line-install.sh | bash${NC}"
     echo ""
 }
 
