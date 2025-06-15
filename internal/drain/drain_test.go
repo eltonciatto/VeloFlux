@@ -80,7 +80,7 @@ func TestTrack(t *testing.T) {
 
 	// Check the response
 	assert.Equal(t, http.StatusOK, recorder.Code)
-	
+
 	// Test nil manager
 	var nilManager *Manager
 	assert.NotPanics(t, func() {

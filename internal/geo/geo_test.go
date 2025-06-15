@@ -202,7 +202,7 @@ func TestGetRegionBackends(t *testing.T) {
 	manager.AddBackendLocation("backend1:8080", "NA", 37.7749, -122.4194) // San Francisco
 	manager.AddBackendLocation("backend2:8080", "EU", 51.5074, -0.1278)   // London
 	manager.AddBackendLocation("backend3:8080", "NA", 40.7128, -74.0060)  // New York
-	
+
 	// Skip actual tests that depend on real GeoIP database
 	t.Skip("Skipping test that requires a real GeoIP database")
 
@@ -259,7 +259,7 @@ func TestHaversineDistance(t *testing.T) {
 			lon1:     -122.4194, // San Francisco
 			lat2:     40.7128,
 			lon2:     -74.0060, // New York
-			expected: 4130, // approximate distance in km
+			expected: 4130,     // approximate distance in km
 			// Allow for some variation in the calculation
 		},
 	}
@@ -267,7 +267,7 @@ func TestHaversineDistance(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			distance := haversineDistance(tc.lat1, tc.lon1, tc.lat2, tc.lon2)
-			
+
 			if tc.expected == 0 {
 				assert.Equal(t, tc.expected, distance)
 			} else {
@@ -301,9 +301,9 @@ func TestToRadians(t *testing.T) {
 
 func TestGetClientIP(t *testing.T) {
 	testCases := []struct {
-		name           string
-		setupRequest   func() *http.Request
-		expectedIP     string
+		name         string
+		setupRequest func() *http.Request
+		expectedIP   string
 	}{
 		{
 			name: "XForwardedFor",

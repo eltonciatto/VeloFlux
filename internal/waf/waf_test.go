@@ -88,7 +88,7 @@ SecRuleEngine On
 		recorder := httptest.NewRecorder()
 
 		middleware.ServeHTTP(recorder, req)
-		
+
 		// The handler should be called since we don't have any blocking rules
 		assert.True(t, handlerCalled)
 		assert.Equal(t, http.StatusOK, recorder.Code)

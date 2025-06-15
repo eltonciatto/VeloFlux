@@ -18,12 +18,12 @@ func createMockBalancer(cfg *config.Config, logger *zap.Logger) *balancer.Balanc
 
 func setupTestRouter(t *testing.T) (*Router, *config.Config) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	cfg := &config.Config{
 		Global: config.GlobalConfig{
 			RateLimit: config.RateLimitConfig{
 				RequestsPerSecond: 10,
-				BurstSize:        20,
+				BurstSize:         20,
 			},
 		},
 		Routes: []config.Route{
@@ -45,26 +45,26 @@ func setupTestRouter(t *testing.T) (*Router, *config.Config) {
 			},
 		},
 	}
-	
+
 	bal := createMockBalancer(cfg, logger)
-	
+
 	router := New(cfg, bal, "test-node", logger)
 	return router, cfg
 }
 
 func TestNew(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	t.Run("BasicConfiguration", func(t *testing.T) {
 		cfg := &config.Config{
 			Global: config.GlobalConfig{},
 			Routes: []config.Route{},
 			Pools:  []config.Pool{},
 		}
-		
+
 		bal := createMockBalancer(cfg, logger)
 		router := New(cfg, bal, "test-node", logger)
-		
+
 		assert.NotNil(t, router)
 		assert.NotNil(t, router.router)
 		assert.NotNil(t, router.rateLimiter)
@@ -77,11 +77,11 @@ func TestResponseWriter(t *testing.T) {
 		ResponseWriter: httptest.NewRecorder(),
 		statusCode:     http.StatusOK,
 	}
-	
+
 	// Test WriteHeader
 	rw.WriteHeader(http.StatusNotFound)
 	assert.Equal(t, http.StatusNotFound, rw.statusCode)
-	
+
 	// Test Header
 	header := rw.Header()
 	assert.NotNil(t, header)
@@ -89,12 +89,12 @@ func TestResponseWriter(t *testing.T) {
 
 func TestGetSessionID(t *testing.T) {
 	router, _ := setupTestRouter(t)
-	
+
 	// Test without cookie
 	req1 := httptest.NewRequest("GET", "/", nil)
 	id1 := router.getSessionID(req1)
 	assert.Empty(t, id1) // No cookie = empty session ID
-	
+
 	// Test with cookie
 	req2 := httptest.NewRequest("GET", "/", nil)
 	req2.AddCookie(&http.Cookie{
@@ -107,25 +107,25 @@ func TestGetSessionID(t *testing.T) {
 
 func TestGetScheme(t *testing.T) {
 	router, _ := setupTestRouter(t)
-	
+
 	// Test HTTP
 	req1 := httptest.NewRequest("GET", "http://example.com/", nil)
 	scheme1 := router.getScheme(req1)
 	assert.Equal(t, "http", scheme1)
-	
-	// The current implementation doesn't check X-Forwarded-Proto, 
+
+	// The current implementation doesn't check X-Forwarded-Proto,
 	// so we only test the HTTP and HTTPS cases based on req.TLS
-	
+
 	// Note: Can't easily test the HTTPS case with httptest.NewRequest()
 	// as it doesn't set up TLS
 }
 
 func TestGenerateRequestID(t *testing.T) {
 	router, _ := setupTestRouter(t)
-	
+
 	id1 := router.generateRequestID()
 	id2 := router.generateRequestID()
-	
+
 	assert.NotEmpty(t, id1)
 	assert.NotEmpty(t, id2)
 	assert.NotEqual(t, id1, id2) // IDs should be unique
@@ -133,7 +133,7 @@ func TestGenerateRequestID(t *testing.T) {
 
 func TestGetClientIP(t *testing.T) {
 	router, _ := setupTestRouter(t)
-	
+
 	testCases := []struct {
 		name     string
 		headers  map[string]string
@@ -159,16 +159,16 @@ func TestGetClientIP(t *testing.T) {
 			expected: "192.0.2.1", // Placeholder, will be replaced by remote addr
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://example.com/", nil)
 			req.RemoteAddr = "192.0.2.1:12345" // Set a fake remote address
-			
+
 			for k, v := range tc.headers {
 				req.Header.Set(k, v)
 			}
-			
+
 			ip := router.getClientIP(req)
 			assert.Equal(t, tc.expected, ip.String())
 		})
