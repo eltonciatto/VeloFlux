@@ -21,6 +21,8 @@ type Checker struct {
 	updater  BackendHealthUpdater
 	stopChan chan struct{}
 	wg       sync.WaitGroup
+	mu       sync.Mutex // Mutex to protect against concurrent access to internal state
+	started  bool       // Track if the checker is already started
 }
 
 type BackendStatus struct {
@@ -38,11 +40,31 @@ func New(cfg *config.Config, logger *zap.Logger, updater BackendHealthUpdater) *
 		logger:   logger,
 		updater:  updater,
 		stopChan: make(chan struct{}),
+		started:  false,
 	}
 }
 
 func (c *Checker) Start(ctx context.Context) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	
+	// Prevent multiple Start() calls
+	if c.started {
+		c.logger.Warn("Health checker already started, ignoring Start() call")
+		return
+	}
+	
 	c.logger.Info("Starting health checker")
+	c.started = true
+	
+	// Reset the stop channel if it was previously closed
+	select {
+	case <-c.stopChan:
+		// Channel was closed, recreate it
+		c.stopChan = make(chan struct{})
+	default:
+		// Channel is still open, do nothing
+	}
 
 	for _, pool := range c.config.Pools {
 		for _, backend := range pool.Backends {
@@ -53,8 +75,21 @@ func (c *Checker) Start(ctx context.Context) {
 }
 
 func (c *Checker) Stop() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	
+	if !c.started {
+		c.logger.Warn("Health checker not started, ignoring Stop() call")
+		return
+	}
+	
 	c.logger.Info("Stopping health checker")
+	c.started = false
+	
+	// Close the channel to signal all goroutines to stop
 	close(c.stopChan)
+	
+	// Wait for all goroutines to finish
 	c.wg.Wait()
 }
 
