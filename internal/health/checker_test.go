@@ -138,33 +138,33 @@ func TestStartAndStop(t *testing.T) {
 
 	logger := zap.NewNop()
 	updater := &MockBackendHealthUpdater{}
-	
+
 	// Set up expectations for the mock
 	updater.On("UpdateBackendHealth", "test-pool", "localhost:8080", false).Return()
 	updater.On("UpdateBackendHealth", "test-pool", "localhost:8080", true).Return()
-	
+
 	// Create a simplified test that avoids race conditions
 	checker := New(cfg, logger, updater)
-	
+
 	// Cancel the context immediately to avoid long-running goroutines
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Create a channel to synchronize the test
 	done := make(chan struct{})
-	
+
 	go func() {
 		// Start the checker
 		checker.Start(ctx)
 		close(done)
 	}()
-	
+
 	// Give it a moment to initialize
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Cancel the context and stop the checker
 	cancel()
 	checker.Stop()
-	
+
 	// Wait for the goroutine to finish with timeout
 	select {
 	case <-done:

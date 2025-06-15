@@ -47,16 +47,16 @@ func New(cfg *config.Config, logger *zap.Logger, updater BackendHealthUpdater) *
 func (c *Checker) Start(ctx context.Context) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	// Prevent multiple Start() calls
 	if c.started {
 		c.logger.Warn("Health checker already started, ignoring Start() call")
 		return
 	}
-	
+
 	c.logger.Info("Starting health checker")
 	c.started = true
-	
+
 	// Reset the stop channel if it was previously closed
 	select {
 	case <-c.stopChan:
@@ -77,18 +77,18 @@ func (c *Checker) Start(ctx context.Context) {
 func (c *Checker) Stop() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if !c.started {
 		c.logger.Warn("Health checker not started, ignoring Stop() call")
 		return
 	}
-	
+
 	c.logger.Info("Stopping health checker")
 	c.started = false
-	
+
 	// Close the channel to signal all goroutines to stop
 	close(c.stopChan)
-	
+
 	// Wait for all goroutines to finish
 	c.wg.Wait()
 }
