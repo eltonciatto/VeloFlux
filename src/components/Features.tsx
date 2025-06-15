@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -19,81 +20,83 @@ import {
 } from 'lucide-react';
 
 export const Features = () => {
+  const { t } = useTranslation();
+
   const aiFeatures = [
     {
       icon: Brain,
-      title: "AI-Powered Routing",
-      description: "Machine learning algorithms automatically select optimal backends based on real-time performance metrics and predictive analytics",
-      badges: ["ML Routing", "Smart Selection", "Auto-optimize"]
+      title: t('features.ai.aiPoweredRouting.title'),
+      description: t('features.ai.aiPoweredRouting.description'),
+      badges: t('features.ai.aiPoweredRouting.badges', { returnObjects: true }) as string[]
     },
     {
       icon: TrendingUp,
-      title: "Predictive Analytics",
-      description: "AI-driven traffic forecasting and capacity planning with early spike detection and automated scaling recommendations",
-      badges: ["Traffic Prediction", "Capacity Planning", "Forecasting"]
+      title: t('features.ai.predictiveAnalytics.title'),
+      description: t('features.ai.predictiveAnalytics.description'),
+      badges: t('features.ai.predictiveAnalytics.badges', { returnObjects: true }) as string[]
     },
     {
       icon: AlertTriangle,
-      title: "Anomaly Detection",
-      description: "Real-time detection of unusual patterns, performance anomalies, and potential security threats using advanced ML models",
-      badges: ["Real-time", "Pattern Detection", "Security"]
+      title: t('features.ai.anomalyDetection.title'),
+      description: t('features.ai.anomalyDetection.description'),
+      badges: t('features.ai.anomalyDetection.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Target,
-      title: "Performance Optimization",
-      description: "AI-generated configuration recommendations and automated tuning for optimal load balancing performance",
-      badges: ["Auto-tune", "Recommendations", "Optimization"]
+      title: t('features.ai.performanceOptimization.title'),
+      description: t('features.ai.performanceOptimization.description'),
+      badges: t('features.ai.performanceOptimization.badges', { returnObjects: true }) as string[]
     }
   ];
 
   const coreFeatures = [
     {
       icon: Shield,
-      title: "SSL/TLS Termination",
-      description: "Automatic ACME certificates with Let's Encrypt, HTTP/2 & HTTP/3 support, SNI routing",
-      badges: ["TLS 1.3", "HTTP/3", "ACME"]
+      title: t('features.core.sslTermination.title'),
+      description: t('features.core.sslTermination.description'),
+      badges: t('features.core.sslTermination.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Activity,
-      title: "Health Monitoring",
-      description: "Active HTTP/TCP health checks, passive failure detection, exponential backoff retry",
-      badges: ["Active", "Passive", "Auto-heal"]
+      title: t('features.core.healthMonitoring.title'),
+      description: t('features.core.healthMonitoring.description'),
+      badges: t('features.core.healthMonitoring.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Globe,
-      title: "Geo-Aware Routing",
-      description: "Route traffic to nearest healthy backend using MaxMind GeoIP, anycast support",
-      badges: ["GeoIP", "Anycast", "Proximity"]
+      title: t('features.core.geoAwareRouting.title'),
+      description: t('features.core.geoAwareRouting.description'),
+      badges: t('features.core.geoAwareRouting.badges', { returnObjects: true }) as string[]
     },
     {
       icon: BarChart3,
-      title: "Load Balancing",
-      description: "Round-robin, least-connections, IP-hash, weighted backends with sticky sessions",
-      badges: ["Multiple Algorithms", "Sticky Sessions", "Weighted"]
+      title: t('features.core.loadBalancing.title'),
+      description: t('features.core.loadBalancing.description'),
+      badges: t('features.core.loadBalancing.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Network,
-      title: "Protocol Support",
-      description: "WebSocket pass-through, gRPC proxying, HTTP/1.1, HTTP/2, HTTP/3 (QUIC)",
-      badges: ["WebSocket", "gRPC", "QUIC"]
+      title: t('features.core.protocolSupport.title'),
+      description: t('features.core.protocolSupport.description'),
+      badges: t('features.core.protocolSupport.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Lock,
-      title: "Security Features",
-      description: "Rate limiting, WAF integration hooks, mTLS upstream, IP allowlisting",
-      badges: ["Rate Limiting", "WAF", "mTLS"]
+      title: t('features.core.securityFeatures.title'),
+      description: t('features.core.securityFeatures.description'),
+      badges: t('features.core.securityFeatures.badges', { returnObjects: true }) as string[]
     },
     {
       icon: Cpu,
-      title: "High Performance",
-      description: "Handle 100k+ concurrent connections on 2 vCPU, optimized for cloud workloads",
-      badges: ["100k Conn", "Low Latency", "Optimized"]
+      title: t('features.core.highPerformance.title'),
+      description: t('features.core.highPerformance.description'),
+      badges: t('features.core.highPerformance.badges', { returnObjects: true }) as string[]
     },
     {
       icon: GitBranch,
-      title: "Cloud Native",
-      description: "Docker native, stateless design, Kubernetes ready, horizontal scaling",
-      badges: ["Docker", "K8s", "Stateless"]
+      title: t('features.core.cloudNative.title'),
+      description: t('features.core.cloudNative.description'),
+      badges: t('features.core.cloudNative.badges', { returnObjects: true }) as string[]
     }
   ];
 
@@ -104,13 +107,13 @@ export const Features = () => {
         <div className="text-center mb-16">
           <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Brain className="w-4 h-4 mr-2" />
-            AI/ML Intelligence
+            {t('features.ai.badge')}
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Intelligent Load Balancing
+            {t('features.ai.title')}
           </h2>
           <p className="text-xl text-purple-200 max-w-3xl mx-auto mb-12">
-            Advanced AI and machine learning capabilities for automated optimization and predictive performance
+            {t('features.ai.description')}
           </p>
         </div>
 
@@ -140,10 +143,10 @@ export const Features = () => {
         {/* Core Features Section */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Enterprise-Grade Features
+            {t('features.core.title')}
           </h2>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Built from the ground up for modern cloud infrastructure with production-tested reliability
+            {t('features.core.description')}
           </p>
         </div>
 

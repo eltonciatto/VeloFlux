@@ -1,0 +1,252 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "retry": "Tentar novamente",
+    "download": "Baixar"
+  },
+  "navigation": {
+    "home": "Início",
+    "dashboard": "Painel",
+    "features": "Recursos",
+    "documentation": "Documentação",
+    "login": "Entrar",
+    "logout": "Sair",
+    "settings": "Configurações",
+    "profile": "Perfil"
+  },
+  "hero": {
+    "badge": "Load Balancer com IA",
+    "title": "VeloFlux LB",
+    "description": "Load balancer global inteligente nativo para contêineres com capacidades de {{highlight}}, terminação SSL, suporte HTTP/3, análise preditiva e otimização automatizada. Construído para a era cloud-native.",
+    "descriptionHighlight": "IA/ML",
+    "buttons": {
+      "aiDashboard": "Painel de IA",
+      "github": "GitHub",
+      "documentation": "Documentação",
+      "demoLogin": "Demo Login"
+    },
+    "stats": {
+      "aiPowered": "Com IA",
+      "intelligentRouting": "Roteamento Inteligente",
+      "concurrentConnections": "Conexões Simultâneas",
+      "containerSize": "Tamanho do Container",
+      "uptimeSLA": "SLA de Uptime"
+    }
+  },
+  "features": {
+    "ai": {
+      "badge": "Inteligência IA/ML",
+      "title": "Load Balancing Inteligente",
+      "description": "Capacidades avançadas de IA e machine learning para otimização automatizada e desempenho preditivo",
+      "aiPoweredRouting": {
+        "title": "Roteamento com IA",
+        "description": "Algoritmos de machine learning selecionam automaticamente backends ótimos baseados em métricas de desempenho em tempo real e análise preditiva",
+        "badges": ["Roteamento ML", "Seleção Inteligente", "Auto-otimização"]
+      },
+      "predictiveAnalytics": {
+        "title": "Análise Preditiva",
+        "description": "Previsão de tráfego e planejamento de capacidade orientados por IA com detecção precoce de picos e recomendações de escala automatizada",
+        "badges": ["Previsão de Tráfego", "Planejamento de Capacidade", "Forecasting"]
+      },
+      "anomalyDetection": {
+        "title": "Detecção de Anomalias",
+        "description": "Detecção em tempo real de padrões incomuns, anomalias de desempenho e ameaças de segurança potenciais usando modelos ML avançados",
+        "badges": ["Tempo Real", "Detecção de Padrões", "Segurança"]
+      },
+      "performanceOptimization": {
+        "title": "Otimização de Desempenho",
+        "description": "Recomendações de configuração geradas por IA e ajuste automatizado para desempenho ótimo de load balancing",
+        "badges": ["Auto-ajuste", "Recomendações", "Otimização"]
+      }
+    },
+    "core": {
+      "title": "Recursos Empresariais",
+      "description": "Construído do zero para infraestrutura de nuvem moderna com confiabilidade testada em produção",
+      "sslTermination": {
+        "title": "Terminação SSL/TLS",
+        "description": "Certificados ACME automáticos com Let's Encrypt, suporte HTTP/2 e HTTP/3, roteamento SNI",
+        "badges": ["TLS 1.3", "HTTP/3", "ACME"]
+      },
+      "healthMonitoring": {
+        "title": "Monitoramento de Saúde",
+        "description": "Verificações ativas de saúde HTTP/TCP, detecção passiva de falhas, retry com backoff exponencial",
+        "badges": ["Ativo", "Passivo", "Auto-cura"]
+      },
+      "geoAwareRouting": {
+        "title": "Roteamento Geo-Aware",
+        "description": "Roteamento de tráfego para o backend saudável mais próximo usando MaxMind GeoIP, suporte anycast",
+        "badges": ["GeoIP", "Anycast", "Proximidade"]
+      },
+      "loadBalancing": {
+        "title": "Load Balancing",
+        "description": "Round-robin, least-connections, IP-hash, backends ponderados com sessões sticky",
+        "badges": ["Múltiplos Algoritmos", "Sessões Sticky", "Ponderado"]
+      },
+      "protocolSupport": {
+        "title": "Suporte a Protocolos",
+        "description": "Pass-through WebSocket, proxy gRPC, HTTP/1.1, HTTP/2, HTTP/3 (QUIC)",
+        "badges": ["WebSocket", "gRPC", "QUIC"]
+      },
+      "securityFeatures": {
+        "title": "Recursos de Segurança",
+        "description": "Rate limiting, hooks de integração WAF, mTLS upstream, lista de IPs permitidos",
+        "badges": ["Rate Limiting", "WAF", "mTLS"]
+      },
+      "highPerformance": {
+        "title": "Alto Desempenho",
+        "description": "Suporta 100k+ conexões simultâneas em 2 vCPU, otimizado para cargas de trabalho na nuvem",
+        "badges": ["100k Conn", "Baixa Latência", "Otimizado"]
+      },
+      "cloudNative": {
+        "title": "Cloud Native",
+        "description": "Nativo Docker, design stateless, pronto para Kubernetes, escala horizontal",
+        "badges": ["Docker", "K8s", "Stateless"]
+      }
+    }
+  },
+  "aiShowcase": {
+    "badge": "Powered by Artificial Intelligence",
+    "title": "IA que Realmente {{highlight}}",
+    "titleHighlight": "Funciona",
+    "description": "Experimente o futuro do load balancing com IA que aprende, prevê e otimiza sua infraestrutura automaticamente",
+    "capabilities": {
+      "intelligentRouting": {
+        "title": "Roteamento Inteligente",
+        "description": "Algoritmos ML analisam métricas de desempenho em tempo real para rotear automaticamente o tráfego para o backend ótimo",
+        "benefit": "Até 40% melhores tempos de resposta"
+      },
+      "predictiveScaling": {
+        "title": "Escala Preditiva",
+        "description": "IA prevê padrões de tráfego e recomenda ações de escala antes que picos de demanda ocorram",
+        "benefit": "Previne 95% dos problemas de capacidade"
+      },
+      "anomalyDetection": {
+        "title": "Detecção de Anomalias",
+        "description": "Reconhecimento de padrões em tempo real identifica comportamento incomum e ameaças de segurança potenciais",
+        "benefit": "Detecta problemas 80% mais rápido"
+      },
+      "autoOptimization": {
+        "title": "Auto-Otimização",
+        "description": "Análise contínua de IA fornece recomendações de configuração para desempenho ótimo",
+        "benefit": "Reduz ajustes manuais em 90%"
+      }
+    },
+    "demo": {
+      "title": "Veja a IA em Ação",
+      "description": "Experimente tomada de decisão de IA em tempo real com nosso painel interativo. Observe como algoritmos de machine learning otimizam seu roteamento de tráfego em tempo real.",
+      "buttons": {
+        "launchDashboard": "Lançar Painel de IA",
+        "learnMore": "Saiba Mais Sobre IA"
+      }
+    }
+  },
+  "performance": {
+    "badge": "Desempenho Aprimorado por IA",
+    "title": "Benchmarks de Desempenho",
+    "description": "Métricas de desempenho do mundo real comparando load balancing tradicional vs roteamento aprimorado por IA",
+    "metrics": {
+      "routingAccuracy": "Precisão de Roteamento",
+      "predictionScore": "Score de Predição",
+      "anomalyDetection": "Detecção de Anomalias",
+      "optimizationRate": "Taxa de Otimização"
+    },
+    "charts": {
+      "throughputPerformance": "Desempenho de Throughput",
+      "responseLatency": "Latência de Resposta",
+      "traditional": "Tradicional: {{value}} RPS",
+      "aiEnhanced": "Aprimorado por IA: {{value}} RPS",
+      "p99Under": "P99 abaixo de {{value}}ms"
+    },
+    "stats": {
+      "requestsPerSec": "Requisições/seg",
+      "connections": "Conexões",
+      "resourceUsage": "Uso de Recursos",
+      "medianP50": "Mediana (P50)",
+      "p95Latency": "Latência P95",
+      "p99Latency": "Latência P99",
+      "uptimeSLA": "SLA de Uptime",
+      "downtimePerYear": "Menos de {{time}} min/ano de downtime",
+      "requestsPerHour": "Requisições/Hora",
+      "peakSustainedLoad": "Carga sustentada de pico",
+      "containerSize": "Tamanho do Container",
+      "optimizedBinary": "Binário otimizado",
+      "startupTime": "Tempo de Inicialização",
+      "coldStartToReady": "Cold start até pronto"
+    },
+    "resourceEfficiency": {
+      "title": "Eficiência de Recursos",
+      "cpu": "CPU",
+      "memory": "Memória",
+      "network": "Rede",
+      "utilized": "{{percentage}}% utilizado",
+      "testInfo": "Testado em droplet DigitalOcean Premium Intel (2 vCPU, 2GB RAM)",
+      "badge": "Utilização eficiente de recursos com espaço para crescimento"
+    }
+  },
+  "footer": {
+    "title": "Pronto para Fazer Deploy do VeloFlux LB?",
+    "description": "Junte-se a milhares de desenvolvedores construindo infraestrutura confiável e com IA",
+    "buttons": {
+      "viewOnGithub": "Ver no GitHub",
+      "downloadRelease": "Baixar Release",
+      "documentation": "Documentação",
+      "officialWebsite": "Site Oficial"
+    },
+    "stats": {
+      "stars": "{{count}}+ estrelas",
+      "downloads": "{{count}}+ downloads",
+      "aiPowered": "Com IA",
+      "activeCommunity": "Comunidade ativa"
+    },
+    "sections": {
+      "aiFeatures": "Recursos IA/ML",
+      "documentation": "Documentação",
+      "community": "Comunidade",
+      "resources": "Recursos"
+    },
+    "links": {
+      "intelligentRouting": "Roteamento Inteligente",
+      "predictiveAnalytics": "Análise Preditiva",
+      "anomalyDetection": "Detecção de Anomalias",
+      "quickStart": "Início Rápido",
+      "aiMlGuide": "Guia IA/ML",
+      "apiReference": "Referência da API",
+      "configuration": "Configuração",
+      "githubIssues": "Issues do GitHub",
+      "discord": "Discord",
+      "stackOverflow": "Stack Overflow",
+      "contributing": "Contribuindo",
+      "benchmarks": "Benchmarks",
+      "bestPractices": "Melhores Práticas",
+      "securityGuide": "Guia de Segurança",
+      "migrationGuide": "Guia de Migração"
+    },
+    "copyright": "© {{year}} VeloFlux LB. Licença Customizada VeloFlux.",
+    "madeWith": "Feito com",
+    "and": "e",
+    "forCommunity": "para a comunidade open source",
+    "versionBadge": "v{{version}} - Edição IA"
+  },
+  "dashboard": {
+    "title": "Painel de IA",
+    "welcome": "Bem-vindo ao Painel de IA VeloFlux",
+    "overview": "Visão Geral",
+    "metrics": "Métricas",
+    "analytics": "Análises",
+    "configuration": "Configuração",
+    "logs": "Logs",
+    "alerts": "Alertas"
+  }
+}

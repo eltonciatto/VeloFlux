@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,34 +17,35 @@ import { useNavigate } from 'react-router-dom';
 
 export const AIShowcase = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const aiCapabilities = [
     {
       icon: Brain,
-      title: "Intelligent Routing",
-      description: "ML algorithms analyze real-time performance metrics to automatically route traffic to the optimal backend",
-      benefit: "Up to 40% better response times",
+      title: t('aiShowcase.capabilities.intelligentRouting.title'),
+      description: t('aiShowcase.capabilities.intelligentRouting.description'),
+      benefit: t('aiShowcase.capabilities.intelligentRouting.benefit'),
       color: "purple"
     },
     {
       icon: TrendingUp,
-      title: "Predictive Scaling",
-      description: "AI forecasts traffic patterns and recommends scaling actions before demand spikes occur",
-      benefit: "Prevent 95% of capacity issues",
+      title: t('aiShowcase.capabilities.predictiveScaling.title'),
+      description: t('aiShowcase.capabilities.predictiveScaling.description'),
+      benefit: t('aiShowcase.capabilities.predictiveScaling.benefit'),
       color: "blue"
     },
     {
       icon: AlertTriangle,
-      title: "Anomaly Detection",
-      description: "Real-time pattern recognition identifies unusual behavior and potential security threats",
-      benefit: "Detect issues 80% faster",
+      title: t('aiShowcase.capabilities.anomalyDetection.title'),
+      description: t('aiShowcase.capabilities.anomalyDetection.description'),
+      benefit: t('aiShowcase.capabilities.anomalyDetection.benefit'),
       color: "orange"
     },
     {
       icon: Target,
-      title: "Auto-Optimization",
-      description: "Continuous AI analysis provides configuration recommendations for optimal performance",
-      benefit: "Reduce manual tuning by 90%",
+      title: t('aiShowcase.capabilities.autoOptimization.title'),
+      description: t('aiShowcase.capabilities.autoOptimization.description'),
+      benefit: t('aiShowcase.capabilities.autoOptimization.benefit'),
       color: "green"
     }
   ];
@@ -86,18 +88,18 @@ export const AIShowcase = () => {
         <div className="text-center mb-16">
           <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Sparkles className="w-4 h-4 mr-2" />
-            Powered by Artificial Intelligence
+            {t('aiShowcase.badge')}
           </Badge>
           
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            AI That Actually{' '}
+            {t('aiShowcase.title', { highlight: '' }).split('{{highlight}}')[0]}
             <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Works
+              {t('aiShowcase.titleHighlight')}
             </span>
           </h2>
           
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Experience the future of load balancing with AI that learns, predicts, and optimizes your infrastructure automatically
+            {t('aiShowcase.description')}
           </p>
         </div>
 
@@ -131,11 +133,10 @@ export const AIShowcase = () => {
           <div className="mb-6">
             <LineChart className="w-16 h-16 text-purple-400 mx-auto mb-4" />
             <h3 className="text-3xl font-bold text-white mb-4">
-              See AI in Action
+              {t('aiShowcase.demo.title')}
             </h3>
             <p className="text-slate-100 text-lg max-w-2xl mx-auto">
-              Experience real-time AI decision making with our interactive dashboard. 
-              Watch as machine learning algorithms optimize your traffic routing in real-time.
+              {t('aiShowcase.demo.description')}
             </p>
           </div>
           
@@ -145,7 +146,7 @@ export const AIShowcase = () => {
               onClick={() => navigate('/dashboard')}
             >
               <Brain className="w-5 h-5 mr-2" />
-              Launch AI Dashboard
+              {t('aiShowcase.demo.buttons.launchDashboard')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button 
@@ -153,7 +154,7 @@ export const AIShowcase = () => {
               className="border-2 border-purple-400/70 text-purple-100 hover:bg-purple-600/40 bg-slate-800/70 px-8 py-3 text-lg font-semibold"
               onClick={() => window.open('https://veloflux.io/docs/ai-features', '_blank')}
             >
-              Learn More About AI
+              {t('aiShowcase.demo.buttons.learnMore')}
             </Button>
           </div>
         </div>

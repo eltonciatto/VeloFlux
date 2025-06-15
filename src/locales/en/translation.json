@@ -1,0 +1,252 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "retry": "Retry",
+    "download": "Download"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "features": "Features",
+    "documentation": "Documentation",
+    "login": "Login",
+    "logout": "Logout",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "hero": {
+    "badge": "AI-Powered Load Balancer",
+    "title": "VeloFlux LB",
+    "description": "Intelligent container-native global load balancer with {{highlight}} capabilities, SSL termination, HTTP/3 support, predictive analytics, and automated optimization. Built for the cloud-native era.",
+    "descriptionHighlight": "AI/ML",
+    "buttons": {
+      "aiDashboard": "AI Dashboard",
+      "github": "GitHub",
+      "documentation": "Documentation",
+      "demoLogin": "Demo Login"
+    },
+    "stats": {
+      "aiPowered": "AI-Powered",
+      "intelligentRouting": "Intelligent Routing",
+      "concurrentConnections": "Concurrent Connections",
+      "containerSize": "Container Size",
+      "uptimeSLA": "Uptime SLA"
+    }
+  },
+  "features": {
+    "ai": {
+      "badge": "AI/ML Intelligence",
+      "title": "Intelligent Load Balancing",
+      "description": "Advanced AI and machine learning capabilities for automated optimization and predictive performance",
+      "aiPoweredRouting": {
+        "title": "AI-Powered Routing",
+        "description": "Machine learning algorithms automatically select optimal backends based on real-time performance metrics and predictive analytics",
+        "badges": ["ML Routing", "Smart Selection", "Auto-optimize"]
+      },
+      "predictiveAnalytics": {
+        "title": "Predictive Analytics",
+        "description": "AI-driven traffic forecasting and capacity planning with early spike detection and automated scaling recommendations",
+        "badges": ["Traffic Prediction", "Capacity Planning", "Forecasting"]
+      },
+      "anomalyDetection": {
+        "title": "Anomaly Detection",
+        "description": "Real-time detection of unusual patterns, performance anomalies, and potential security threats using advanced ML models",
+        "badges": ["Real-time", "Pattern Detection", "Security"]
+      },
+      "performanceOptimization": {
+        "title": "Performance Optimization",
+        "description": "AI-generated configuration recommendations and automated tuning for optimal load balancing performance",
+        "badges": ["Auto-tune", "Recommendations", "Optimization"]
+      }
+    },
+    "core": {
+      "title": "Enterprise-Grade Features",
+      "description": "Built from the ground up for modern cloud infrastructure with production-tested reliability",
+      "sslTermination": {
+        "title": "SSL/TLS Termination",
+        "description": "Automatic ACME certificates with Let's Encrypt, HTTP/2 & HTTP/3 support, SNI routing",
+        "badges": ["TLS 1.3", "HTTP/3", "ACME"]
+      },
+      "healthMonitoring": {
+        "title": "Health Monitoring",
+        "description": "Active HTTP/TCP health checks, passive failure detection, exponential backoff retry",
+        "badges": ["Active", "Passive", "Auto-heal"]
+      },
+      "geoAwareRouting": {
+        "title": "Geo-Aware Routing",
+        "description": "Route traffic to nearest healthy backend using MaxMind GeoIP, anycast support",
+        "badges": ["GeoIP", "Anycast", "Proximity"]
+      },
+      "loadBalancing": {
+        "title": "Load Balancing",
+        "description": "Round-robin, least-connections, IP-hash, weighted backends with sticky sessions",
+        "badges": ["Multiple Algorithms", "Sticky Sessions", "Weighted"]
+      },
+      "protocolSupport": {
+        "title": "Protocol Support",
+        "description": "WebSocket pass-through, gRPC proxying, HTTP/1.1, HTTP/2, HTTP/3 (QUIC)",
+        "badges": ["WebSocket", "gRPC", "QUIC"]
+      },
+      "securityFeatures": {
+        "title": "Security Features",
+        "description": "Rate limiting, WAF integration hooks, mTLS upstream, IP allowlisting",
+        "badges": ["Rate Limiting", "WAF", "mTLS"]
+      },
+      "highPerformance": {
+        "title": "High Performance",
+        "description": "Handle 100k+ concurrent connections on 2 vCPU, optimized for cloud workloads",
+        "badges": ["100k Conn", "Low Latency", "Optimized"]
+      },
+      "cloudNative": {
+        "title": "Cloud Native",
+        "description": "Docker native, stateless design, Kubernetes ready, horizontal scaling",
+        "badges": ["Docker", "K8s", "Stateless"]
+      }
+    }
+  },
+  "aiShowcase": {
+    "badge": "Powered by Artificial Intelligence",
+    "title": "AI That Actually {{highlight}}",
+    "titleHighlight": "Works",
+    "description": "Experience the future of load balancing with AI that learns, predicts, and optimizes your infrastructure automatically",
+    "capabilities": {
+      "intelligentRouting": {
+        "title": "Intelligent Routing",
+        "description": "ML algorithms analyze real-time performance metrics to automatically route traffic to the optimal backend",
+        "benefit": "Up to 40% better response times"
+      },
+      "predictiveScaling": {
+        "title": "Predictive Scaling",
+        "description": "AI forecasts traffic patterns and recommends scaling actions before demand spikes occur",
+        "benefit": "Prevent 95% of capacity issues"
+      },
+      "anomalyDetection": {
+        "title": "Anomaly Detection",
+        "description": "Real-time pattern recognition identifies unusual behavior and potential security threats",
+        "benefit": "Detect issues 80% faster"
+      },
+      "autoOptimization": {
+        "title": "Auto-Optimization",
+        "description": "Continuous AI analysis provides configuration recommendations for optimal performance",
+        "benefit": "Reduce manual tuning by 90%"
+      }
+    },
+    "demo": {
+      "title": "See AI in Action",
+      "description": "Experience real-time AI decision making with our interactive dashboard. Watch as machine learning algorithms optimize your traffic routing in real-time.",
+      "buttons": {
+        "launchDashboard": "Launch AI Dashboard",
+        "learnMore": "Learn More About AI"
+      }
+    }
+  },
+  "performance": {
+    "badge": "AI-Enhanced Performance",
+    "title": "Performance Benchmarks",
+    "description": "Real-world performance metrics comparing traditional load balancing vs AI-enhanced routing",
+    "metrics": {
+      "routingAccuracy": "Routing Accuracy",
+      "predictionScore": "Prediction Score",
+      "anomalyDetection": "Anomaly Detection",
+      "optimizationRate": "Optimization Rate"
+    },
+    "charts": {
+      "throughputPerformance": "Throughput Performance",
+      "responseLatency": "Response Latency",
+      "traditional": "Traditional: {{value}} RPS",
+      "aiEnhanced": "AI-Enhanced: {{value}} RPS",
+      "p99Under": "P99 under {{value}}ms"
+    },
+    "stats": {
+      "requestsPerSec": "Requests/sec",
+      "connections": "Connections",
+      "resourceUsage": "Resource Usage",
+      "medianP50": "Median (P50)",
+      "p95Latency": "P95 Latency",
+      "p99Latency": "P99 Latency",
+      "uptimeSLA": "Uptime SLA",
+      "downtimePerYear": "Under {{time}} min/year downtime",
+      "requestsPerHour": "Requests/Hour",
+      "peakSustainedLoad": "Peak sustained load",
+      "containerSize": "Container Size",
+      "optimizedBinary": "Optimized binary",
+      "startupTime": "Startup Time",
+      "coldStartToReady": "Cold start to ready"
+    },
+    "resourceEfficiency": {
+      "title": "Resource Efficiency",
+      "cpu": "CPU",
+      "memory": "Memory",
+      "network": "Network",
+      "utilized": "{{percentage}}% utilized",
+      "testInfo": "Tested on DigitalOcean Premium Intel droplet (2 vCPU, 2GB RAM)",
+      "badge": "Efficient resource utilization with room for growth"
+    }
+  },
+  "footer": {
+    "title": "Ready to Deploy VeloFlux LB?",
+    "description": "Join thousands of developers building reliable, AI-powered infrastructure",
+    "buttons": {
+      "viewOnGithub": "View on GitHub",
+      "downloadRelease": "Download Release",
+      "documentation": "Documentation",
+      "officialWebsite": "Official Website"
+    },
+    "stats": {
+      "stars": "{{count}}+ stars",
+      "downloads": "{{count}}+ downloads",
+      "aiPowered": "AI-Powered",
+      "activeCommunity": "Active community"
+    },
+    "sections": {
+      "aiFeatures": "AI/ML Features",
+      "documentation": "Documentation",
+      "community": "Community",
+      "resources": "Resources"
+    },
+    "links": {
+      "intelligentRouting": "Intelligent Routing",
+      "predictiveAnalytics": "Predictive Analytics",
+      "anomalyDetection": "Anomaly Detection",
+      "quickStart": "Quick Start",
+      "aiMlGuide": "AI/ML Guide",
+      "apiReference": "API Reference",
+      "configuration": "Configuration",
+      "githubIssues": "GitHub Issues",
+      "discord": "Discord",
+      "stackOverflow": "Stack Overflow",
+      "contributing": "Contributing",
+      "benchmarks": "Benchmarks",
+      "bestPractices": "Best Practices",
+      "securityGuide": "Security Guide",
+      "migrationGuide": "Migration Guide"
+    },
+    "copyright": "© {{year}} VeloFlux LB. VeloFlux Custom License.",
+    "madeWith": "Made with",
+    "and": "and",
+    "forCommunity": "for the open source community",
+    "versionBadge": "v{{version}} - AI Edition"
+  },
+  "dashboard": {
+    "title": "AI Dashboard",
+    "welcome": "Welcome to VeloFlux AI Dashboard",
+    "overview": "Overview",
+    "metrics": "Metrics",
+    "analytics": "Analytics",
+    "configuration": "Configuration",
+    "logs": "Logs",
+    "alerts": "Alerts"
+  }
+}
