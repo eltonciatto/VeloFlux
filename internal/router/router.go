@@ -221,6 +221,9 @@ func (r *Router) getScheme(req *http.Request) string {
 	if req.TLS != nil {
 		return "https"
 	}
+	if proto := req.Header.Get("X-Forwarded-Proto"); proto == "https" {
+		return "https"
+	}
 	return "http"
 }
 

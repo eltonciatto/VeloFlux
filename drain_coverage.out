@@ -1,0 +1,24 @@
+mode: set
+github.com/eltonciatto/veloflux/internal/drain/drain.go:18.56,19.35 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:19.35,21.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:22.2,22.48 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:25.38,25.86 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:26.38,26.85 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:29.57,30.14 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:30.14,32.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:33.2,33.71 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:33.71,38.3 4 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:42.68,43.14 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:43.14,45.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:46.2,46.71 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:46.71,48.18 2 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:48.18,51.4 2 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:52.3,52.23 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:57.74,58.14 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:58.14,60.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:61.2,61.53 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:65.60,66.14 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:66.14,68.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:69.2,70.22 2 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:70.22,72.3 1 1
+github.com/eltonciatto/veloflux/internal/drain/drain.go:73.2,73.15 1 1

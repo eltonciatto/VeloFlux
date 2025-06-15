@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>middleware: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/eltonciatto/veloflux/internal/middleware/auth.go (100.0%)</option>
+				
+				<option value="file1">github.com/eltonciatto/veloflux/internal/middleware/security.go (96.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package middleware
+
+import (
+        "net/http"
+        "os"
+)
+
+// AdminAuth provides simple Basic Auth protection for admin endpoints.
+func AdminAuth(next http.Handler) http.Handler <span class="cov8" title="1">{
+        user := os.Getenv("VF_ADMIN_USER")
+        pass := os.Getenv("VF_ADMIN_PASS")
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                u, p, ok := r.BasicAuth()
+                if !ok || u != user || p != pass </span><span class="cov8" title="1">{
+                        w.Header().Set("WWW-Authenticate", `Basic realm="VeloFlux"`)
+                        w.WriteHeader(http.StatusUnauthorized)
+                        return
+                }</span>
+                <span class="cov8" title="1">next.ServeHTTP(w, r)</span>
+        })
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package middleware
+
+import (
+        "net/http"
+        "strings"
+        "time"
+
+        "github.com/gin-gonic/gin"
+)
+
+// SecurityHeaders middleware adds security headers to responses
+func SecurityHeaders() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                // HSTS (HTTP Strict Transport Security)
+                c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+                // Content Security Policy
+                csp := buildCSP()
+                c.Header("Content-Security-Policy", csp)
+
+                // X-Frame-Options to prevent clickjacking
+                c.Header("X-Frame-Options", "DENY")
+
+                // X-Content-Type-Options to prevent MIME type sniffing
+                c.Header("X-Content-Type-Options", "nosniff")
+
+                // X-XSS-Protection
+                c.Header("X-XSS-Protection", "1; mode=block")
+
+                // Referrer Policy
+                c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+
+                // Permissions Policy (formerly Feature Policy)
+                c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+                // Remove server information
+                c.Header("Server", "")
+                c.Header("X-Powered-By", "")
+
+                // Cache control for sensitive pages
+                if isSensitivePath(c.Request.URL.Path) </span><span class="cov8" title="1">{
+                        c.Header("Cache-Control", "no-cache, no-store, must-revalidate, private")
+                        c.Header("Pragma", "no-cache")
+                        c.Header("Expires", "0")
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+
+// CORS middleware with secure defaults
+func SecureCORS() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                origin := c.Request.Header.Get("Origin")
+
+                // Allow only specific origins in production
+                allowedOrigins := getAllowedOrigins()
+
+                if isAllowedOrigin(origin, allowedOrigins) </span><span class="cov8" title="1">{
+                        c.Header("Access-Control-Allow-Origin", origin)
+                }</span>
+
+                <span class="cov8" title="1">c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
+                c.Header("Access-Control-Allow-Credentials", "true")
+                c.Header("Access-Control-Max-Age", "86400") // 24 hours
+
+                // Handle preflight requests
+                if c.Request.Method == "OPTIONS" </span><span class="cov8" title="1">{
+                        c.AbortWithStatus(http.StatusNoContent)
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+
+// Rate limiting middleware with different limits for different endpoints
+func RateLimiter() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                clientIP := c.ClientIP()
+                path := c.Request.URL.Path
+
+                // Different rate limits for different endpoints
+                var limit int
+                var window time.Duration
+
+                switch </span>{
+                case strings.HasPrefix(path, "/auth/login"):<span class="cov8" title="1">
+                        limit = 5 // 5 login attempts
+                        window = 15 * time.Minute</span>
+                case strings.HasPrefix(path, "/auth/"):<span class="cov8" title="1">
+                        limit = 20 // 20 auth requests
+                        window = time.Minute</span>
+                case strings.HasPrefix(path, "/api/"):<span class="cov8" title="1">
+                        limit = 100 // 100 API requests
+                        window = time.Minute</span>
+                default:<span class="cov8" title="1">
+                        limit = 200 // 200 general requests
+                        window = time.Minute</span>
+                }
+
+                <span class="cov8" title="1">if !checkRateLimit(clientIP, path, limit, window) </span><span class="cov0" title="0">{
+                        c.JSON(http.StatusTooManyRequests, gin.H{
+                                "error":       "Rate limit exceeded",
+                                "retry_after": window.Seconds(),
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+
+// Input validation and sanitization middleware
+func InputSanitizer() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                // Validate Content-Length
+                if c.Request.ContentLength &gt; 10*1024*1024 </span><span class="cov8" title="1">{ // 10MB limit
+                        c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+                                "error": "Request body too large",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                // Check for common attack patterns in URL
+                <span class="cov8" title="1">if containsSuspiciousPatterns(c.Request.URL.Path) </span><span class="cov8" title="1">{
+                        c.JSON(http.StatusBadRequest, gin.H{
+                                "error": "Invalid request",
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+
+// Helper functions
+func buildCSP() string <span class="cov8" title="1">{
+        return strings.Join([]string{
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com",
+                "img-src 'self' data: https:",
+                "connect-src 'self' wss: ws:",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'none'",
+                "upgrade-insecure-requests",
+        }, "; ")
+}</span>
+
+func isSensitivePath(path string) bool <span class="cov8" title="1">{
+        sensitivePaths := []string{
+                "/auth/",
+                "/admin/",
+                "/api/profile",
+                "/api/billing",
+                "/api/tenants",
+        }
+
+        for _, sensitive := range sensitivePaths </span><span class="cov8" title="1">{
+                if strings.HasPrefix(path, sensitive) </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+func getAllowedOrigins() []string <span class="cov8" title="1">{
+        // In production, this should come from configuration
+        return []string{
+                "https://veloflux.io",
+                "https://admin.veloflux.io",
+                "https://app.veloflux.io",
+                // Add other allowed origins
+        }
+}</span>
+
+func isAllowedOrigin(origin string, allowed []string) bool <span class="cov8" title="1">{
+        if origin == "" </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">for _, allowedOrigin := range allowed </span><span class="cov8" title="1">{
+                if origin == allowedOrigin </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+func checkRateLimit(clientIP, path string, limit int, window time.Duration) bool <span class="cov8" title="1">{
+        // This is a simplified implementation
+        // In production, use Redis or another distributed store
+        // for rate limiting across multiple instances
+
+        // Implementation would track requests per IP per endpoint
+        // and return false if limit is exceeded
+
+        return true // Placeholder
+}</span>
+
+func containsSuspiciousPatterns(path string) bool <span class="cov8" title="1">{
+        suspiciousPatterns := []string{
+                "../",
+                "..\\",
+                "&lt;script",
+                "javascript:",
+                "vbscript:",
+                "onload=",
+                "onerror=",
+                "eval(",
+                "union select",
+                "drop table",
+                "insert into",
+                "delete from",
+        }
+
+        lowerPath := strings.ToLower(path)
+        for _, pattern := range suspiciousPatterns </span><span class="cov8" title="1">{
+                if strings.Contains(lowerPath, pattern) </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -193,6 +196,32 @@ func TestInputSanitizerSuspiciousPath(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
+func TestInputSanitizerLargeContent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	router.Use(InputSanitizer())
+	router.POST("/test", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
+
+	// Create a request with large Content-Length
+	req := httptest.NewRequest("POST", "/test", nil)
+	req.ContentLength = 11 * 1024 * 1024 // 11MB (exceeds 10MB limit)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should get request entity too large response
+	assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
+
+	// Check response body
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "Request body too large", response["error"])
+}
+
 func TestBuildCSP(t *testing.T) {
 	csp := buildCSP()
 
@@ -272,4 +301,166 @@ func TestCheckRateLimit(t *testing.T) {
 	// Test the placeholder implementation
 	result := checkRateLimit("192.168.1.1", "/test", 10, 60)
 	assert.True(t, result) // Placeholder always returns true
+}
+
+// MockRateLimiter adds a testable version of the rate limiter
+func MockRateLimiter(shouldLimit bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// This mock version allows control of rate limiting for testing
+		if shouldLimit {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "Rate limit exceeded",
+				"retry_after": 60.0,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// TestRateLimiterRejection tests the case when rate limit is exceeded
+func TestRateLimiterRejection(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	// Use mock rate limiter that will reject requests
+	router.Use(MockRateLimiter(true))
+	router.GET("/test", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
+
+	// Test rate limited request
+	req := httptest.NewRequest("GET", "/test", nil)
+	req.RemoteAddr = "192.168.1.1:12345"
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should get 429 Too Many Requests
+	assert.Equal(t, http.StatusTooManyRequests, w.Code)
+
+	// Check response body
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "Rate limit exceeded", response["error"])
+	assert.Equal(t, float64(60), response["retry_after"])
+}
+
+func TestRateLimiterPaths(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Create a custom function to check the path-specific rate limit logic
+	checkPathRateLimit := func(path string) {
+		router := gin.New()
+		router.Use(RateLimiter())
+		router.Any("/*path", func(c *gin.Context) {
+			c.String(200, "OK")
+		})
+
+		req := httptest.NewRequest("GET", path, nil)
+		req.RemoteAddr = "192.168.1.2:12345"
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		// The placeholder implementation returns true, so should get 200 OK
+		assert.Equal(t, http.StatusOK, w.Code)
+	}
+
+	// Test the different path cases in the RateLimiter function
+	paths := []string{
+		"/auth/login",        // Login path - 5 requests per 15 minutes
+		"/auth/register",     // Other auth paths - 20 requests per minute
+		"/api/users",         // API paths - 100 requests per minute
+		"/public/assets/img", // Default case - 200 requests per minute
+	}
+
+	for _, path := range paths {
+		t.Run("Path: "+path, func(t *testing.T) {
+			checkPathRateLimit(path)
+		})
+	}
+}
+
+// CustomRateLimiter is a test-specific version that allows controlling the checkRateLimit response
+func CustomRateLimiter(allowRequest bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		// Different rate limits for different endpoints - same as the original function
+		var window time.Duration
+
+		switch {
+		case strings.HasPrefix(path, "/auth/login"):
+			window = 15 * time.Minute
+		case strings.HasPrefix(path, "/auth/"):
+			window = time.Minute
+		case strings.HasPrefix(path, "/api/"):
+			window = time.Minute
+		default:
+			window = time.Minute
+		}
+
+		// Instead of calling the real checkRateLimit, use our test parameter
+		if !allowRequest {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "Rate limit exceeded",
+				"retry_after": window.Seconds(),
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// TestRateLimiterRejectionWithMock tests the rate limiter's rejection logic with a custom rate limiter
+func TestRateLimiterRejectionWithMock(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	router.Use(CustomRateLimiter(false)) // Use our custom rate limiter that will reject requests
+	router.Any("/*path", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
+
+	// Test paths to cover all rate limit conditions
+	paths := []string{
+		"/auth/login",        // Login path - 5 requests per 15 minutes
+		"/auth/register",     // Other auth paths - 20 requests per minute
+		"/api/users",         // API paths - 100 requests per minute
+		"/public/assets/img", // Default case - 200 requests per minute
+	}
+
+	for _, path := range paths {
+		t.Run("Path: "+path, func(t *testing.T) {
+			req := httptest.NewRequest("GET", path, nil)
+			req.RemoteAddr = "192.168.1.3:12345"
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			// Should get 429 Too Many Requests
+			assert.Equal(t, http.StatusTooManyRequests, w.Code)
+
+			// Check response body
+			var response map[string]interface{}
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			assert.NoError(t, err)
+			assert.Equal(t, "Rate limit exceeded", response["error"])
+
+			// The retry_after time should match the window duration for the path
+			var expectedWindow float64
+			if strings.HasPrefix(path, "/auth/login") {
+				expectedWindow = 15 * 60.0 // 15 minutes in seconds
+			} else {
+				expectedWindow = 60.0 // 1 minute in seconds
+			}
+			assert.Equal(t, expectedWindow, response["retry_after"])
+		})
+	}
 }

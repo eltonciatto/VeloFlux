@@ -26,10 +26,16 @@ type Backend struct {
 	Location Location
 }
 
+
+// GeoIPCityReader is an interface for GeoIP city lookups (for testability)
+type GeoIPCityReader interface {
+	City(ip net.IP) (*geoip2.City, error)
+}
+
 // Manager handles GeoIP lookups and distance calculations
 type Manager struct {
 	config     *config.Config
-	reader     *geoip2.Reader
+	reader     GeoIPCityReader
 	logger     *zap.Logger
 	enabled    bool
 	locations  map[string]Location // cache IP -> Location
@@ -60,7 +66,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*Manager, error) {
 		return m, err
 	}
 
-	m.reader = reader
+	m.reader = reader // geoip2.Reader implements GeoIPCityReader
 	m.enabled = true
 	logger.Info("GeoIP routing enabled", zap.String("database", cfg.Global.GeoIP.DatabasePath))
 
@@ -70,7 +76,9 @@ func New(cfg *config.Config, logger *zap.Logger) (*Manager, error) {
 // Close shuts down the GeoIP manager
 func (m *Manager) Close() error {
 	if m.reader != nil {
-		return m.reader.Close()
+		if closer, ok := m.reader.(interface{ Close() error }); ok {
+			return closer.Close()
+		}
 	}
 	return nil
 }
@@ -289,6 +297,11 @@ func getClientIP(r *http.Request) string {
 
 // splitString splits a string by a separator and trims spaces
 func splitString(s string, sep rune) []string {
+	// Handle empty string specially
+	if s == "" {
+		return []string{""}
+	}
+	
 	var result []string
 	var builder strings.Builder
 	for _, r := range s {

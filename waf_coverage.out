@@ -1,0 +1,17 @@
+mode: set
+github.com/eltonciatto/veloflux/internal/waf/waf.go:15.42,16.21 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:16.21,18.3 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:19.2,22.16 2 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:22.16,24.3 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:25.2,25.34 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:29.58,30.33 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:30.33,32.3 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:33.2,33.72 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:33.72,35.16 2 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:35.16,38.4 2 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:40.3,42.30 3 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:42.30,43.25 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:43.25,45.5 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:47.3,47.50 1 1
+github.com/eltonciatto/veloflux/internal/waf/waf.go:47.50,50.4 2 0
+github.com/eltonciatto/veloflux/internal/waf/waf.go:51.3,51.24 1 1
