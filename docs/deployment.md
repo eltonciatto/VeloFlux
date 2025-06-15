@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document outlines common deployment scenarios for VeloFlux in both single-tenant and multi-tenant SaaS contexts.
+This document outlines common deployment scenarios for VeloFlux in both single-tenant and multi-tenant SaaS contexts, including AI/ML features.
 
 ## Deployment Options
 
@@ -14,7 +14,38 @@ VeloFlux provides multiple deployment methods to suit different needs:
 For local development or single-tenant deployments, the provided `docker-compose.yml` starts VeloFlux, Redis and auxiliary services.
 
 ```bash
+# Standard deployment
 docker-compose up -d
+
+# Deploy with AI dashboard
+docker-compose up -d
+npm install && npm run dev  # In a separate terminal for frontend
+```
+
+## AI/ML Dashboard Deployment
+
+The AI dashboard requires Node.js and can be deployed alongside the main VeloFlux service:
+
+### Development Deployment
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Access dashboard at http://localhost:3000
+```
+
+### Production Deployment
+```bash
+# Build for production
+npm run build
+
+# Serve with a web server (nginx, apache, etc.)
+# Or use a Node.js process manager like PM2
+npm install -g pm2
+pm2 start npm --name "veloflux-dashboard" -- run preview
 ```
 
 ## Kubernetes / Helm
@@ -35,7 +66,7 @@ helm install veloflux ./charts/veloflux \
   --set oidc.provider=auth0 \
   --set oidc.domain=yourdomain.auth0.com
   
-# Enabling all new features
+# Enabling all features including AI/ML
 helm install veloflux ./charts/veloflux \
   --set redis.auth.password=secure-password \
   --set ingress.enabled=true \
@@ -47,7 +78,11 @@ helm install veloflux ./charts/veloflux \
   --set oidc.provider=keycloak \
   --set oidc.domain=auth.yourdomain.com \
   --set orchestration.enabled=true \
-  --set orchestration.inCluster=true
+  --set orchestration.inCluster=true \
+  --set ai.enabled=true \
+  --set ai.intelligentRouting=true \
+  --set ai.predictiveScaling=true \
+  --set ai.anomalyDetection=true
 ```
 
 Adjust the `values.yaml` file or command line flags to set:

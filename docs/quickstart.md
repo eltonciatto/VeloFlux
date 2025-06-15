@@ -1,9 +1,10 @@
 # Quick Start
 
-This guide helps you quickly get started with VeloFlux in both single-tenant and multi-tenant SaaS scenarios.
+This guide helps you quickly get started with VeloFlux in both single-tenant and multi-tenant SaaS scenarios, including the AI-powered dashboard.
 
 ## Prerequisites
 - Docker and Docker Compose installed
+- Node.js 18+ and npm (for the AI dashboard)
 - Optional: Go 1.22+ if you want to build from source
 - Optional: Redis CLI for advanced operations
 
@@ -16,9 +17,25 @@ cd VeloFlux
 
 # Start services with default configuration
 docker-compose up -d
+
+# Install frontend dependencies and start the AI dashboard
+npm install
+npm run dev
 ```
 
 Access the admin API on `http://localhost:9000`. The default credentials are controlled by the environment variables `VF_ADMIN_USER` and `VF_ADMIN_PASS` (default: admin/admin).
+
+Access the AI Dashboard on `http://localhost:3000` for intelligent load balancing insights and configuration.
+
+### 🤖 AI Dashboard Features
+
+The VeloFlux AI Dashboard provides:
+
+- **Real-time AI Insights** - View ML-powered load balancing decisions
+- **Predictive Analytics** - Traffic forecasting and capacity planning
+- **Model Performance** - Monitor ML model accuracy and training status
+- **Anomaly Detection** - Real-time alerts for unusual patterns
+- **Smart Configuration** - AI-recommended optimization settings
 
 ### Configure Your First Backend Pool
 

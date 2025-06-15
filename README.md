@@ -43,6 +43,17 @@ curl http://localhost:8080/metrics
 docker-compose logs -f veloflux
 ```
 
+3. **Access the AI Dashboard:**
+```bash
+# Start the frontend development server
+npm install
+npm run dev
+
+# Open browser to http://localhost:3000
+# Navigate to the "AI Insights" tab to view intelligent load balancing metrics
+# Explore predictive analytics, model performance, and AI configuration options
+```
+
 ### Build from Source
 
 ```bash
@@ -76,6 +87,16 @@ VeloFlux LB is designed as a single-binary, stateless load balancer with the fol
 - ✅ **Rate Limiting** - Per-IP token bucket rate limiting
 - ✅ **Metrics** - Prometheus metrics endpoint
 - ✅ **Graceful Shutdown** - Zero-downtime rolling updates
+
+### 🤖 AI/ML Intelligence Features
+- ✅ **Intelligent Load Balancing** - ML-powered backend selection based on real-time performance
+- ✅ **Predictive Auto-scaling** - AI-driven capacity planning and scaling recommendations
+- ✅ **Anomaly Detection** - Real-time detection of traffic patterns and system anomalies
+- ✅ **Performance Optimization** - ML-based configuration tuning and optimization suggestions
+- ✅ **Smart Health Prediction** - Predictive health monitoring with early failure detection
+- ✅ **Traffic Pattern Analysis** - AI-powered insights into user behavior and traffic trends
+- ✅ **Real-time AI Dashboard** - Interactive web interface for AI insights and configuration
+- ✅ **Model Performance Monitoring** - Track and visualize ML model accuracy and performance
 
 ### Performance
 - **100k+ concurrent connections** on 2 vCPU
@@ -159,13 +180,41 @@ DEPLOYMENT_MODE=nomad ./scripts/deploy.sh
 
 ## 📊 Monitoring & Observability
 
+### 🤖 AI/ML Dashboard
+
+Access the intelligent load balancer dashboard at `http://localhost:3000` (development) or your configured frontend URL:
+
+**Dashboard Features:**
+- **AI Overview** - Real-time summary of AI-driven optimizations and insights
+- **Predictive Analytics** - Traffic forecasting, capacity planning, and scaling recommendations
+- **Model Performance** - ML model accuracy metrics, training status, and performance trends
+- **AI Configuration** - Configure ML models, enable/disable AI features, and tune parameters
+- **Intelligent Insights** - Anomaly detection alerts, optimization suggestions, and pattern analysis
+- **Real-time Metrics** - Live visualization of AI-enhanced load balancing decisions
+
+**Key AI Capabilities:**
+- **Smart Backend Selection** - ML algorithms automatically route traffic to optimal backends
+- **Predictive Scaling** - AI predicts traffic spikes and recommends scaling actions
+- **Anomaly Detection** - Real-time detection of unusual traffic patterns or system behavior
+- **Performance Optimization** - AI continuously tunes configuration for optimal performance
+- **Health Prediction** - Predictive models identify potential backend failures before they occur
+
 ### Metrics
 
 Access Prometheus metrics at `http://localhost:8080/metrics`:
 
+**Core Metrics:**
 - `veloflux_requests_total` - Total requests by method, status, pool
 - `veloflux_request_duration_seconds` - Request latency histogram
 - `veloflux_active_connections` - Active connections per backend
+- `veloflux_backend_health` - Backend health status
+
+**AI/ML Metrics:**
+- `veloflux_ai_model_accuracy` - ML model prediction accuracy
+- `veloflux_ai_predictions_total` - Total AI predictions made
+- `veloflux_ai_anomalies_detected` - Anomalies detected by AI models
+- `veloflux_ai_optimization_score` - AI-driven optimization effectiveness
+- `veloflux_ai_backend_score` - AI-calculated backend performance scores
 ### Prometheus Scrape Configuration
 Add the following job to your Prometheus configuration to collect VeloFlux metrics:
 ```yaml
@@ -173,8 +222,6 @@ Add the following job to your Prometheus configuration to collect VeloFlux metri
   static_configs:
   - targets: ["localhost:8080"]
 ```
-
-- `veloflux_backend_health` - Backend health status
 
 ### Health Checks
 
@@ -249,6 +296,42 @@ go test ./...
 go run -race ./cmd/velofluxlb
 ```
 
+### 🎨 Frontend Development
+
+The VeloFlux dashboard is built with React, TypeScript, and Tailwind CSS:
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run type checking
+npm run type-check
+
+# Run linting
+npm run lint
+```
+
+**Frontend Architecture:**
+- **React 18** with TypeScript for type safety
+- **Tailwind CSS** for modern, responsive styling
+- **Recharts** for data visualization and metrics charts
+- **React Query** for efficient API state management
+- **Real-time updates** via WebSocket connections to backend AI services
+
+**AI/ML Frontend Components:**
+- `AIOverview` - Main AI dashboard with key metrics and insights
+- `AIMetricsDashboard` - Comprehensive AI metrics visualization
+- `ModelPerformance` - ML model accuracy and performance tracking
+- `PredictiveAnalytics` - Traffic prediction and capacity planning charts
+- `AIConfiguration` - AI feature settings and model configuration
+- `AIInsights` - Anomaly detection and optimization recommendations
+
 ### Contributing
 
 1. Fork the repository
@@ -259,6 +342,7 @@ go run -race ./cmd/velofluxlb
 
 ## 📚 Documentation
 
+**Core Documentation:**
 - [Quick Start Guide](docs/quickstart.md)
 - [Configuration Reference](docs/configuration.md)
 - [API Documentation](docs/api.md)
@@ -266,6 +350,12 @@ go run -race ./cmd/velofluxlb
 - [Security Hardening](docs/security.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Multitenant Roadmap](docs/multitenant.md)
+
+**AI/ML Documentation:**
+- [AI/ML Features Guide](docs/ai_ml_features.md)
+- [AI Frontend Implementation](docs/ai_frontend_final_summary.md)
+- [AI Frontend Testing Guide](docs/ai_frontend_testing_guide.md)
+- [Frontend AI Implementation Status](docs/frontend_ai_implementation_complete.md)
 
 ## 🤝 Community
 

@@ -64,6 +64,21 @@ VeloFlux exposes a comprehensive JSON HTTP API for managing tenants, pools, rout
 | GET    | `/api/tenants/{tenant_id}/usage`             | Get tenant usage statistics             |
 | GET    | `/api/tenants/{tenant_id}/logs`              | Get tenant logs                         |
 
+## 🤖 AI/ML Endpoints
+
+| Method | Endpoint                                        | Description                             |
+| ------ | ----------------------------------------------- | --------------------------------------- |
+| GET    | `/api/ai/metrics`                               | Get real-time AI metrics and insights   |
+| GET    | `/api/ai/models/performance`                    | Get ML model performance metrics        |
+| GET    | `/api/ai/predictions`                           | Get traffic and capacity predictions    |
+| GET    | `/api/ai/anomalies`                             | Get detected anomalies and alerts       |
+| GET    | `/api/ai/insights`                              | Get AI-generated optimization insights  |
+| GET    | `/api/ai/config`                                | Get AI/ML feature configuration        |
+| PUT    | `/api/ai/config`                                | Update AI/ML feature settings          |
+| POST   | `/api/ai/models/retrain`                        | Trigger ML model retraining             |
+| GET    | `/api/tenants/{tenant_id}/ai/backend-scores`    | Get AI-calculated backend scores        |
+| GET    | `/api/tenants/{tenant_id}/ai/recommendations`   | Get AI optimization recommendations     |
+
 ## Example Usage
 
 ```bash
@@ -84,6 +99,25 @@ curl -X PUT http://localhost:9000/api/tenants/tenant1/routes/route1 \
     "host": "example.com",
     "pool": "web-servers",
     "path_prefix": "/api"
+  }'
+
+# Get AI metrics and insights
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:9000/api/ai/metrics
+
+# Get traffic predictions
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:9000/api/ai/predictions
+
+# Update AI configuration
+curl -X PUT http://localhost:9000/api/ai/config \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "intelligent_routing_enabled": true,
+    "predictive_scaling_enabled": true,
+    "anomaly_detection_enabled": true,
+    "model_retrain_interval": "24h"
   }'
 ```
 

@@ -46,6 +46,28 @@ global:
     enabled: true
     database_path: "/etc/geoip/GeoLite2-City.mmdb"
     update_interval: "168h"         # auto-update interval
+
+  # AI/ML Configuration
+  ai:
+    enabled: true                   # Enable AI/ML features
+    intelligent_routing: true       # ML-powered backend selection
+    predictive_scaling: true        # AI-driven capacity predictions
+    anomaly_detection: true         # Real-time anomaly detection
+    model_retrain_interval: "24h"   # How often to retrain models
+    metrics_retention: "30d"        # How long to keep AI metrics
+    
+    # Model performance thresholds
+    thresholds:
+      min_accuracy: 0.85            # Minimum model accuracy before retraining
+      anomaly_sensitivity: 0.7      # Anomaly detection sensitivity (0-1)
+      prediction_confidence: 0.8    # Minimum confidence for predictions
+    
+    # Feature configuration
+    features:
+      backend_scoring: true         # AI-based backend performance scoring
+      traffic_prediction: true      # Traffic forecasting
+      health_prediction: true       # Predictive health monitoring
+      optimization_suggestions: true # AI-generated optimization recommendations
 ```
 
 ## Authentication and Multi-tenant

@@ -2,6 +2,7 @@
   "name": "veloflux",
   "private": true,
   "version": "1.1.0",
+  "description": "VeloFlux - Container-Native Global Load Balancer with AI/ML Intelligence",
   "license": "VPSL-1.0",
   "type": "module",
   "scripts": {
@@ -10,7 +11,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "security:audit": "npm audit --production"
+    "security:audit": "npm audit --production",
+    "type-check": "tsc --noEmit",
+    "ai:demo": "npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
