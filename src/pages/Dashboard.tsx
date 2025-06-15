@@ -10,7 +10,25 @@ import { BackendManager } from '@/components/dashboard/BackendManager';
 import { ClusterStatus } from '@/components/dashboard/ClusterStatus';
 import WAFConfig from '@/components/dashboard/WAFConfig';
 import RateLimitConfig from '@/components/dashboard/RateLimitConfig';
-import { Activity, Server, BarChart3, Settings, Users, Crown, Shield, Gauge } from 'lucide-react';
+import AIInsights from '@/components/dashboard/AIInsights';
+import AIMetricsDashboard from '@/components/dashboard/AIMetricsDashboard';
+import ModelPerformance from '@/components/dashboard/ModelPerformance';
+import PredictiveAnalytics from '@/components/dashboard/PredictiveAnalytics';
+import AIConfiguration from '@/components/dashboard/AIConfiguration';
+import { 
+  Activity, 
+  Server, 
+  BarChart3, 
+  Settings, 
+  Users, 
+  Crown, 
+  Shield, 
+  Gauge,
+  Brain,
+  Target,
+  TrendingUp,
+  Sliders
+} from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/use-auth';
 import { useTenant } from '@/hooks/use-tenant';
@@ -33,6 +51,22 @@ export const Dashboard = () => {
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Server className="w-4 h-4" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights" className="flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="ai-metrics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              AI Metrics
+            </TabsTrigger>
+            <TabsTrigger value="predictions" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Predictions
+            </TabsTrigger>
+            <TabsTrigger value="model-performance" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Models
             </TabsTrigger>
             <TabsTrigger value="health" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
@@ -58,6 +92,10 @@ export const Dashboard = () => {
               <Gauge className="w-4 h-4" />
               Rate Limiting
             </TabsTrigger>
+            <TabsTrigger value="ai-config" className="flex items-center gap-2">
+              <Sliders className="w-4 h-4" />
+              AI Config
+            </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Configuration
@@ -66,6 +104,22 @@ export const Dashboard = () => {
 
           <TabsContent value="overview">
             <BackendOverview />
+          </TabsContent>
+
+          <TabsContent value="ai-insights">
+            <AIInsights />
+          </TabsContent>
+
+          <TabsContent value="ai-metrics">
+            <AIMetricsDashboard />
+          </TabsContent>
+
+          <TabsContent value="predictions">
+            <PredictiveAnalytics />
+          </TabsContent>
+
+          <TabsContent value="model-performance">
+            <ModelPerformance />
           </TabsContent>
 
           <TabsContent value="health">
@@ -90,6 +144,10 @@ export const Dashboard = () => {
           
           <TabsContent value="ratelimit">
             <RateLimitConfig tenantId={selectedTenantId} />
+          </TabsContent>
+
+          <TabsContent value="ai-config">
+            <AIConfiguration />
           </TabsContent>
 
           <TabsContent value="config">

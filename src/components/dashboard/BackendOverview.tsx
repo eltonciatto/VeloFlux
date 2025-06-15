@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Server, Activity, Clock, Users, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useBackends } from '@/hooks/use-api';
+import AIOverview from './AIOverview';
 
 interface Backend {
   address: string;
@@ -48,6 +49,10 @@ export const BackendOverview = () => {
 
   return (
     <div className="space-y-6">
+      {/* AI Overview Section */}
+      <AIOverview />
+      
+      {/* Original Backend Overview */}
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
