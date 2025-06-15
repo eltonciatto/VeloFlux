@@ -249,7 +249,7 @@ export const Footer = () => {
                 VeloFlux LB
               </div>
               <Badge className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 border-purple-400/30">
-                v0.6.0 - AI Edition
+                v0.0.6 - AI Edition
               </Badge>
             </div>
             
