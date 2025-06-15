@@ -3,11 +3,47 @@
 📜 Licensed under **VeloFlux Public Source License (VPSL) v1.0** — See [`LICENSE`](./LICENSE) for details.  
 💼 For commercial licensing, visit **https://veloflux.io** or contact **contact@veloflux.io**.
 
-# VeloFlux LB - Container-Native Global Load Balancer
+# VeloFlux SaaS - AI-Powered Load Balancer Platform
 
-A production-grade, container-native load balancer built in Go with SSL termination, HTTP/3 support, automatic health checks, and geo-aware routing.
+[![License](https://img.shields.io/badge/license-VPSL--1.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](package.json)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
 
-## 🚀 Quick Start
+A production-grade, container-native SaaS load balancer built in Go with AI intelligence, SSL termination, HTTP/3 support, automatic health checks, and geo-aware routing.
+
+## ⚡ Super Quick Install (1 Command)
+
+### � Docker (Recommended - Ready in ~5 minutes)
+```bash
+git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/docker-quick-install.sh
+```
+**Access:** http://localhost | **Admin:** http://localhost:9000 | **Grafana:** http://localhost:3000
+
+### 🛠️ Development Environment
+```bash
+git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/dev-quick-install.sh
+```
+**Access:** http://localhost:5173 | **Hot reload enabled**
+
+### 🚀 Production (with SSL)
+```bash
+git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh production -d yourdomain.com -e admin@yourdomain.com
+```
+**SSL auto-generated** | **Monitoring included** | **Backups enabled**
+
+### 🧙‍♂️ Interactive Wizard
+```bash
+git clone https://github.com/eciatto/VeloFlux.git && cd VeloFlux && ./scripts/master-install.sh
+```
+**Smart assistant** | **Auto-detection** | **Custom configuration**
+
+---
+
+## 📚 Detailed Installation Guide
+
+For complete installation options and troubleshooting, see: **[📖 Quick Install Guide](docs/QUICK_INSTALL.md)**
+
+## �🚀 Traditional Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose

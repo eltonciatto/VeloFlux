@@ -103,7 +103,8 @@ const Index = () => {
         <Footer />
       </div>
       
-      <TranslationTest />
+      {/* Translation Test - Only shown in development mode */}
+      {import.meta.env.DEV && <TranslationTest />}
 
     </div>
   );
