@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { safeApiFetch } from '@/lib/csrfToken';
 import { TokenService } from '@/lib/tokenService';
 import { AuthContext, UserInfo } from './auth-context';
+import type { UserInfo as TokenUserInfo } from '@/lib/tokenService';
+import { CONFIG, isDemoMode, isProduction } from '@/config/environment';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(TokenService.getToken());
@@ -65,10 +67,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 10 * 60 * 1000); // Refresh every 10 minutes
     
     return () => clearInterval(refreshInterval);
-  }, [fetchProfile, refreshToken]);
+  }, [fetchProfile, refreshToken]);  const login = async (email: string, password: string) => {
+    // Demo mode: Only use demo credentials in development/demo mode
+    if (isDemoMode() && 
+        (email === CONFIG.DEMO_CREDENTIALS.username || email === 'demo') && 
+        password === CONFIG.DEMO_CREDENTIALS.password) {
+      
+      console.warn('🔧 Demo Mode: Using simulated authentication. This will not work in production!');
+      
+      // Create a demo token and user
+      const demoToken = 'demo-token-' + Date.now();
+      const demoUser: UserInfo = {
+        user_id: 'demo-user',
+        tenant_id: 'default',
+        email: 'admin@veloflux.demo',
+        first_name: 'Admin',
+        last_name: 'Demo',
+        role: 'admin'
+      };
+      
+      const tokenUser: TokenUserInfo = {
+        id: 'demo-user',
+        email: 'admin@veloflux.demo',
+        name: 'Admin Demo',
+        role: 'admin',
+        tenantId: 'default'
+      };
+      
+      TokenService.setToken(demoToken);
+      TokenService.setUserInfo(tokenUser);
+      setToken(demoToken);
+      setUser(demoUser);
+      return;
+    }
 
-  const login = async (email: string, password: string) => {
-    // Implement login throttling
+    // Production mode: Block demo credentials
+    if (isProduction() && 
+        (email === CONFIG.DEMO_CREDENTIALS.username || email === 'demo') && 
+        password === CONFIG.DEMO_CREDENTIALS.password) {
+      throw new Error('Demo credentials are not allowed in production. Please use real credentials.');
+    }
+
+    // Implement login throttling for real authentication
     const now = Date.now();
     const recentAttempts = loginAttempts[email] || 0;
     const lastAttempt = lastLoginAttempt[email] || 0;
@@ -79,10 +119,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      const res = await safeApiFetch('/auth/login', {
+      // Use real authentication endpoint
+      const authEndpoint = isProduction() 
+        ? CONFIG.PRODUCTION.ENDPOINTS.LOGIN 
+        : '/auth/login';
+        
+      const res = await safeApiFetch(authEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password,
+          // Add additional production-specific fields if needed
+          ...(isProduction() && {
+            client_id: 'veloflux-web',
+            grant_type: 'password'
+          })
+        }),
       });
+      
       const { token: newToken } = res as { token: string };
       
       // Reset login attempts on success
@@ -94,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       TokenService.setToken(newToken);
       setToken(newToken);
       await fetchProfile(newToken);
+      
     } catch (error) {
       // Increment failed login attempts
       setLoginAttempts(prev => ({
@@ -105,6 +163,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         [email]: now
       }));
+      
+      // Add production-specific error handling
+      if (isProduction()) {
+        console.error('Production authentication failed:', error);
+      }
       
       throw error;
     }

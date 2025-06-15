@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslation } from 'react-i18next';
 import { TenantSelector } from '@/components/TenantSelector';
 import { 
   LogOut, 
@@ -24,6 +25,7 @@ import {
 const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -60,10 +62,34 @@ const Header = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-blue-200 hover:text-white hover:bg-blue-600/20"
+                onClick={() => navigate('/about')}
+              >
+                About
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-200 hover:text-white hover:bg-blue-600/20"
+                onClick={() => navigate('/pricing')}
+              >
+                Pricing
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-200 hover:text-white hover:bg-blue-600/20"
                 onClick={() => navigate('/docs')}
               >
                 <BookOpen className="w-4 h-4 mr-2" />
                 Docs
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-200 hover:text-white hover:bg-blue-600/20"
+                onClick={() => navigate('/contact')}
+              >
+                Contact
               </Button>
               {user && (
                 <Button 
@@ -87,7 +113,7 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span className="text-white">{user.name || user.email}</span>
+                    <span className="text-white">{user.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-slate-900 border-slate-800">
@@ -96,14 +122,14 @@ const Header = () => {
                     className="cursor-pointer"
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Profile
+                    {t('navigation.profile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => navigate('/dashboard')}
                     className="cursor-pointer"
                   >
                     <BarChart3 className="w-4 h-4 mr-2" />
-                    Dashboard
+                    {t('navigation.dashboard')}
                   </DropdownMenuItem>
                   {user.role === 'admin' && (
                     <DropdownMenuItem 
@@ -111,7 +137,7 @@ const Header = () => {
                       className="cursor-pointer"
                     >
                       <Shield className="w-4 h-4 mr-2" />
-                      Admin
+                      {t('pages.admin.title')}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator className="bg-slate-800" />
@@ -120,7 +146,7 @@ const Header = () => {
                     className="cursor-pointer text-red-400 hover:text-red-300"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    {t('navigation.logout')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -132,14 +158,14 @@ const Header = () => {
                   onClick={() => navigate('/login')}
                   className="text-blue-200 hover:text-white"
                 >
-                  Login
+                  {t('navigation.login')}
                 </Button>
                 <Button 
                   size="sm" 
                   onClick={() => navigate('/register')}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  Sign Up
+                  {t('pages.register.title')}
                 </Button>
               </div>
             )}

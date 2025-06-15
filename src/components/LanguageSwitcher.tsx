@@ -8,12 +8,14 @@ export const LanguageSwitcher = () => {
 
   const toggleLanguage = () => {
     const currentLang = i18n.language;
-    const newLang = currentLang === 'en' ? 'pt-BR' : 'en';
+    const newLang = (currentLang === 'en') ? 'pt-BR' : 'en';
+    console.log('Switching from', currentLang, 'to', newLang);
     i18n.changeLanguage(newLang);
   };
 
   const getCurrentLanguageLabel = () => {
-    return i18n.language === 'en' ? 'EN' : 'PT';
+    const lang = i18n.language;
+    return (lang === 'en') ? 'EN' : 'PT';
   };
 
   return (

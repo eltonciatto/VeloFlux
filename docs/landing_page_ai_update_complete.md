@@ -13,7 +13,7 @@ Este documento resume todas as atualizações feitas na landing page do VeloFlux
   - **AI Dashboard** (gradiente roxo-azul) → `/dashboard`
   - **GitHub** → `https://github.com/eltonciatto/VeloFlux`
   - **Documentação** → `https://veloflux.io/docs`
-  - **Demo Login** → `/login`
+  - **Login** → `/login`
 - ✅ Stats cards atualizados com novo card "AI-Powered" em destaque
 
 ### 2. **Features Section (`src/components/Features.tsx`)**
@@ -120,7 +120,7 @@ Este documento resume todas as atualizações feitas na landing page do VeloFlux
 
 ### Links Internos
 - **AI Dashboard:** `/dashboard`
-- **Demo Login:** `/login`
+- **Login:** `/login`
 - **Documentação local:** `/docs`
 
 ## ✅ Status da Implementação

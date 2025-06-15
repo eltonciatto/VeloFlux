@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -12,7 +11,13 @@ import Profile from '@/pages/Profile';
 import TenantManagement from '@/pages/TenantManagement';
 import UserManager from '@/pages/UserManager';
 import Docs from '@/pages/Docs';
+import Pricing from '@/pages/Pricing';
+import TermsOfService from '@/pages/TermsOfService';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Contact from '@/pages/Contact';
+import About from '@/pages/About';
 import { AuthProvider } from '@/hooks/auth-provider';
+import EnvironmentIndicator from '@/components/EnvironmentIndicator';
 import { TenantProvider } from '@/hooks/tenant-provider';
 import { RequireAuth } from '@/components/RequireAuth';
 
@@ -24,10 +29,16 @@ function App() {
       <AuthProvider>
         <TenantProvider>
           <Router>
+            <EnvironmentIndicator />
             <Toaster position="top-right" />
             <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
             <Route path="/docs" element={<Docs />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

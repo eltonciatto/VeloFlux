@@ -16,6 +16,17 @@
     "retry": "Tentar novamente",
     "download": "Baixar"
   },
+  "nav": {
+    "home": "Início",
+    "features": "Recursos",
+    "pricing": "Preços",
+    "about": "Sobre",
+    "contact": "Contato",
+    "login": "Entrar",
+    "signup": "Começar",
+    "dashboard": "Painel",
+    "docs": "Documentação"
+  },
   "navigation": {
     "home": "Início",
     "dashboard": "Painel",
@@ -24,13 +35,18 @@
     "login": "Entrar",
     "logout": "Sair",
     "settings": "Configurações",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "backToHome": "Voltar ao Início"
   },
   "hero": {
-    "badge": "Load Balancer com IA",
-    "title": "VeloFlux LB",
-    "description": "Load balancer global inteligente nativo para contêineres com capacidades de {{highlight}}, terminação SSL, suporte HTTP/3, análise preditiva e otimização automatizada. Construído para a era cloud-native.",
-    "descriptionHighlight": "IA/ML",
+    "title": "VeloFlux",
+    "subtitle": "Load Balancer de Nova Geração com IA",
+    "description": "Experimente roteamento inteligente de tráfego com algoritmos avançados de machine learning. VeloFlux otimiza automaticamente a performance, prevê padrões de tráfego e escala recursos em tempo real.",
+    "descriptionHighlight": "machine learning",
+    "badge": "🚀 Load Balancing com IA",
+    "cta": "Começar Teste Grátis",
+    "watchDemo": "Ver Demo",
+    "learnMore": "Saiba Mais",
     "buttons": {
       "aiDashboard": "Painel de IA",
       "github": "GitHub",
@@ -43,9 +59,13 @@
       "concurrentConnections": "Conexões Simultâneas",
       "containerSize": "Tamanho do Container",
       "uptimeSLA": "SLA de Uptime"
-    }
+    },
+    "getStarted": "Começar",
+    "viewDemo": "Ver Demo"
   },
   "features": {
+    "title": "Recursos",
+    "description": "Descubra as poderosas capacidades que fazem do VeloFlux o load balancer de próxima geração",
     "ai": {
       "badge": "Inteligência IA/ML",
       "title": "Load Balancing Inteligente",
@@ -150,11 +170,97 @@
         "launchDashboard": "Lançar Painel de IA",
         "learnMore": "Saiba Mais Sobre IA"
       }
+    },
+    "immersiveHero": {
+      "title": {
+        "part1": "Nova Geração",
+        "part2": "Load Balancer com IA",
+        "part3": "para o Futuro"
+      },
+      "subtitle": "Inteligente • Escalável • Autônomo",
+      "description": "Aproveite o poder do machine learning para performance de balanceamento de carga sem precedentes. VeloFlux aprende, se adapta e otimiza sua infraestrutura em tempo real.",
+      "badge": "🚀 Tecnologia de Nova Geração",
+      "cta": {
+        "primary": "Começar Teste Grátis",
+        "secondary": "Assistir Demo ao Vivo"
+      },
+      "metrics": {
+        "performance": "99.99% Uptime",
+        "speed": "< 1ms Latência",
+        "intelligence": "Com IA"
+      },
+      "stats": {
+        "aiModels": "Modelos de IA",
+        "requestsPerSec": "Requisições/seg",
+        "mlAccuracy": "Precisão ML",
+        "globalEdge": "Edge Global",
+        "locations": " locais"
+      },
+      "networkVisualization": {
+        "title": "Visualização de Rede",
+        "description": "Rede de tráfego em tempo real"
+      }
+    },
+    "liveDemo": {
+      "title": "Demonstrações de IA/ML ao Vivo",
+      "subtitle": "Métricas em tempo real e tomada de decisão inteligente",
+      "description": "Veja nossos algoritmos de IA otimizarem o roteamento de tráfego, preverem padrões de carga e escalarem recursos automaticamente em tempo real.",
+      "metrics": {
+        "requestsPerSec": "Requisições/seg",
+        "aiAccuracy": "Precisão da IA",
+        "responseTime": "Tempo de Resposta",
+        "uptimeSLA": "SLA de Uptime"
+      },
+      "units": {
+        "rps": "RPS",
+        "percentage": "%",
+        "milliseconds": "ms"
+      },
+      "networkVisualization": {
+        "title": "Visualização da Topologia de Rede"
+      },
+      "networkTopology": {
+        "title": "Topologia de Rede",
+        "loadBalancer": "Load Balancer",
+        "backend": "Backend",
+        "load": "Carga"
+      },
+      "aiDecisions": {
+        "title": "Log de Decisões da IA",
+        "subtitle": "Decisões de machine learning ao vivo",
+        "waiting": "Aguardando decisões da IA...",
+        "decisions": {
+          "routingTraffic": "IA: Roteando tráfego para Backend-2 (menor latência)",
+          "predictingSpike": "ML: Prevendo pico de tráfego de 23% em 5 minutos",
+          "detectedAnomaly": "IA: Anomalia detectada no Backend-1, alterando rotas",
+          "optimizingSSL": "Neural: Otimizando performance do handshake SSL",
+          "autoScaling": "IA: Auto-scaling acionado - adicionando 2 instâncias",
+          "learningPatterns": "ML: Aprendendo com padrões de tráfego - melhoria de 15%"
+        }
+      },
+      "buttons": {
+        "exploreDashboard": "Explorar Painel",
+        "viewDocumentation": "Ver Documentação"
+      },
+      "cta": "Experimente Agora"
+    },
+    "scrollProgress": {
+      "sections": {
+        "hero": "Início",
+        "features": "Recursos",
+        "aiShowcase": "Showcase IA",
+        "demo": "Demo",
+        "architecture": "Arquitetura",
+        "quickstart": "Início Rápido",
+        "performance": "Performance",
+        "conclusion": "Conclusão"
+      }
     }
   },
   "performance": {
     "badge": "Desempenho Aprimorado por IA",
     "title": "Benchmarks de Desempenho",
+    "subtitle": "Métricas do mundo real",
     "description": "Métricas de desempenho do mundo real comparando load balancing tradicional vs roteamento aprimorado por IA",
     "metrics": {
       "routingAccuracy": "Precisão de Roteamento",
@@ -214,7 +320,8 @@
       "aiFeatures": "Recursos IA/ML",
       "documentation": "Documentação",
       "community": "Comunidade",
-      "resources": "Recursos"
+      "resources": "Recursos",
+      "company": "Empresa"
     },
     "links": {
       "intelligentRouting": "Roteamento Inteligente",
@@ -231,22 +338,971 @@
       "benchmarks": "Benchmarks",
       "bestPractices": "Melhores Práticas",
       "securityGuide": "Guia de Segurança",
-      "migrationGuide": "Guia de Migração"
+      "migrationGuide": "Guia de Migração",
+      "pricing": "Preços",
+      "contact": "Contato",
+      "terms": "Termos de Serviço",
+      "privacy": "Política de Privacidade",
+      "about": "Sobre"
     },
     "copyright": "© {{year}} VeloFlux LB. Licença Customizada VeloFlux.",
+    "rights": "Todos os direitos reservados",
     "madeWith": "Feito com",
     "and": "e",
     "forCommunity": "para a comunidade open source",
     "versionBadge": "v{{version}} - Edição IA"
   },
+  "conclusion": {
+    "badge": "Pronto para o Futuro",
+    "title": "Junte-se à Revolução do {{highlight}}",
+    "titleHighlight": "Load Balancing com IA",
+    "description": "Não deixe load balancers tradicionais limitarem sua infraestrutura. Experimente o poder da otimização orientada por IA, escala preditiva e roteamento inteligente.",
+    "benefits": {
+      "aiOptimization": {
+        "title": "40% Melhor Desempenho",
+        "description": "Otimização por IA entrega tempos de resposta mais rápidos"
+      },
+      "predictiveScaling": {
+        "title": "95% Menos Falhas",
+        "description": "Análise preditiva previne problemas de capacidade"
+      },
+      "smartRouting": {
+        "title": "80% Detecção Mais Rápida",
+        "description": "Detecção de anomalias em tempo real mantém você seguro"
+      }
+    },
+    "cta": {
+      "title": "Comece Sua Jornada com IA Hoje",
+      "description": "Junte-se a milhares de desenvolvedores já usando VeloFlux para alimentar sua infraestrutura moderna",
+      "buttons": {
+        "getStarted": "Começar Grátis",
+        "viewPricing": "Ver Preços",
+        "talkToExpert": "Falar com Especialista"
+      }
+    },
+    "testimonial": {
+      "quote": "As capacidades de IA do VeloFlux transformaram nossa infraestrutura. Vimos 40% de melhoria nos tempos de resposta e não tivemos uma única falha relacionada à capacidade desde o deployment.",
+      "author": "Sarah Chen",
+      "title": "Líder de Engenharia de Plataforma",
+      "company": "TechCorp"
+    }
+  },
   "dashboard": {
-    "title": "Painel de IA",
+    "title": "Painel VeloFlux",
+    "subtitle": "Monitore e gerencie suas instâncias de load balancer com inteligência artificial",
+    "badge": "🚀 IA Avançada Ativa",
+    "aiDashboard": "Painel de IA",
     "welcome": "Bem-vindo ao Painel de IA VeloFlux",
     "overview": "Visão Geral",
     "metrics": "Métricas",
     "analytics": "Análises",
     "configuration": "Configuração",
     "logs": "Logs",
-    "alerts": "Alertas"
+    "alerts": "Alertas",
+    "loading": "Carregando painel...",
+    "error": "Erro ao carregar dados",
+    "noData": "Nenhum dado disponível",
+    "refreshData": "Atualizar dados",
+    "lastUpdated": "Última atualização: {{time}}",
+    "aiStatus": "Status da IA",
+    "systemHealth": "Saúde do Sistema",
+    "performanceMetrics": "Métricas de Desempenho",
+    "backendHealth": "Saúde do Backend",
+    "loadBalancerStatus": "Status do Load Balancer",
+    "trafficAnalysis": "Análise de Tráfego",
+    "securityOverview": "Visão Geral de Segurança",
+    "tabs": {
+      "overview": "Visão Geral",
+      "aiInsights": "Insights de IA",
+      "aiMetrics": "Métricas de IA",
+      "predictions": "Predições",
+      "models": "Modelos",
+      "health": "Monitor de Saúde",
+      "metrics": "Métricas",
+      "cluster": "Cluster",
+      "backends": "Backends",
+      "security": "Segurança",
+      "rateLimit": "Limitação de Taxa",
+      "aiConfig": "Configuração de IA",
+      "configuration": "Configuração"
+    }
+  },
+  "pages": {
+    "notFound": {
+      "title": "404",
+      "message": "Oops! Página não encontrada",
+      "description": "A página que você está procurando não existe ou foi movida.",
+      "backHome": "Voltar ao Início"
+    },
+    "login": {
+      "title": "Entrar",
+      "subtitle": "Acesse sua conta VeloFlux",
+      "username": "Nome de usuário",
+      "password": "Senha",
+      "loginButton": "Entrar",
+      "forgotPassword": "Esqueceu a senha?",
+      "noAccount": "Não tem uma conta?",
+      "createAccount": "Criar conta",
+      "loginFailed": "Falha no login",
+      "usernamePasswordRequired": "Nome de usuário e senha são obrigatórios",
+      "invalidCredentials": "Credenciais inválidas"
+    },
+    "register": {
+      "title": "Criar Conta",
+      "subtitle": "Comece a usar o VeloFlux hoje",
+      "name": "Nome completo",
+      "email": "E-mail",
+      "username": "Nome de usuário",
+      "password": "Senha",
+      "confirmPassword": "Confirmar senha",
+      "registerButton": "Criar conta",
+      "alreadyHaveAccount": "Já tem uma conta?",
+      "signIn": "Entrar",
+      "registrationFailed": "Falha no registro",
+      "allFieldsRequired": "Todos os campos são obrigatórios",
+      "passwordsDoNotMatch": "As senhas não coincidem",
+      "registrationSuccess": "Conta criada com sucesso"
+    },
+    "profile": {
+      "title": "Perfil do Usuário",
+      "personalInfo": "Informações Pessoais",
+      "accountSettings": "Configurações da Conta",
+      "securitySettings": "Configurações de Segurança",
+      "changePassword": "Alterar Senha",
+      "currentPassword": "Senha atual",
+      "newPassword": "Nova senha",
+      "confirmNewPassword": "Confirmar nova senha",
+      "updateProfile": "Atualizar Perfil",
+      "deleteAccount": "Excluir Conta",
+      "dangerZone": "Zona de Perigo"
+    },
+    "docs": {
+      "title": "Documentação",
+      "subtitle": "Guias completos e referência da API",
+      "searchDocs": "Pesquisar documentação...",
+      "quickStart": "Início Rápido",
+      "apiReference": "Referência da API",
+      "tutorials": "Tutoriais",
+      "examples": "Exemplos",
+      "troubleshooting": "Solução de Problemas"
+    },
+    "admin": {
+      "title": "Painel Administrativo",
+      "userManagement": "Gerenciamento de Usuários",
+      "systemSettings": "Configurações do Sistema",
+      "monitoring": "Monitoramento",
+      "logs": "Logs do Sistema",
+      "analytics": "Análises",
+      "maintenance": "Manutenção"
+    },
+    "privacy": {
+      "title": "Política de Privacidade",
+      "description": "Como protegemos seus dados",
+      "lastUpdated": "Última atualização: {{date}}",
+      "tableOfContents": "Índice",
+      "sections": {
+        "overview": {
+          "title": "Visão Geral",
+          "content": {
+            "intro": "Sua privacidade é importante para nós.",
+            "commitment": "Estamos comprometidos em proteger seus dados.",
+            "keyPoints": {
+              "title": "Pontos Principais:",
+              "transparency": "Transparência total",
+              "minimization": "Coleta mínima de dados",
+              "security": "Segurança avançada",
+              "rights": "Respeito aos seus direitos"
+            }
+          }
+        }
+      }
+    },
+    "contact": {
+      "title": "Entre em Contato",
+      "description": "Estamos aqui para ajudar",
+      "methods": {
+        "title": "Métodos de Contato",
+        "email": {
+          "title": "Email",
+          "description": "Para suporte geral e dúvidas"
+        },
+        "chat": {
+          "title": "Chat ao Vivo",
+          "description": "Resposta rápida durante horário comercial",
+          "availability": "Seg-Sex 9h-18h"
+        },
+        "phone": {
+          "title": "Telefone",
+          "description": "Para clientes Enterprise"
+        }
+      },
+      "office": {
+        "title": "Escritório",
+        "address": "São Paulo, SP, Brasil"
+      },
+      "hours": {
+        "title": "Horário Comercial",
+        "weekdays": "Segunda a Sexta: 9h - 18h",
+        "weekends": "Fins de semana: Apenas email"
+      },
+      "form": {
+        "title": "Enviar Mensagem",
+        "name": "Nome",
+        "email": "Email",
+        "category": "Categoria",
+        "subject": "Assunto",
+        "message": "Mensagem",
+        "responseTime": "Responderemos em até 24 horas",
+        "sending": "Enviando...",
+        "send": "Enviar Mensagem",
+        "categories": {
+          "technical": "Suporte Técnico",
+          "billing": "Cobrança",
+          "general": "Dúvida Geral",
+          "feature": "Solicitação de Recurso"
+        },
+        "placeholders": {
+          "name": "Seu nome completo",
+          "email": "seu@email.com",
+          "category": "Selecione uma categoria",
+          "subject": "Resumo de sua mensagem",
+          "message": "Descreva sua dúvida ou comentário..."
+        },
+        "success": {
+          "title": "Mensagem Enviada!",
+          "message": "Recebemos sua mensagem e responderemos em breve.",
+          "sendAnother": "Enviar Outra Mensagem"
+        }
+      },
+      "faq": {
+        "title": "Perguntas Frequentes",
+        "questions": {
+          "response": {
+            "question": "Qual o tempo de resposta?",
+            "answer": "Respondemos emails em até 24 horas úteis."
+          },
+          "support": {
+            "question": "Que tipo de suporte vocês oferecem?",
+            "answer": "Oferecemos suporte via email, chat e telefone dependendo do seu plano."
+          },
+          "emergency": {
+            "question": "Vocês oferecem suporte de emergência?",
+            "answer": "Sim, clientes Enterprise têm acesso a suporte de emergência 24/7."
+          },
+          "documentation": {
+            "question": "Onde posso encontrar a documentação?",
+            "answer": "Nossa documentação completa está disponível na seção Docs."
+          }
+        }
+      }
+    }
+  },
+  "aiComponents": {
+    "overview": {
+      "title": "Visão Geral da IA",
+      "description": "Status e métricas dos sistemas de IA",
+      "aiStatus": "Status da IA",
+      "online": "Online",
+      "offline": "Offline",
+      "learning": "Aprendendo",
+      "optimizing": "Otimizando",
+      "performance": "Desempenho",
+      "accuracy": "Precisão",
+      "efficiency": "Eficiência",
+      "predictions": "Predições",
+      "anomalies": "Anomalias",
+      "optimizations": "Otimizações"
+    },
+    "insights": {
+      "title": "Insights de IA",
+      "description": "Análises e recomendações geradas pela IA",
+      "recommendations": "Recomendações",
+      "trends": "Tendências",
+      "patterns": "Padrões",
+      "alerts": "Alertas",
+      "noInsights": "Nenhum insight disponível",
+      "loadingInsights": "Carregando insights...",
+      "recentAnomalies": "Anomalias Recentes",
+      "performanceRecommendations": "Recomendações de Desempenho",
+      "costOptimizations": "Otimizações de Custo",
+      "securityAlerts": "Alertas de Segurança",
+      "modelPerformance": "Desempenho do Modelo",
+      "trainingStatus": "Status do Treinamento",
+      "retrainModel": "Retreinar Modelo",
+      "modelAccuracy": "Precisão do Modelo",
+      "predictionConfidence": "Confiança das Predições",
+      "performanceMetrics": "Métricas de Desempenho",
+      "successRate": "Taxa de Sucesso",
+      "totalRequests": "Total de Requisições",
+      "activeModels": "Modelos Ativos",
+      "confidence": "Confiança",
+      "accuracy": "Precisão",
+      "currentAlgorithm": "Algoritmo Atual",
+      "performanceTrend": "Tendência de Desempenho",
+      "systemHealth": "Saúde do Sistema",
+      "realTimePerformance": "Desempenho em Tempo Real",
+      "excellent": "Excelente",
+      "good": "Bom",
+      "needsImprovement": "Precisa de Melhoria"
+    },
+    "configuration": {
+      "title": "Configuração de IA",
+      "description": "Configure parâmetros e modelos de IA",
+      "models": "Modelos",
+      "parameters": "Parâmetros",
+      "training": "Treinamento",
+      "deployment": "Implantação",
+      "monitoring": "Monitoramento",
+      "enableAI": "Habilitar IA",
+      "disableAI": "Desabilitar IA",
+      "modelSelection": "Seleção de Modelo",
+      "trainingData": "Dados de Treinamento",
+      "performanceThresholds": "Limites de Desempenho",
+      "autoRetraining": "Retreinamento Automático",
+      "predictionSettings": "Configurações de Predição",
+      "anomalyThresholds": "Limites de Anomalia",
+      "performance": "Desempenho",
+      "performanceSettings": "Configurações de Desempenho",
+      "incorrectValues": "Valores incorretos podem impactar o desempenho do sistema."
+    },
+    "analytics": {
+      "title": "Análises Preditivas",
+      "description": "Previsões e análises baseadas em IA",
+      "trafficForecasting": "Previsão de Tráfego",
+      "capacityPlanning": "Planejamento de Capacidade",
+      "performanceTrends": "Tendências de Desempenho",
+      "resourceUtilization": "Utilização de Recursos",
+      "upcomingPeaks": "Picos Próximos",
+      "recommendedActions": "Ações Recomendadas",
+      "confidenceLevel": "Nível de Confiança",
+      "forecastAccuracy": "Precisão da Previsão"
+    },
+    "metrics": {
+      "title": "Métricas de IA",
+      "description": "Métricas de desempenho e monitoramento de IA",
+      "realTimeMetrics": "Métricas em Tempo Real",
+      "historicalData": "Dados Históricos",
+      "performanceIndicators": "Indicadores de Desempenho",
+      "systemHealth": "Saúde do Sistema",
+      "throughput": "Taxa de Transferência",
+      "latency": "Latência",
+      "errorRate": "Taxa de Erro",
+      "responseTime": "Tempo de Resposta",
+      "requestsPerSecond": "Requisições por Segundo",
+      "cpuUsage": "Uso de CPU",
+      "memoryUsage": "Uso de Memória",
+      "networkTraffic": "Tráfego de Rede",
+      "neuralNetworkVsRL": "Rede Neural vs Desempenho RL",
+      "performanceOptimization": "Otimização de Desempenho",
+      "aiMetricsDashboard": "Painel de Métricas de IA",
+      "aiDashboard": "Painel de IA"
+    },
+    "privacy": {
+      "title": "Política de Privacidade",
+      "description": "Sua privacidade é importante para nós. Saiba como coletamos, usamos e protegemos suas informações.",
+      "lastUpdated": "Última atualização",
+      "tableOfContents": "Índice",
+      "sections": {
+        "overview": {
+          "title": "Visão Geral",
+          "content": {
+            "intro": "Na VeloFlux, estamos comprometidos em proteger sua privacidade e tratar suas informações pessoais com transparência e respeito.",
+            "commitment": "Esta Política de Privacidade explica como coletamos, usamos, armazenamos e protegemos suas informações ao usar nossos serviços de balanceamento de carga.",
+            "keyPoints": {
+              "title": "Princípios de Privacidade:",
+              "transparency": "Transparência total sobre coleta de dados",
+              "minimization": "Minimização de dados - coletamos apenas o necessário",
+              "security": "Medidas de segurança robustas para proteger seus dados",
+              "rights": "Respeito aos seus direitos e escolhas de privacidade"
+            }
+          }
+        },
+        "informationCollection": {
+          "title": "Informações que Coletamos",
+          "personalInfo": {
+            "title": "Informações Pessoais:",
+            "email": "Endereço de email (para criação de conta e suporte)",
+            "name": "Nome e detalhes da organização",
+            "organization": "Informações da organização ou empresa",
+            "billing": "Informações de cobrança e pagamento"
+          },
+          "technicalInfo": {
+            "title": "Informações Técnicas:",
+            "ip": "Endereços IP e informações de rede",
+            "logs": "Logs de acesso e padrões de uso",
+            "usage": "Estatísticas de uso do serviço",
+            "performance": "Dados de performance e diagnóstico"
+          }
+        },
+        "informationUse": {
+          "title": "Como Usamos Suas Informações",
+          "intro": "Usamos suas informações para os seguintes propósitos:",
+          "purposes": {
+            "service": "Fornecimento e melhoria dos nossos serviços de balanceamento de carga",
+            "support": "Suporte ao cliente e assistência técnica",
+            "billing": "Cobrança e gerenciamento de conta",
+            "improvement": "Otimização do serviço e desenvolvimento de recursos",
+            "security": "Monitoramento de segurança e detecção de ameaças",
+            "communication": "Atualizações importantes do serviço e comunicações"
+          }
+        },
+        "informationSharing": {
+          "title": "Compartilhamento de Informações",
+          "policy": "Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros, exceto nas seguintes circunstâncias:",
+          "exceptions": {
+            "title": "Exceções Limitadas:",
+            "legal": "Conformidade legal ou solicitações de aplicação da lei",
+            "consent": "Com seu consentimento explícito",
+            "processors": "Provedores de serviços confiáveis (sob acordos rigorosos)",
+            "business": "Transferências de negócios (com aviso a você)"
+          }
+        },
+        "dataSecurity": {
+          "title": "Segurança de Dados",
+          "commitment": "Implementamos medidas de segurança abrangentes para proteger suas informações:",
+          "technical": {
+            "title": "Proteções Técnicas:",
+            "encryption": "Criptografia ponta a ponta",
+            "access": "Autenticação multifator",
+            "monitoring": "Monitoramento de segurança 24/7"
+          },
+          "organizational": {
+            "title": "Medidas Organizacionais:",
+            "training": "Treinamento regular de segurança",
+            "policies": "Políticas rigorosas de acesso",
+            "audits": "Auditorias regulares de segurança"
+          }
+        },
+        "cookies": {
+          "title": "Cookies e Rastreamento",
+          "description": "Usamos cookies e tecnologias similares para melhorar sua experiência:",
+          "essential": {
+            "title": "Cookies Essenciais:",
+            "description": "Necessários para funcionalidade básica e segurança"
+          },
+          "analytics": {
+            "title": "Cookies de Análise:",
+            "description": "Nos ajudam a entender padrões de uso e melhorar nossos serviços"
+          }
+        },
+        "userRights": {
+          "title": "Seus Direitos",
+          "intro": "Você tem os seguintes direitos em relação às suas informações pessoais:",
+          "rights": {
+            "access": {
+              "title": "Direito de Acesso",
+              "description": "Solicitar uma cópia dos seus dados pessoais"
+            },
+            "rectification": {
+              "title": "Direito de Retificação",
+              "description": "Corrigir informações imprecisas ou incompletas"
+            },
+            "erasure": {
+              "title": "Direito ao Apagamento",
+              "description": "Solicitar a exclusão dos seus dados pessoais"
+            },
+            "portability": {
+              "title": "Direito à Portabilidade",
+              "description": "Exportar seus dados em formato legível por máquina"
+            },
+            "restriction": {
+              "title": "Direito à Restrição",
+              "description": "Limitar como processamos seus dados"
+            },
+            "objection": {
+              "title": "Direito de Objeção",
+              "description": "Objetar a certos tipos de processamento"
+            }
+          }
+        },
+        "dataRetention": {
+          "title": "Retenção de Dados",
+          "policy": "Retemos suas informações apenas pelo tempo necessário para os propósitos descritos nesta política:",
+          "periods": {
+            "title": "Períodos de Retenção:",
+            "account": "Dados da conta: Retidos enquanto a conta estiver ativa + 30 dias",
+            "logs": "Logs de acesso: 90 dias para segurança e solução de problemas",
+            "billing": "Registros de cobrança: 7 anos para conformidade legal",
+            "support": "Tickets de suporte: 3 anos para melhoria do serviço"
+          }
+        },
+        "contact": {
+          "title": "Entre em Contato",
+          "intro": "Se você tiver dúvidas sobre esta Política de Privacidade ou quiser exercer seus direitos, entre em contato conosco:",
+          "methods": {
+            "title": "Métodos de Contato:",
+            "website": "Website"
+          }
+        }
+      },
+      "footer": {
+        "updates": "Podemos atualizar esta Política de Privacidade de tempos em tempos. Notificaremos você sobre quaisquer alterações."
+      }
+    },
+    "contact": {
+      "title": "Entre em Contato",
+      "description": "Entre em contato com nossa equipe para suporte, dúvidas ou feedback. Estamos aqui para ajudar!",
+      "methods": {
+        "title": "Métodos de Contato",
+        "email": {
+          "title": "Suporte por Email",
+          "description": "Melhor para perguntas detalhadas e suporte técnico"
+        },
+        "chat": {
+          "title": "Chat ao Vivo",
+          "description": "Ajuda rápida durante horário comercial",
+          "availability": "Disponível das 9h às 18h"
+        },
+        "phone": {
+          "title": "Suporte por Telefone",
+          "description": "Para questões urgentes e clientes empresariais"
+        }
+      },
+      "office": {
+        "title": "Nosso Escritório",
+        "address": "Rua Tech 123, São Paulo, SP 01234-567"
+      },
+      "hours": {
+        "title": "Horário Comercial",
+        "weekdays": "Segunda - Sexta: 9:00 - 18:00",
+        "weekends": "Sábado - Domingo: Suporte limitado"
+      },
+      "form": {
+        "title": "Envie uma Mensagem",
+        "name": "Nome Completo",
+        "email": "Endereço de Email",
+        "subject": "Assunto",
+        "category": "Categoria",
+        "message": "Mensagem",
+        "responseTime": "💡 Normalmente respondemos em até 24 horas durante dias úteis.",
+        "sending": "Enviando...",
+        "send": "Enviar Mensagem",
+        "placeholders": {
+          "name": "Digite seu nome completo",
+          "email": "seu.email@empresa.com",
+          "subject": "Descrição breve da sua pergunta",
+          "category": "Selecione uma categoria",
+          "message": "Por favor, forneça detalhes sobre sua pergunta ou problema..."
+        },
+        "categories": {
+          "technical": "Suporte Técnico",
+          "billing": "Cobrança e Conta",
+          "general": "Pergunta Geral",
+          "feature": "Solicitação de Recurso"
+        },
+        "success": {
+          "title": "Mensagem Enviada com Sucesso!",
+          "message": "Obrigado por entrar em contato. Retornaremos em até 24 horas.",
+          "sendAnother": "Enviar Outra Mensagem"
+        }
+      },
+      "faq": {
+        "title": "Perguntas Frequentes",
+        "questions": {
+          "response": {
+            "question": "Qual a rapidez da resposta às solicitações de suporte?",
+            "answer": "Nosso objetivo é responder em até 24 horas durante dias úteis. Questões urgentes são priorizadas."
+          },
+          "support": {
+            "question": "Quais canais de suporte estão disponíveis?",
+            "answer": "Email, chat ao vivo durante horário comercial e suporte por telefone para clientes empresariais."
+          },
+          "emergency": {
+            "question": "Vocês oferecem suporte de emergência?",
+            "answer": "Sim, clientes empresariais têm acesso a suporte de emergência 24/7 para questões críticas."
+          },
+          "documentation": {
+            "question": "Onde posso encontrar a documentação?",
+            "answer": "Nossa documentação completa está disponível na seção Docs com guias, referências da API e tutoriais."
+          }
+        }
+      }
+    }
+  },
+  "dashboardComponents": {
+    "navigation": {
+      "home": "Início",
+      "aiOverview": "Visão Geral da IA",
+      "aiInsights": "Insights de IA",
+      "aiConfiguration": "Configuração de IA",
+      "predictiveAnalytics": "Análises Preditivas",
+      "modelPerformance": "Desempenho do Modelo",
+      "metricsView": "Visualização de Métricas",
+      "backendManagement": "Gerenciamento de Backend",
+      "healthMonitor": "Monitor de Saúde",
+      "configManager": "Gerenciador de Configuração",
+      "rateLimitConfig": "Configuração de Rate Limit",
+      "wafConfig": "Configuração WAF",
+      "clusterStatus": "Status do Cluster",
+      "billingPanel": "Painel de Cobrança",
+      "oidcSettings": "Configurações OIDC",
+      "smtpSettings": "Configurações SMTP",
+      "orchestrationSettings": "Configurações de Orquestração"
+    },
+    "status": {
+      "healthy": "Saudável",
+      "warning": "Aviso",
+      "error": "Erro",
+      "offline": "Offline",
+      "online": "Online",
+      "loading": "Carregando...",
+      "noData": "Sem dados",
+      "lastUpdate": "Última atualização",
+      "refreshing": "Atualizando..."
+    },
+    "actions": {
+      "refresh": "Atualizar",
+      "configure": "Configurar",
+      "enable": "Habilitar",
+      "disable": "Desabilitar",
+      "restart": "Reiniciar",
+      "export": "Exportar",
+      "import": "Importar",
+      "backup": "Backup",
+      "restore": "Restaurar"
+    }
+  },
+  "billing": {
+    "title": "Cobrança",
+    "currentPlan": "Plano Atual",
+    "usage": "Uso",
+    "billing": "Cobrança",
+    "subscription": "Assinatura",
+    "paymentMethod": "Método de Pagamento",
+    "billingHistory": "Histórico de Cobrança",
+    "upgradePlan": "Atualizar Plano",
+    "downgradePlan": "Reduzir Plano",
+    "cancelSubscription": "Cancelar Assinatura",
+    "loadingUsage": "Carregando dados de uso...",
+    "loadingPlans": "Carregando planos disponíveis...",
+    "loading": "Carregando...",
+    "planDetails": "Detalhes do Plano",
+    "features": "Recursos",
+    "limits": "Limites",
+    "support": "Suporte"
+  },
+  "forms": {
+    "validation": {
+      "required": "Este campo é obrigatório",
+      "email": "Insira um e-mail válido",
+      "minLength": "Mínimo de {{min}} caracteres",
+      "maxLength": "Máximo de {{max}} caracteres",
+      "passwordStrength": "A senha deve ter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números",
+      "confirmPassword": "As senhas devem coincidir"
+    },
+    "buttons": {
+      "submit": "Enviar",
+      "cancel": "Cancelar",
+      "reset": "Redefinir",
+      "clear": "Limpar",
+      "apply": "Aplicar",
+      "save": "Salvar",
+      "update": "Atualizar",
+      "create": "Criar",
+      "delete": "Excluir"
+    }
+  },
+  "notifications": {
+    "success": {
+      "saved": "Salvo com sucesso",
+      "updated": "Atualizado com sucesso",
+      "created": "Criado com sucesso",
+      "deleted": "Excluído com sucesso",
+      "deployed": "Implantado com sucesso"
+    },
+    "error": {
+      "failed": "Operação falhou",
+      "networkError": "Erro de rede",
+      "unauthorized": "Não autorizado",
+      "forbidden": "Acesso negado",
+      "notFound": "Recurso não encontrado",
+      "serverError": "Erro interno do servidor"
+    },
+    "warning": {
+      "unsavedChanges": "Você tem alterações não salvas",
+      "confirmDelete": "Tem certeza que deseja excluir?",
+      "irreversibleAction": "Esta ação não pode ser desfeita"
+    },
+    "info": {
+      "loading": "Carregando...",
+      "processing": "Processando...",
+      "noDataAvailable": "Nenhum dado disponível",
+      "comingSoon": "Em breve"
+    }
+  },
+  "architecture": {
+    "title": "Arquitetura do Sistema",
+    "subtitle": "Cloud-native e escalável",
+    "description": "Projetado para escala global com implantação multi-região e infraestrutura agnóstica à nuvem",
+    "tabs": {
+      "overview": "Visão Geral",
+      "components": "Componentes",
+      "deployment": "Implantação"
+    },
+    "globalLoadBalancing": {
+      "title": "Load Balancing Global",
+      "description": "O VeloFlux LB opera como um sistema distribuído com múltiplos pontos de presença (PoPs) mundialmente, roteando automaticamente o tráfego para o backend saudável mais próximo.",
+      "features": {
+        "multiRegion": "Implantação multi-região com geo-roteamento",
+        "autoFailover": "Failover automático e monitoramento de saúde",
+        "protocolAware": "Roteamento com consciência de protocolo (HTTP/2, HTTP/3, WebSocket)"
+      }
+    },
+    "clientRequestFlow": {
+      "title": "Fluxo de Requisição do Cliente",
+      "steps": {
+        "dnsResolution": "Resolução DNS (Anycast)",
+        "tlsTermination": "Terminação TLS",
+        "healthCheck": "Verificação de Saúde e Seleção de Rota",
+        "backendProxy": "Proxy do Backend"
+      }
+    }
+  },
+  "quickStart": {
+    "title": "Guia de Início Rápido",
+    "subtitle": "Pronto em 5 minutos",
+    "description": "Execute o VeloFlux LB em menos de 5 minutos com Docker",
+    "tabs": {
+      "docker": "Docker",
+      "compose": "Compose",
+      "config": "Config"
+    },
+    "singleContainer": {
+      "title": "Implantação de Container Único",
+      "badge": "Recomendado",
+      "description": "Execute o VeloFlux LB com um comando Docker simples. Perfeito para desenvolvimento e pequenas implantações.",
+      "features": {
+        "port": "Porta 80/443",
+        "portDesc": "Tráfego HTTP/HTTPS",
+        "configVolume": "Volume de Config",
+        "configDesc": "Monte seu config.yaml",
+        "autoStart": "Início Automático",
+        "autoStartDesc": "Executa em segundo plano"
+      }
+    },
+    "downloadExamples": "Baixar Exemplos Completos",
+    "copyCommand": "Copiar Comando",
+    "copied": "Copiado!"
+  },
+  "pricing": {
+    "badge": "💰 Preços Flexíveis",
+    "title": "Planos e Preços",
+    "subtitle": "Escolha o plano perfeito para suas necessidades de infraestrutura",
+    "description": "Escale do desenvolvimento ao enterprise com nossas soluções de balanceamento de carga com IA",
+    "mostPopular": "Mais Popular",
+    "currency": {
+      "usd": "USD",
+      "brl": "BRL"
+    },
+    "billing": {
+      "monthly": "Mensal",
+      "annually": "Anual",
+      "save": "Economize 20%"
+    },
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "description": "Perfeito para começar e projetos pequenos",
+        "price": {
+          "usd": "0",
+          "brl": "0"
+        },
+        "features": [
+          "100K requisições/mês",
+          "Até 2 backends",
+          "Balanceamento básico",
+          "Suporte da comunidade",
+          "SLA 99.9% uptime",
+          "Terminação SSL"
+        ],
+        "cta": "Começar Grátis"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Recursos avançados para empresas em crescimento",
+        "price": {
+          "usd": "29",
+          "brl": "149"
+        },
+        "popular": "Mais Popular",
+        "features": [
+          "10M requisições/mês",
+          "Backends ilimitados",
+          "Roteamento com IA",
+          "Análise preditiva",
+          "Suporte prioritário",
+          "SLA 99.99% uptime",
+          "SSL/TLS avançado",
+          "Health checks customizados",
+          "Rate limiting",
+          "Proteção WAF"
+        ],
+        "cta": "Iniciar Teste Pro"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Soluções customizadas para operações de grande escala",
+        "price": {
+          "usd": "Contact us",
+          "brl": "Entre em contato"
+        },
+        "features": [
+          "Limites de volume customizados",
+          "Infraestrutura dedicada",
+          "Suporte dedicado 24/7",
+          "SLA customizado até 99.999%",
+          "Deploy on-premise",
+          "Modelos IA/ML avançados",
+          "Integrações customizadas",
+          "Prioridade em novos recursos",
+          "Auditorias de segurança",
+          "Treinamento e consultoria"
+        ],
+        "cta": "Contatar Vendas"
+      }
+    },
+    "features": {
+      "comparison": "Comparação de Recursos",
+      "requests": "Requisições/Mês",
+      "backends": "Servidores Backend",
+      "ai": "Recursos com IA",
+      "support": "Nível de Suporte",
+      "uptime": "SLA Uptime",
+      "ssl": "SSL/TLS",
+      "analytics": "Analytics",
+      "customization": "Customização"
+    },
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "questions": {
+        "trial": {
+          "question": "Existe um teste gratuito disponível?",
+          "answer": "Sim! Você pode começar com nosso plano Gratuito imediatamente, e fazer upgrade para Pro com 14 dias de teste grátis para testar todos os recursos avançados."
+        },
+        "billing": {
+          "question": "Como funciona a cobrança?",
+          "answer": "Cobramos mensalmente ou anualmente com base no seu uso. Planos anuais têm 20% de desconto. Sem taxas ocultas ou surpresas."
+        },
+        "scaling": {
+          "question": "Posso fazer upgrade ou downgrade do meu plano?",
+          "answer": "Absolutamente! Você pode mudar seu plano a qualquer momento. Upgrades têm efeito imediato, enquanto downgrades têm efeito no próximo ciclo de cobrança."
+        },
+        "support": {
+          "question": "Que tipo de suporte vocês oferecem?",
+          "answer": "Planos gratuitos têm suporte da comunidade, planos Pro têm suporte prioritário por email, e planos Enterprise têm suporte dedicado 24/7 com telefone e videochamadas."
+        },
+        "sla": {
+          "question": "O que acontece se vocês não cumprirem o SLA?",
+          "answer": "Fornecemos créditos de serviço baseados no uptime real alcançado. Clientes Enterprise têm termos de SLA customizados com penalidades e compensação."
+        },
+        "data": {
+          "question": "Onde meus dados são armazenados?",
+          "answer": "Usamos data centers seguros e certificados SOC 2. Clientes Enterprise podem escolher regiões específicas ou deploy on-premise."
+        },
+        "cancel": {
+          "question": "Posso cancelar a qualquer momento?",
+          "answer": "Sim, você pode cancelar sua assinatura a qualquer momento. Sem contratos de longo prazo ou taxas de cancelamento."
+        }
+      }
+    },
+    "guarantee": {
+      "title": "Garantia de 30 Dias",
+      "description": "Experimente o VeloFlux sem riscos. Se não ficar satisfeito, devolvemos seu dinheiro."
+    },
+    "calculator": {
+      "title": "Calculadora de ROI",
+      "description": "Calcule suas economias potenciais com VeloFlux",
+      "inputs": {
+        "requests": "Requisições Mensais",
+        "currentCost": "Custo Atual de Infraestrutura",
+        "downtime": "Horas de Downtime Mensais"
+      },
+      "results": {
+        "savings": "Economia Mensal",
+        "roi": "ROI Anual",
+        "payback": "Período de Payback"
+      }
+    }
+  },
+  "terms": {
+    "badge": "📋 Termos Legais",
+    "title": "Termos de Serviço",
+    "subtitle": "Leia nossos termos e condições",
+    "lastUpdated": "Última atualização: {{date}}",
+    "sections": {
+      "acceptance": {
+        "title": "1. Aceitação dos Termos",
+        "content": "Ao usar o VeloFlux, você concorda com estes termos de serviço."
+      },
+      "services": {
+        "title": "2. Descrição dos Serviços",
+        "content": "VeloFlux é uma plataforma de load balancing com IA."
+      },
+      "accounts": {
+        "title": "3. Contas de Usuário",
+        "content": "Você é responsável por manter sua conta segura."
+      },
+      "payment": {
+        "title": "4. Pagamento e Cobrança",
+        "content": "Os pagamentos são processados mensalmente ou anualmente."
+      },
+      "usage": {
+        "title": "5. Uso Aceitável",
+        "content": "Você concorda em usar nossos serviços de forma responsável."
+      },
+      "privacy": {
+        "title": "6. Privacidade",
+        "content": "Respeitamos sua privacidade conforme nossa política."
+      },
+      "intellectual": {
+        "title": "7. Propriedade Intelectual",
+        "content": "VeloFlux e suas marcas são nossa propriedade."
+      },
+      "liability": {
+        "title": "8. Limitação de Responsabilidade",
+        "content": "Nossa responsabilidade é limitada conforme a lei."
+      },
+      "termination": {
+        "title": "9. Rescisão",
+        "content": "Ambas as partes podem rescindir este acordo."
+      },
+      "changes": {
+        "title": "10. Alterações aos Termos",
+        "content": "Podemos alterar estes termos com aviso prévio."
+      },
+      "governing": {
+        "title": "11. Lei Aplicável",
+        "content": "Estes termos são regidos pela lei brasileira."
+      },
+      "contact": {
+        "title": "12. Contato",
+        "content": "Entre em contato conosco para questões legais."
+      }
+    },
+    "notice": {
+      "title": "Aviso Importante",
+      "content": "Estes termos entram em vigor imediatamente."
+    },
+    "toc": {
+      "title": "Índice"
+    },
+    "contact": {
+      "title": "Contato Legal",
+      "description": "Para questões legais",
+      "email": "legal@veloflux.com",
+      "address": "Endereço",
+      "addressValue": "São Paulo, SP, Brasil"
+    },
+    "acknowledgment": "Ao usar o VeloFlux, você reconhece ter lido e aceito estes termos."
+  },
+  "buttons": {
+    "getStarted": "Começar",
+    "learnMore": "Saiba Mais",
+    "tryFree": "Teste Grátis",
+    "contactUs": "Entre em Contato",
+    "readDocs": "Ler Documentação",
+    "viewDemo": "Ver Demo",
+    "signUp": "Cadastrar",
+    "logIn": "Entrar"
   }
 }

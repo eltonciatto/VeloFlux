@@ -61,9 +61,9 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 
 	// Create Redis client
 	redisOpts := &redis.Options{
-		Addr:     cfg.Redis.Address,
-		Password: cfg.Redis.Password,
-		DB:       cfg.Redis.DB,
+		Addr:     cfg.Cluster.RedisAddress,
+		Password: cfg.Cluster.RedisPassword,
+		DB:       cfg.Cluster.RedisDB,
 	}
 	redisClient := redis.NewClient(redisOpts)
 

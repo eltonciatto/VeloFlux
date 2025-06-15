@@ -1,5 +1,7 @@
-export const API_BASE = import.meta.env.VITE_API_URL || '';
-export const ADMIN_BASE = import.meta.env.VITE_ADMIN_URL || '';
+import { getApiBase, getAdminBase, isProduction } from '@/config/environment';
+
+export const API_BASE = getApiBase();
+export const ADMIN_BASE = getAdminBase();
 
 // Simple sanitizer for input data to prevent XSS attacks
 export function sanitizeInput<T>(data: T): T {

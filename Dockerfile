@@ -4,7 +4,7 @@
 # 🚫 Not for Commercial Use Without License
 # 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
 # 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata nodejs npm

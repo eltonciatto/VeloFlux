@@ -1,7 +1,9 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { 
   Github, 
   Star, 
@@ -17,16 +19,18 @@ import {
 } from 'lucide-react';
 
 export const Footer = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   return (
     <footer className="py-20 px-4 border-t border-white/10">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <div className="mb-6">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Deploy VeloFlux LB?
+              {t('footer.title')}
             </h2>
             <p className="text-xl text-blue-200 max-w-2xl mx-auto">
-              Join thousands of developers building reliable, AI-powered infrastructure
+              {t('footer.description')}
             </p>
           </div>
 
@@ -36,7 +40,7 @@ export const Footer = () => {
               onClick={() => window.open('https://github.com/eltonciatto/VeloFlux', '_blank')}
             >
               <Github className="w-5 h-5 mr-2" />
-              View on GitHub
+              {t('footer.buttons.viewOnGithub')}
             </Button>
             <Button 
               variant="outline" 
@@ -44,7 +48,7 @@ export const Footer = () => {
               onClick={() => window.open('https://github.com/eltonciatto/VeloFlux/releases', '_blank')}
             >
               <Download className="w-5 h-5 mr-2" />
-              Download Release
+              {t('footer.buttons.downloadRelease')}
             </Button>
             <Button 
               variant="outline" 
@@ -52,7 +56,7 @@ export const Footer = () => {
               onClick={() => window.open('https://veloflux.io/docs', '_blank')}
             >
               <BookOpen className="w-5 h-5 mr-2" />
-              Documentation
+              {t('footer.buttons.documentation')}
             </Button>
             <Button 
               variant="outline" 
@@ -60,51 +64,51 @@ export const Footer = () => {
               onClick={() => window.open('https://veloflux.io', '_blank')}
             >
               <ExternalLink className="w-5 h-5 mr-2" />
-              Official Website
+              {t('footer.buttons.officialWebsite')}
             </Button>
           </div>
 
           <div className="flex justify-center gap-6 mb-12">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-400" />
-              <span className="text-blue-200">1.2k+ stars</span>
+              <span className="text-blue-200">{t('footer.stats.stars').replace('{{count}}', '1.2k')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Download className="w-4 h-4 text-green-400" />
-              <span className="text-blue-200">25k+ downloads</span>
+              <span className="text-blue-200">{t('footer.stats.downloads').replace('{{count}}', '25k')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Brain className="w-4 h-4 text-purple-400" />
-              <span className="text-blue-200">AI-Powered</span>
+              <span className="text-blue-200">{t('footer.stats.aiPowered')}</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-blue-400" />
-              <span className="text-blue-200">Active community</span>
+              <span className="text-blue-200">{t('footer.stats.activeCommunity')}</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">AI/ML Features</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('footer.sections.aiFeatures')}</h3>
             <ul className="space-y-2 text-blue-200">
               <li className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-purple-400" />
-                Intelligent Routing
+                {t('footer.links.intelligentRouting')}
               </li>
               <li className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-400" />
-                Predictive Analytics
+                {t('footer.links.predictiveAnalytics')}
               </li>
               <li className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-green-400" />
-                Anomaly Detection
+                {t('footer.links.anomalyDetection')}
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Documentation</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('footer.sections.documentation')}</h3>
             <ul className="space-y-2 text-blue-200">
               <li>
                 <a 
@@ -113,7 +117,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Quick Start
+                  {t('footer.links.quickStart')}
                 </a>
               </li>
               <li>
@@ -123,7 +127,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  AI/ML Guide
+                  {t('footer.links.aiMlGuide')}
                 </a>
               </li>
               <li>
@@ -133,7 +137,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  API Reference
+                  {t('footer.links.apiReference')}
                 </a>
               </li>
               <li>
@@ -143,14 +147,14 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Configuration
+                  {t('footer.links.configuration')}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Community</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('footer.sections.community')}</h3>
             <ul className="space-y-2 text-blue-200">
               <li>
                 <a 
@@ -159,7 +163,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  GitHub Issues
+                  {t('footer.links.githubIssues')}
                 </a>
               </li>
               <li>
@@ -169,7 +173,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Discord
+                  {t('footer.links.discord')}
                 </a>
               </li>
               <li>
@@ -179,7 +183,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Stack Overflow
+                  {t('footer.links.stackOverflow')}
                 </a>
               </li>
               <li>
@@ -189,14 +193,14 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Contributing
+                  {t('footer.links.contributing')}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('footer.sections.resources')}</h3>
             <ul className="space-y-2 text-blue-200">
               <li>
                 <a 
@@ -205,7 +209,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Benchmarks
+                  {t('footer.links.benchmarks')}
                 </a>
               </li>
               <li>
@@ -215,7 +219,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Best Practices
+                  {t('footer.links.bestPractices')}
                 </a>
               </li>
               <li>
@@ -225,7 +229,7 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Security Guide
+                  {t('footer.links.securityGuide')}
                 </a>
               </li>
               <li>
@@ -235,8 +239,54 @@ export const Footer = () => {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Migration Guide
+                  {t('footer.links.migrationGuide')}
                 </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">{t('footer.sections.company')}</h3>
+            <ul className="space-y-2 text-blue-200">
+              <li>
+                <button 
+                  onClick={() => navigate('/about')}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  {t('footer.links.about')}
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => navigate('/pricing')}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  {t('footer.links.pricing')}
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => navigate('/contact')}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  {t('footer.links.contact')}
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => navigate('/terms')}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  {t('footer.links.terms')}
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => navigate('/privacy')}
+                  className="hover:text-white transition-colors text-left"
+                >
+                  {t('footer.links.privacy')}
+                </button>
               </li>
             </ul>
           </div>
@@ -249,20 +299,20 @@ export const Footer = () => {
                 VeloFlux LB
               </div>
               <Badge className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-3 py-1 inline-flex items-center rounded-full">
-                v0.0.6 - AI Edition
+                {t('footer.versionBadge', { version: '0.0.6' })}
               </Badge>
             </div>
             
             <div className="flex items-center gap-4 text-blue-200">
-              <span>Made with</span>
+              <span>{t('footer.madeWith')}</span>
               <Heart className="w-4 h-4 text-red-400" />
-              <span>and AI</span>
+              <span>{t('footer.and')}</span>
               <Brain className="w-4 h-4 text-purple-400" />
-              <span>for the open source community</span>
+              <span>{t('footer.forCommunity')}</span>
             </div>
             
             <div className="text-blue-200 text-sm">
-              © 2025 VeloFlux LB. VeloFlux Custom License.
+              {t('footer.copyright', { year: '2025' })}
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ Complete visual overhaul of the VeloFlux landing page to improve readability, co
 
 #### Enhanced Buttons
 - Added `font-semibold` and `shadow-lg` to all buttons
-- Improved Demo Login button with stronger border: `border-2 border-blue-400/70`
+- Improved Login button with stronger border: `border-2 border-blue-400/70`
 - Better hover states and background opacity
 
 ### 2. Features Component (`src/components/Features.tsx`)

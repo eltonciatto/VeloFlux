@@ -58,6 +58,13 @@ export const Hero = () => {
             {t('hero.buttons.aiDashboard')}
           </Button>
           <Button 
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
+            onClick={() => navigate('/pricing')}
+          >
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Pricing
+          </Button>
+          <Button 
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
             onClick={() => window.open('https://github.com/eltonciatto/VeloFlux', '_blank')}
           >
@@ -65,8 +72,8 @@ export const Hero = () => {
             {t('hero.buttons.github')}
           </Button>
           <Button 
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
-            onClick={() => window.open('https://veloflux.io/docs', '_blank')}
+            className="bg-slate-600 hover:bg-slate-700 text-white px-8 py-3 text-lg font-semibold shadow-lg"
+            onClick={() => navigate('/docs')}
           >
             <BookOpen className="w-5 h-5 mr-2" />
             {t('hero.buttons.documentation')}

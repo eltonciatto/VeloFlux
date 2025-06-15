@@ -7,34 +7,39 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close",
     "confirm": "Confirm",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "submit": "Submit",
-    "retry": "Retry",
-    "download": "Download"
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Get Started",
+    "dashboard": "Dashboard",
+    "docs": "Documentation"
   },
   "navigation": {
-    "home": "Home",
+    "profile": "Profile",
     "dashboard": "Dashboard",
-    "features": "Features",
-    "documentation": "Documentation",
-    "login": "Login",
     "logout": "Logout",
-    "settings": "Settings",
-    "profile": "Profile"
+    "login": "Login"
   },
   "hero": {
-    "badge": "AI-Powered Load Balancer",
-    "title": "VeloFlux LB",
-    "description": "Intelligent container-native global load balancer with {{highlight}} capabilities, SSL termination, HTTP/3 support, predictive analytics, and automated optimization. Built for the cloud-native era.",
-    "descriptionHighlight": "AI/ML",
+    "title": "VeloFlux",
+    "subtitle": "Next-Generation AI-Powered Load Balancer",
+    "description": "Experience intelligent traffic routing with advanced machine learning algorithms. VeloFlux automatically optimizes performance, predicts traffic patterns, and scales resources in real-time.",
+    "descriptionHighlight": "machine learning",
+    "badge": "🚀 AI-Powered Load Balancing",
+    "cta": "Start Free Trial",
+    "watchDemo": "Watch Demo",
+    "learnMore": "Learn More",
     "buttons": {
       "aiDashboard": "AI Dashboard",
       "github": "GitHub",
-      "documentation": "Documentation",
+      "documentation": "Documentation", 
       "demoLogin": "Demo Login"
     },
     "stats": {
@@ -43,50 +48,80 @@
       "concurrentConnections": "Concurrent Connections",
       "containerSize": "Container Size",
       "uptimeSLA": "Uptime SLA"
+    },
+    "getStarted": "Get Started",
+    "viewDemo": "View Demo"
+  },
+  "immersiveHero": {
+    "title": {
+      "part1": "Next-Gen",
+      "part2": "AI Load Balancer",
+      "part3": "for the Future"
+    },
+    "subtitle": "Intelligent • Scalable • Autonomous",
+    "description": "Harness the power of machine learning for unprecedented load balancing performance. VeloFlux learns, adapts, and optimizes your infrastructure in real-time.",
+    "badge": "🚀 Next-Generation Technology",
+    "cta": {
+      "primary": "Start Free Trial",
+      "secondary": "Watch Live Demo"
+    },
+    "metrics": {
+      "performance": "99.99% Uptime",
+      "speed": "< 1ms Latency",
+      "intelligence": "AI-Powered"
+    },
+    "stats": {
+      "aiModels": "AI Models",
+      "requestsPerSec": "Requests/sec",
+      "mlAccuracy": "ML Accuracy",
+      "globalEdge": "Global Edge",
+      "locations": " locations"
     }
   },
   "features": {
+    "title": "Features",
+    "description": "Discover the powerful capabilities that make VeloFlux the next-generation load balancer",
     "ai": {
-      "badge": "AI/ML Intelligence",
-      "title": "Intelligent Load Balancing",
-      "description": "Advanced AI and machine learning capabilities for automated optimization and predictive performance",
+      "title": "AI-Powered Features",
+      "badge": "🤖 AI-Powered",
+      "description": "Leverage advanced machine learning algorithms for intelligent traffic management and predictive optimization",
       "aiPoweredRouting": {
         "title": "AI-Powered Routing",
-        "description": "Machine learning algorithms automatically select optimal backends based on real-time performance metrics and predictive analytics",
-        "badges": ["ML Routing", "Smart Selection", "Auto-optimize"]
+        "description": "Neural networks analyze real-time traffic patterns to make intelligent routing decisions and optimize backend selection",
+        "badges": ["Neural Networks", "Real-time", "Adaptive"]
       },
       "predictiveAnalytics": {
         "title": "Predictive Analytics",
-        "description": "AI-driven traffic forecasting and capacity planning with early spike detection and automated scaling recommendations",
-        "badges": ["Traffic Prediction", "Capacity Planning", "Forecasting"]
+        "description": "Machine learning models predict traffic spikes and automatically pre-scale infrastructure before demand increases",
+        "badges": ["Forecasting", "Auto-scaling", "Predictive"]
       },
       "anomalyDetection": {
         "title": "Anomaly Detection",
-        "description": "Real-time detection of unusual patterns, performance anomalies, and potential security threats using advanced ML models",
-        "badges": ["Real-time", "Pattern Detection", "Security"]
+        "description": "Advanced algorithms detect unusual patterns and automatically implement failover strategies to maintain service quality",
+        "badges": ["Pattern Recognition", "Auto-failover", "Quality Assurance"]
       },
       "performanceOptimization": {
         "title": "Performance Optimization",
-        "description": "AI-generated configuration recommendations and automated tuning for optimal load balancing performance",
-        "badges": ["Auto-tune", "Recommendations", "Optimization"]
+        "description": "AI-generated configuration recommendations and automatic tuning for optimal load balancing performance",
+        "badges": ["Auto-tuning", "Recommendations", "Optimization"]
       }
     },
     "core": {
-      "title": "Enterprise-Grade Features",
+      "title": "Enterprise Features",
       "description": "Built from the ground up for modern cloud infrastructure with production-tested reliability",
       "sslTermination": {
         "title": "SSL/TLS Termination",
-        "description": "Automatic ACME certificates with Let's Encrypt, HTTP/2 & HTTP/3 support, SNI routing",
+        "description": "Automatic ACME certificates with Let's Encrypt, HTTP/2 and HTTP/3 support, SNI routing",
         "badges": ["TLS 1.3", "HTTP/3", "ACME"]
       },
       "healthMonitoring": {
         "title": "Health Monitoring",
         "description": "Active HTTP/TCP health checks, passive failure detection, exponential backoff retry",
-        "badges": ["Active", "Passive", "Auto-heal"]
+        "badges": ["Active", "Passive", "Self-healing"]
       },
       "geoAwareRouting": {
         "title": "Geo-Aware Routing",
-        "description": "Route traffic to nearest healthy backend using MaxMind GeoIP, anycast support",
+        "description": "Route traffic to the nearest healthy backend using MaxMind GeoIP, anycast support",
         "badges": ["GeoIP", "Anycast", "Proximity"]
       },
       "loadBalancing": {
@@ -96,125 +131,233 @@
       },
       "protocolSupport": {
         "title": "Protocol Support",
-        "description": "WebSocket pass-through, gRPC proxying, HTTP/1.1, HTTP/2, HTTP/3 (QUIC)",
-        "badges": ["WebSocket", "gRPC", "QUIC"]
+        "description": "WebSocket pass-through, gRPC proxy, HTTP/1.1, HTTP/2, HTTP/3 (QUIC)",
+        "badges": ["WebSocket", "gRPC", "HTTP/3"]
       },
       "securityFeatures": {
         "title": "Security Features",
-        "description": "Rate limiting, WAF integration hooks, mTLS upstream, IP allowlisting",
-        "badges": ["Rate Limiting", "WAF", "mTLS"]
+        "description": "Rate limiting, DDoS protection, IP whitelisting/blacklisting, WAF integration",
+        "badges": ["Rate Limiting", "DDoS Protection", "WAF"]
       },
       "highPerformance": {
         "title": "High Performance",
-        "description": "Handle 100k+ concurrent connections on 2 vCPU, optimized for cloud workloads",
-        "badges": ["100k Conn", "Low Latency", "Optimized"]
+        "description": "Rust-powered core with async I/O, zero-copy networking, sub-millisecond latency",
+        "badges": ["Rust Core", "Zero-copy", "Sub-ms Latency"]
       },
       "cloudNative": {
         "title": "Cloud Native",
-        "description": "Docker native, stateless design, Kubernetes ready, horizontal scaling",
-        "badges": ["Docker", "K8s", "Stateless"]
+        "description": "Kubernetes integration, Docker support, Helm charts, service mesh compatibility",
+        "badges": ["Kubernetes", "Docker", "Service Mesh"]
       }
     }
   },
   "aiShowcase": {
-    "badge": "Powered by Artificial Intelligence",
-    "title": "AI That Actually {{highlight}}",
-    "titleHighlight": "Works",
-    "description": "Experience the future of load balancing with AI that learns, predicts, and optimizes your infrastructure automatically",
+    "badge": "🧠 AI Showcase",
+    "title": "Witness the {{highlight}} in Action",
+    "titleHighlight": "Power of AI",
+    "description": "Experience how our advanced AI algorithms transform traditional load balancing into an intelligent, self-optimizing system",
     "capabilities": {
       "intelligentRouting": {
         "title": "Intelligent Routing",
-        "description": "ML algorithms analyze real-time performance metrics to automatically route traffic to the optimal backend",
-        "benefit": "Up to 40% better response times"
+        "description": "Neural networks analyze real-time metrics to route traffic optimally",
+        "benefit": "40% faster response times"
       },
       "predictiveScaling": {
         "title": "Predictive Scaling",
-        "description": "AI forecasts traffic patterns and recommends scaling actions before demand spikes occur",
-        "benefit": "Prevent 95% of capacity issues"
+        "description": "ML models forecast demand and pre-scale infrastructure automatically",
+        "benefit": "60% cost savings"
       },
       "anomalyDetection": {
         "title": "Anomaly Detection",
-        "description": "Real-time pattern recognition identifies unusual behavior and potential security threats",
-        "benefit": "Detect issues 80% faster"
+        "description": "Advanced algorithms detect and mitigate issues before they impact users",
+        "benefit": "99.9% uptime guarantee"
       },
       "autoOptimization": {
         "title": "Auto-Optimization",
-        "description": "Continuous AI analysis provides configuration recommendations for optimal performance",
-        "benefit": "Reduce manual tuning by 90%"
+        "description": "Continuous learning improves performance without manual intervention",
+        "benefit": "Self-improving system"
       }
     },
     "demo": {
-      "title": "See AI in Action",
-      "description": "Experience real-time AI decision making with our interactive dashboard. Watch as machine learning algorithms optimize your traffic routing in real-time.",
+      "title": "Interactive AI Dashboard",
+      "description": "Experience real-time AI decision making and performance optimization",
       "buttons": {
         "launchDashboard": "Launch AI Dashboard",
-        "learnMore": "Learn More About AI"
+        "learnMore": "Learn More"
       }
     }
   },
+  "liveDemo": {
+    "title": "Live AI/ML Demonstrations",
+    "subtitle": "Real-time metrics and intelligent decision making",
+    "description": "Watch our AI algorithms optimize traffic routing, predict load patterns, and automatically scale resources in real-time.",
+    "metrics": {
+      "requestsPerSec": "Requests/sec",
+      "aiAccuracy": "AI Accuracy", 
+      "responseTime": "Response Time",
+      "uptimeSLA": "Uptime SLA"
+    },
+    "units": {
+      "rps": "RPS",
+      "percentage": "%",
+      "milliseconds": "ms"
+    },
+    "networkVisualization": {
+      "title": "Network Topology Visualization"
+    },
+    "aiDecisions": {
+      "title": "AI Decision Log",
+      "subtitle": "Live machine learning decisions",
+      "waiting": "Awaiting AI decisions...",
+      "decisions": {
+        "routingTraffic": "AI: Routing traffic to Backend-2 (lowest latency)",
+        "predictingSpike": "ML: Predicting 23% traffic spike in 5 minutes",
+        "detectedAnomaly": "AI: Detected anomaly in Backend-1, switching routes",
+        "optimizingSSL": "Neural: Optimizing SSL handshake performance",
+        "autoScaling": "AI: Auto-scaling triggered - adding 2 instances",
+        "learningPatterns": "ML: Learning from traffic patterns - 15% improvement"
+      }
+    },
+    "cta": "Try It Now"
+  },
+  "architecture": {
+    "title": "Cloud-Native Architecture",
+    "subtitle": "Scalable and intelligent",
+    "description": "Designed for modern infrastructure with intelligent routing and seamless scalability",
+    "tabs": {
+      "overview": "Overview",
+      "components": "Components", 
+      "deployment": "Deployment"
+    },
+    "globalLoadBalancing": {
+      "title": "Global Load Balancing",
+      "description": "Intelligent traffic distribution across multiple regions with automatic failover and protocol-aware routing",
+      "features": {
+        "multiRegion": "Multi-region deployment",
+        "autoFailover": "Automatic failover",
+        "protocolAware": "Protocol-aware routing"
+      }
+    },
+    "clientRequestFlow": {
+      "title": "Client Request Flow",
+      "steps": {
+        "dnsResolution": "DNS resolution to nearest edge",
+        "tlsTermination": "TLS termination and inspection",
+        "healthCheck": "Health check and backend selection",
+        "backendProxy": "Request proxying to optimal backend"
+      }
+    }
+  },
+  "quickStart": {
+    "title": "Quick Start Guide",
+    "subtitle": "Ready in 5 minutes",
+    "description": "Get VeloFlux running in minutes with Docker, Docker Compose, or Kubernetes",
+    "tabs": {
+      "docker": "Docker",
+      "compose": "Compose",
+      "config": "Config"
+    },
+    "singleContainer": {
+      "title": "Single Container Setup",
+      "badge": "Recommended",
+      "description": "Perfect for development and testing environments",
+      "features": {
+        "port": "Port Mapping",
+        "portDesc": "Maps container port 8080 to host port 80",
+        "configVolume": "Config Volume",
+        "configDesc": "Mounts configuration directory",
+        "autoStart": "Auto Restart",
+        "autoStartDesc": "Container restarts automatically on failure"
+      }
+    },
+    "downloadExamples": "Download Configuration Examples"
+  },
   "performance": {
-    "badge": "AI-Enhanced Performance",
-    "title": "Performance Benchmarks",
-    "description": "Real-world performance metrics comparing traditional load balancing vs AI-enhanced routing",
+    "badge": "⚡ Performance",
+    "title": "Benchmark Results",
+    "subtitle": "Real-world metrics",
+    "description": "Real-world performance metrics demonstrating VeloFlux's capabilities in production environments",
     "metrics": {
       "routingAccuracy": "Routing Accuracy",
       "predictionScore": "Prediction Score",
       "anomalyDetection": "Anomaly Detection",
       "optimizationRate": "Optimization Rate"
     },
+    "resourceEfficiency": {
+      "title": "Resource Efficiency",
+      "cpu": "CPU Usage",
+      "memory": "Memory Usage", 
+      "network": "Network I/O",
+      "utilized": "{{percentage}}% utilized",
+      "testInfo": "Load test with 100k concurrent connections",
+      "badge": "Highly Optimized"
+    },
     "charts": {
       "throughputPerformance": "Throughput Performance",
-      "responseLatency": "Response Latency",
-      "traditional": "Traditional: {{value}} RPS",
-      "aiEnhanced": "AI-Enhanced: {{value}} RPS",
+      "traditional": "Traditional: {{value}}",
+      "aiEnhanced": "AI-Enhanced: {{value}}",
+      "responseLatency": "Response Latency Distribution",
       "p99Under": "P99 under {{value}}ms"
     },
     "stats": {
       "requestsPerSec": "Requests/sec",
-      "connections": "Connections",
+      "connections": "Active Connections",
       "resourceUsage": "Resource Usage",
       "medianP50": "Median (P50)",
       "p95Latency": "P95 Latency",
       "p99Latency": "P99 Latency",
       "uptimeSLA": "Uptime SLA",
-      "downtimePerYear": "Under {{time}} min/year downtime",
-      "requestsPerHour": "Requests/Hour",
+      "downtimePerYear": "{{time}} minutes downtime/year",
+      "requestsPerHour": "Requests/hour",
       "peakSustainedLoad": "Peak sustained load",
       "containerSize": "Container Size",
       "optimizedBinary": "Optimized binary",
       "startupTime": "Startup Time",
       "coldStartToReady": "Cold start to ready"
+    }
+  },
+  "conclusion": {
+    "badge": "🎯 Ready to Scale",
+    "title": "Transform Your Infrastructure with {{highlight}}",
+    "titleHighlight": "AI-Powered Load Balancing",
+    "description": "Join thousands of companies already using VeloFlux to deliver exceptional performance and reliability",
+    "testimonial": {
+      "quote": "VeloFlux's AI algorithms reduced our response times by 40% and eliminated manual scaling decisions. It's like having a team of experts managing our infrastructure 24/7.",
+      "author": "Sarah Chen",
+      "title": "Lead DevOps Engineer",
+      "company": "TechCorp"
     },
-    "resourceEfficiency": {
-      "title": "Resource Efficiency",
-      "cpu": "CPU",
-      "memory": "Memory",
-      "network": "Network",
-      "utilized": "{{percentage}}% utilized",
-      "testInfo": "Tested on DigitalOcean Premium Intel droplet (2 vCPU, 2GB RAM)",
-      "badge": "Efficient resource utilization with room for growth"
+    "cta": {
+      "title": "Start Your AI Journey Today",
+      "description": "Deploy VeloFlux in minutes and experience the future of load balancing",
+      "buttons": {
+        "getStarted": "Get Started Free",
+        "viewPricing": "View Pricing",
+        "talkToExpert": "Talk to Expert"
+      }
     }
   },
   "footer": {
-    "title": "Ready to Deploy VeloFlux LB?",
-    "description": "Join thousands of developers building reliable, AI-powered infrastructure",
+    "title": "VeloFlux",
+    "description": "The next-generation AI-powered load balancer for modern cloud infrastructure",
     "buttons": {
       "viewOnGithub": "View on GitHub",
-      "downloadRelease": "Download Release",
+      "downloadRelease": "Download Latest",
       "documentation": "Documentation",
       "officialWebsite": "Official Website"
     },
     "stats": {
-      "stars": "{{count}}+ stars",
-      "downloads": "{{count}}+ downloads",
+      "stars": "{{count}} Stars",
+      "downloads": "{{count}} Downloads",
       "aiPowered": "AI-Powered",
-      "activeCommunity": "Active community"
+      "activeCommunity": "Active Community"
     },
     "sections": {
-      "aiFeatures": "AI/ML Features",
+      "aiFeatures": "AI Features",
       "documentation": "Documentation",
       "community": "Community",
-      "resources": "Resources"
+      "resources": "Resources",
+      "company": "Company"
     },
     "links": {
       "intelligentRouting": "Intelligent Routing",
@@ -231,22 +374,289 @@
       "benchmarks": "Benchmarks",
       "bestPractices": "Best Practices",
       "securityGuide": "Security Guide",
-      "migrationGuide": "Migration Guide"
+      "migrationGuide": "Migration Guide",
+      "about": "About",
+      "pricing": "Pricing",
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
     },
-    "copyright": "© {{year}} VeloFlux LB. VeloFlux Custom License.",
+    "versionBadge": "v{{version}}",
     "madeWith": "Made with",
     "and": "and",
-    "forCommunity": "for the open source community",
-    "versionBadge": "v{{version}} - AI Edition"
+    "forCommunity": "for the community",
+    "copyright": "© {{year}} VeloFlux. All rights reserved.",
+    "rights": "All rights reserved"
+  },
+  "scrollProgress": {
+    "sections": {
+      "hero": "Home",
+      "features": "Features",
+      "aiShowcase": "AI Showcase",
+      "demo": "Live Demo",
+      "architecture": "Architecture",
+      "quickstart": "Quick Start",
+      "performance": "Performance",
+      "conclusion": "Conclusion"
+    }
+  },
+  "pages": {
+    "admin": {
+      "title": "Admin Panel"
+    },
+    "register": {
+      "title": "Register"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "How we protect your data",
+      "lastUpdated": "Last updated: {{date}}",
+      "tableOfContents": "Table of Contents",
+      "sections": {
+        "overview": {
+          "title": "Overview",
+          "content": {
+            "intro": "Your privacy is important to us.",
+            "commitment": "We are committed to protecting your data.",
+            "keyPoints": {
+              "title": "Key Points:",
+              "transparency": "Full transparency",
+              "minimization": "Minimal data collection",
+              "security": "Advanced security",
+              "rights": "Respect for your rights"
+            }
+          }
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "We're here to help",
+      "methods": {
+        "title": "Contact Methods",
+        "email": {
+          "title": "Email",
+          "description": "For general support and questions"
+        },
+        "chat": {
+          "title": "Live Chat",
+          "description": "Quick response during business hours",
+          "availability": "Mon-Fri 9am-6pm"
+        },
+        "phone": {
+          "title": "Phone",
+          "description": "For Enterprise customers"
+        }
+      },
+      "office": {
+        "title": "Office",
+        "address": "San Francisco, CA, USA"
+      },
+      "hours": {
+        "title": "Business Hours",
+        "weekdays": "Monday to Friday: 9am - 6pm",
+        "weekends": "Weekends: Email only"
+      },
+      "form": {
+        "title": "Send a Message",
+        "name": "Name",
+        "email": "Email",
+        "category": "Category",
+        "subject": "Subject",
+        "message": "Message",
+        "responseTime": "We'll respond within 24 hours",
+        "sending": "Sending...",
+        "send": "Send Message",
+        "categories": {
+          "technical": "Technical Support",
+          "billing": "Billing",
+          "general": "General Question",
+          "feature": "Feature Request"
+        },
+        "placeholders": {
+          "name": "Your full name",
+          "email": "your@email.com",
+          "category": "Select a category",
+          "subject": "Summary of your message",
+          "message": "Describe your question or comment..."
+        },
+        "success": {
+          "title": "Message Sent!",
+          "message": "We received your message and will respond soon.",
+          "sendAnother": "Send Another Message"
+        }
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "questions": {
+          "response": {
+            "question": "What's the response time?",
+            "answer": "We respond to emails within 24 business hours."
+          },
+          "support": {
+            "question": "What kind of support do you offer?",
+            "answer": "We offer support via email, chat, and phone depending on your plan."
+          },
+          "emergency": {
+            "question": "What about emergencies?",
+            "answer": "Enterprise customers have access to 24/7 phone support."
+          },
+          "documentation": {
+            "question": "Where can I find documentation?",
+            "answer": "Our complete documentation is available at docs.veloflux.com"
+          }
+        }
+      }
+    }
+  },
+  "billing": {
+    "loading": "Loading billing information...",
+    "loadingUsage": "Loading usage data...",
+    "loadingPlans": "Loading plans..."
+  },
+  "aiComponents": {
+    "insights": {
+      "title": "AI Insights",
+      "modelPerformance": "Model Performance",
+      "performanceMetrics": "Performance Metrics"
+    }
+  },
+  "buttons": {
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "tryFree": "Try Free",
+    "contactUs": "Contact Us",
+    "readDocs": "Read Documentation",
+    "viewDemo": "View Demo",
+    "signUp": "Sign Up",
+    "logIn": "Log In"
+  },
+  "pricing": {
+    "badge": "💰 Flexible Pricing",
+    "mostPopular": "Most Popular",
+    "faq": {
+      "questions": {
+        "billing": {
+          "question": "How does billing work?",
+          "answer": "We bill monthly or annually based on your usage. Annual plans have 20% discount. No hidden fees or surprises."
+        }
+      }
+    },
+    "enterprise": {
+      "title": "Enterprise Solutions",
+      "description": "Custom solutions for large-scale operations",
+      "cta": "Talk to Expert"
+    }
+  },
+  "terms": {
+    "badge": "📋 Legal Terms",
+    "title": "Terms of Service",
+    "subtitle": "Read our terms and conditions",
+    "lastUpdated": "Last updated: {{date}}",
+    "sections": {
+      "acceptance": {
+        "title": "1. Acceptance of Terms",
+        "content": "By using VeloFlux, you agree to these terms of service."
+      },
+      "services": {
+        "title": "2. Description of Services",
+        "content": "VeloFlux is an AI-powered load balancing platform."
+      },
+      "accounts": {
+        "title": "3. User Accounts",
+        "content": "You are responsible for keeping your account secure."
+      },
+      "payment": {
+        "title": "4. Payment and Billing",
+        "content": "Payments are processed monthly or annually."
+      },
+      "usage": {
+        "title": "5. Acceptable Use",
+        "content": "You agree to use our services responsibly."
+      },
+      "privacy": {
+        "title": "6. Privacy",
+        "content": "We respect your privacy as outlined in our policy."
+      },
+      "intellectual": {
+        "title": "7. Intellectual Property",
+        "content": "VeloFlux and its trademarks are our property."
+      },
+      "liability": {
+        "title": "8. Limitation of Liability",
+        "content": "Our liability is limited as per the law."
+      },
+      "termination": {
+        "title": "9. Termination",
+        "content": "Either party may terminate this agreement."
+      },
+      "changes": {
+        "title": "10. Changes to Terms",
+        "content": "We may change these terms with prior notice."
+      },
+      "governing": {
+        "title": "11. Governing Law",
+        "content": "These terms are governed by applicable law."
+      },
+      "contact": {
+        "title": "12. Contact",
+        "content": "Contact us for legal questions."
+      }
+    },
+    "notice": {
+      "title": "Important Notice",
+      "content": "These terms take effect immediately."
+    },
+    "toc": {
+      "title": "Table of Contents"
+    },
+    "contact": {
+      "title": "Legal Contact",
+      "description": "For legal matters",
+      "email": "legal@veloflux.com",
+      "address": "Address",
+      "addressValue": "San Francisco, CA, USA"
+    },
+    "acknowledgment": "By using VeloFlux, you acknowledge having read and accepted these terms."
   },
   "dashboard": {
-    "title": "AI Dashboard",
+    "title": "VeloFlux Dashboard", 
+    "subtitle": "Monitor and manage your load balancer instances with artificial intelligence",
+    "badge": "🚀 Advanced AI Active",
+    "aiDashboard": "AI Dashboard",
     "welcome": "Welcome to VeloFlux AI Dashboard",
     "overview": "Overview",
     "metrics": "Metrics",
-    "analytics": "Analytics",
+    "analytics": "Analytics", 
     "configuration": "Configuration",
     "logs": "Logs",
-    "alerts": "Alerts"
+    "alerts": "Alerts",
+    "loading": "Loading dashboard...",
+    "error": "Error loading data",
+    "noData": "No data available",
+    "refreshData": "Refresh data",
+    "lastUpdated": "Last updated: {{time}}",
+    "aiStatus": "AI Status",
+    "systemHealth": "System Health",
+    "performanceMetrics": "Performance Metrics",
+    "backendHealth": "Backend Health", 
+    "loadBalancerStatus": "Load Balancer Status",
+    "trafficAnalysis": "Traffic Analysis",
+    "securityOverview": "Security Overview",
+    "tabs": {
+      "overview": "Overview",
+      "aiInsights": "AI Insights",
+      "aiMetrics": "AI Metrics",
+      "predictions": "Predictions",
+      "models": "Models",
+      "health": "Health Monitor",
+      "metrics": "Metrics",
+      "cluster": "Cluster",
+      "backends": "Backends",
+      "security": "Security",
+      "rateLimit": "Rate Limiting",
+      "aiConfig": "AI Configuration",
+      "configuration": "Configuration"
+    }
   }
 }

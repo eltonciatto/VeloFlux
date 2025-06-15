@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Zap, TrendingUp, Server, Clock, Brain, Target } from 'lucide-react';
 
 export const Performance = () => {
+  const { t } = useTranslation();
   const throughputData = [
     { time: '0s', rps: 0, ai_rps: 0 },
     { time: '10s', rps: 25000, ai_rps: 28000 },
@@ -25,16 +27,16 @@ export const Performance = () => {
   ];
 
   const aiMetrics = [
-    { metric: 'Routing Accuracy', value: 96.5, color: '#8b5cf6' },
-    { metric: 'Prediction Score', value: 94.2, color: '#3b82f6' },
-    { metric: 'Anomaly Detection', value: 98.8, color: '#10b981' },
-    { metric: 'Optimization Rate', value: 92.1, color: '#f59e0b' },
+    { metric: t('performance.metrics.routingAccuracy'), value: 96.5, color: '#8b5cf6' },
+    { metric: t('performance.metrics.predictionScore'), value: 94.2, color: '#3b82f6' },
+    { metric: t('performance.metrics.anomalyDetection'), value: 98.8, color: '#10b981' },
+    { metric: t('performance.metrics.optimizationRate'), value: 92.1, color: '#f59e0b' },
   ];
 
   const resourceData = [
-    { metric: 'CPU', usage: 45, color: '#3b82f6' },
-    { metric: 'Memory', usage: 32, color: '#10b981' },
-    { metric: 'Network', usage: 78, color: '#f59e0b' },
+    { metric: t('performance.resourceEfficiency.cpu'), usage: 45, color: '#3b82f6' },
+    { metric: t('performance.resourceEfficiency.memory'), usage: 32, color: '#10b981' },
+    { metric: t('performance.resourceEfficiency.network'), usage: 78, color: '#f59e0b' },
   ];
 
   return (
@@ -43,13 +45,13 @@ export const Performance = () => {
         <div className="text-center mb-16">
           <Badge className="mb-4 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
             <Brain className="w-4 h-4 mr-2" />
-            AI-Enhanced Performance
+            {t('performance.badge')}
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Performance Benchmarks
+            {t('performance.title')}
           </h2>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Real-world performance metrics comparing traditional load balancing vs AI-enhanced routing
+            {t('performance.description')}
           </p>
         </div>
 
@@ -67,10 +69,14 @@ export const Performance = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-6 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Throughput Performance</h3>
+              <h3 className="text-xl font-bold text-white">{t('performance.charts.throughputPerformance')}</h3>
               <div className="flex gap-2">
-                <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">Traditional: 50k RPS</Badge>
-                <Badge className="bg-purple-600/30 text-purple-100 border-purple-400/50 font-semibold">AI-Enhanced: 59.5k RPS</Badge>
+                <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">
+                  {t('performance.charts.traditional', { value: '50k' })}
+                </Badge>
+                <Badge className="bg-purple-600/30 text-purple-100 border-purple-400/50 font-semibold">
+                  {t('performance.charts.aiEnhanced', { value: '59.5k' })}
+                </Badge>
               </div>
             </div>
             
@@ -94,23 +100,25 @@ export const Performance = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-green-400">50k</div>
-                <div className="text-sm text-green-200 font-medium">Requests/sec</div>
+                <div className="text-sm text-green-200 font-medium">{t('performance.stats.requestsPerSec')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-400">100k</div>
-                <div className="text-sm text-blue-200 font-medium">Connections</div>
+                <div className="text-sm text-blue-200 font-medium">{t('performance.stats.connections')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-purple-400">2 vCPU</div>
-                <div className="text-sm text-purple-200 font-medium">Resource Usage</div>
+                <div className="text-sm text-purple-200 font-medium">{t('performance.stats.resourceUsage')}</div>
               </div>
             </div>
           </Card>
 
           <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-6 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Response Latency</h3>
-              <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">P99 under 10ms</Badge>
+              <h3 className="text-xl font-bold text-white">{t('performance.charts.responseLatency')}</h3>
+              <Badge className="bg-blue-600/30 text-blue-100 border-blue-400/50 font-semibold">
+                {t('performance.charts.p99Under', { value: '10' })}
+              </Badge>
             </div>
             
             <div className="h-64 mb-4">
@@ -127,15 +135,15 @@ export const Performance = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-green-400">1.2ms</div>
-                <div className="text-sm text-green-200 font-medium">Median (P50)</div>
+                <div className="text-sm text-green-200 font-medium">{t('performance.stats.medianP50')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-400">4.1ms</div>
-                <div className="text-sm text-yellow-200 font-medium">P95 Latency</div>
+                <div className="text-sm text-yellow-200 font-medium">{t('performance.stats.p95Latency')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-red-400">8.5ms</div>
-                <div className="text-sm text-red-200 font-medium">P99 Latency</div>
+                <div className="text-sm text-red-200 font-medium">{t('performance.stats.p99Latency')}</div>
               </div>
             </div>
           </Card>
@@ -145,34 +153,36 @@ export const Performance = () => {
           <Card className="bg-slate-800/80 border-yellow-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">99.99%</div>
-            <div className="text-sm text-yellow-200 font-medium">Uptime SLA</div>
-            <div className="text-xs text-green-300 mt-1 font-medium">Under 53 min/year downtime</div>
+            <div className="text-sm text-yellow-200 font-medium">{t('performance.stats.uptimeSLA')}</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">
+              {t('performance.stats.downtimePerYear', { time: '53' })}
+            </div>
           </Card>
 
           <Card className="bg-slate-800/80 border-green-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">5.2M</div>
-            <div className="text-sm text-green-200 font-medium">Requests/Hour</div>
-            <div className="text-xs text-green-300 mt-1 font-medium">Peak sustained load</div>
+            <div className="text-sm text-green-200 font-medium">{t('performance.stats.requestsPerHour')}</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">{t('performance.stats.peakSustainedLoad')}</div>
           </Card>
 
           <Card className="bg-slate-800/80 border-blue-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Server className="w-8 h-8 text-blue-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">45MB</div>
-            <div className="text-sm text-blue-200 font-medium">Container Size</div>
-            <div className="text-xs text-green-300 mt-1 font-medium">Optimized binary</div>
+            <div className="text-sm text-blue-200 font-medium">{t('performance.stats.containerSize')}</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">{t('performance.stats.optimizedBinary')}</div>
           </Card>
 
           <Card className="bg-slate-800/80 border-purple-400/40 backdrop-blur-sm p-6 text-center hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
             <Clock className="w-8 h-8 text-purple-400 mx-auto mb-3" />
             <div className="text-2xl font-bold text-white mb-1">Under 1 s</div>
-            <div className="text-sm text-purple-200 font-medium">Startup Time</div>
-            <div className="text-xs text-green-300 mt-1 font-medium">Cold start to ready</div>
+            <div className="text-sm text-purple-200 font-medium">{t('performance.stats.startupTime')}</div>
+            <div className="text-xs text-green-300 mt-1 font-medium">{t('performance.stats.coldStartToReady')}</div>
           </Card>
         </div>
 
         <Card className="bg-slate-800/80 border-white/20 backdrop-blur-sm p-8 hover:bg-slate-800/90 transition-all duration-300 shadow-lg">
-          <h3 className="text-2xl font-bold text-white mb-6 text-center">Resource Efficiency</h3>
+          <h3 className="text-2xl font-bold text-white mb-6 text-center">{t('performance.resourceEfficiency.title')}</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {resourceData.map((resource, index) => (
@@ -187,17 +197,19 @@ export const Performance = () => {
                     }}
                   />
                 </div>
-                <div className="text-sm text-slate-200 font-medium">{resource.usage}% utilized</div>
+                <div className="text-sm text-slate-200 font-medium">
+                  {t('performance.resourceEfficiency.utilized', { percentage: resource.usage })}
+                </div>
               </div>
             ))}
           </div>
           
           <div className="mt-8 text-center">
             <p className="text-slate-200 mb-4 font-medium">
-              Tested on DigitalOcean Premium Intel droplet (2 vCPU, 2GB RAM)
+              {t('performance.resourceEfficiency.testInfo')}
             </p>
             <Badge className="bg-green-600/30 text-green-100 border-green-400/50 font-semibold">
-              Efficient resource utilization with room for growth
+              {t('performance.resourceEfficiency.badge')}
             </Badge>
           </div>
         </Card>

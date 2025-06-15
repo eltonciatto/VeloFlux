@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,28 +16,30 @@ import {
 } from 'lucide-react';
 
 export const Architecture = () => {
+  const { t } = useTranslation();
+  
   return (
     <section className="py-20 px-4 bg-black/20">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            System Architecture
+            {t('architecture.title')}
           </h2>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Designed for global scale with multi-region deployment and cloud-agnostic infrastructure
+            {t('architecture.description')}
           </p>
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-12 bg-white/5 border-white/10">
             <TabsTrigger value="overview" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Overview
+              {t('architecture.tabs.overview')}
             </TabsTrigger>
             <TabsTrigger value="components" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Components
+              {t('architecture.tabs.components')}
             </TabsTrigger>
             <TabsTrigger value="deployment" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Deployment
+              {t('architecture.tabs.deployment')}
             </TabsTrigger>
           </TabsList>
 
@@ -44,50 +47,49 @@ export const Architecture = () => {
             <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Global Load Balancing</h3>
+                  <h3 className="text-2xl font-bold text-white mb-4">{t('architecture.globalLoadBalancing.title')}</h3>
                   <p className="text-blue-200 mb-6">
-                    VeloFlux LB operates as a distributed system with multiple points of presence (PoPs) 
-                    worldwide, automatically routing traffic to the nearest healthy backend.
+                    {t('architecture.globalLoadBalancing.description')}
                   </p>
                   
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Globe className="w-6 h-6 text-blue-400" />
-                      <span className="text-white">Multi-region deployment with geo-routing</span>
+                      <span className="text-white">{t('architecture.globalLoadBalancing.features.multiRegion')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Shield className="w-6 h-6 text-green-400" />
-                      <span className="text-white">Automatic failover and health monitoring</span>
+                      <span className="text-white">{t('architecture.globalLoadBalancing.features.autoFailover')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Network className="w-6 h-6 text-purple-400" />
-                      <span className="text-white">Protocol-aware routing (HTTP/2, HTTP/3, WebSocket)</span>
+                      <span className="text-white">{t('architecture.globalLoadBalancing.features.protocolAware')}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-lg p-6">
                   <div className="text-center mb-6">
-                    <div className="text-blue-300 text-sm mb-2">Client Request Flow</div>
+                    <div className="text-blue-300 text-sm mb-2">{t('architecture.clientRequestFlow.title')}</div>
                     <div className="h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
                   </div>
                   
                   <div className="space-y-4 text-sm">
                     <div className="flex items-center gap-3 p-2 bg-white/5 rounded">
                       <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                      <span className="text-blue-200">1. DNS Resolution (Anycast)</span>
+                      <span className="text-blue-200">1. {t('architecture.clientRequestFlow.steps.dnsResolution')}</span>
                     </div>
                     <div className="flex items-center gap-3 p-2 bg-white/5 rounded">
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <span className="text-blue-200">2. TLS Termination</span>
+                      <span className="text-blue-200">2. {t('architecture.clientRequestFlow.steps.tlsTermination')}</span>
                     </div>
                     <div className="flex items-center gap-3 p-2 bg-white/5 rounded">
                       <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                      <span className="text-blue-200">3. Health Check & Route Selection</span>
+                      <span className="text-blue-200">3. {t('architecture.clientRequestFlow.steps.healthCheck')}</span>
                     </div>
                     <div className="flex items-center gap-3 p-2 bg-white/5 rounded">
                       <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                      <span className="text-blue-200">4. Backend Proxy</span>
+                      <span className="text-blue-200">4. {t('architecture.clientRequestFlow.steps.backendProxy')}</span>
                     </div>
                   </div>
                 </div>

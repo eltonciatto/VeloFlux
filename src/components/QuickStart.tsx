@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Check, Play, Download, Terminal, FileText } from 'lucide-react';
 
 export const QuickStart = () => {
+  const { t } = useTranslation();
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, commandId: string) => {
@@ -97,10 +99,10 @@ routes:
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Quick Start Guide
+            {t('quickStart.title')}
           </h2>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
-            Get VeloFlux LB running in under 5 minutes with Docker
+            {t('quickStart.description')}
           </p>
         </div>
 
@@ -108,27 +110,27 @@ routes:
           <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-12 bg-white/5 border-white/10">
             <TabsTrigger value="docker" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Terminal className="w-4 h-4 mr-2" />
-              Docker
+              {t('quickStart.tabs.docker')}
             </TabsTrigger>
             <TabsTrigger value="compose" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Play className="w-4 h-4 mr-2" />
-              Compose
+              {t('quickStart.tabs.compose')}
             </TabsTrigger>
             <TabsTrigger value="config" className="text-blue-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <FileText className="w-4 h-4 mr-2" />
-              Config
+              {t('quickStart.tabs.config')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="docker" className="space-y-8">
             <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">Single Container Deployment</h3>
-                <Badge className="bg-green-100/10 text-green-300">Recommended</Badge>
+                <h3 className="text-xl font-bold text-white">{t('quickStart.singleContainer.title')}</h3>
+                <Badge className="bg-green-100/10 text-green-300">{t('quickStart.singleContainer.badge')}</Badge>
               </div>
               
               <p className="text-blue-200 mb-6">
-                Run VeloFlux LB with a simple Docker command. Perfect for development and small deployments.
+                {t('quickStart.singleContainer.description')}
               </p>
 
               <div className="space-y-4">
@@ -148,16 +150,16 @@ routes:
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="text-blue-400 font-semibold mb-2">Port 80/443</div>
-                    <div className="text-sm text-blue-200">HTTP/HTTPS traffic</div>
+                    <div className="text-blue-400 font-semibold mb-2">{t('quickStart.singleContainer.features.port')}</div>
+                    <div className="text-sm text-blue-200">{t('quickStart.singleContainer.features.portDesc')}</div>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="text-green-400 font-semibold mb-2">Config Volume</div>
-                    <div className="text-sm text-blue-200">Mount your config.yaml</div>
+                    <div className="text-green-400 font-semibold mb-2">{t('quickStart.singleContainer.features.configVolume')}</div>
+                    <div className="text-sm text-blue-200">{t('quickStart.singleContainer.features.configDesc')}</div>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="text-purple-400 font-semibold mb-2">Auto Start</div>
-                    <div className="text-sm text-blue-200">Runs in background</div>
+                    <div className="text-purple-400 font-semibold mb-2">{t('quickStart.singleContainer.features.autoStart')}</div>
+                    <div className="text-sm text-blue-200">{t('quickStart.singleContainer.features.autoStartDesc')}</div>
                   </div>
                 </div>
               </div>
@@ -256,7 +258,7 @@ routes:
         <div className="mt-12 text-center">
           <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg">
             <Download className="w-5 h-5 mr-2" />
-            Download Complete Examples
+            {t('quickStart.downloadExamples')}
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 // 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -34,6 +35,7 @@ interface AIInsightsProps {
 }
 
 export function AIInsights({ className }: AIInsightsProps) {
+  const { t } = useTranslation();
   const { data: metrics, isLoading: metricsLoading } = useAIMetrics();
   const { data: predictions, isLoading: predictionsLoading } = useAIPredictions();
   const { data: models, isLoading: modelsLoading } = useModelStatus();
@@ -54,7 +56,7 @@ export function AIInsights({ className }: AIInsightsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              AI Insights
+              {t('aiComponents.insights.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -189,7 +191,7 @@ export function AIInsights({ className }: AIInsightsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Model Performance
+              {t('aiComponents.insights.modelPerformance')}
               <Button 
                 size="sm" 
                 variant="outline" 
@@ -247,7 +249,7 @@ export function AIInsights({ className }: AIInsightsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            Performance Metrics
+            {t('aiComponents.insights.performanceMetrics')}
           </CardTitle>
         </CardHeader>
         <CardContent>

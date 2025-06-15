@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,6 +17,7 @@ const BillingPanel = () => {
   const { tenantId } = useParams();
   const { token } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [billingInfo, setBillingInfo] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -189,7 +191,7 @@ const BillingPanel = () => {
   
   const renderUsageOverview = () => {
     if (!usageData) {
-      return <p>Loading usage data...</p>;
+      return <p>{t('billing.loadingUsage')}</p>;
     }
     
     const percentUsed = Math.min(100, Math.round((usageData.total_usage / usageData.plan_limit) * 100));
@@ -210,7 +212,7 @@ const BillingPanel = () => {
               />
             </div>
             {percentUsed > 90 && (
-              <Alert variant="warning">
+              <Alert variant="destructive">
                 <AlertTitle>Usage Warning</AlertTitle>
                 <AlertDescription>
                   You've used {percentUsed}% of your included requests. Consider upgrading your plan.
@@ -237,7 +239,7 @@ const BillingPanel = () => {
   
   const renderPlans = () => {
     if (plans.length === 0) {
-      return <p>Loading available plans...</p>;
+      return <p>{t('billing.loadingPlans')}</p>;
     }
     
     return (
@@ -323,7 +325,7 @@ const BillingPanel = () => {
               <CardTitle>Subscription Details</CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? <p>Loading...</p> : renderPlanDetails()}
+              {loading ? <p>{t('billing.loading')}</p> : renderPlanDetails()}
             </CardContent>
           </Card>
         </TabsContent>
