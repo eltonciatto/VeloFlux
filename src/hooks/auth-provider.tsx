@@ -5,19 +5,46 @@ import { AuthContext, UserInfo } from './auth-context';
 import type { UserInfo as TokenUserInfo } from '@/lib/tokenService';
 import { CONFIG, isDemoMode, isProduction } from '@/config/environment';
 
+// Helper function to convert TokenService UserInfo to AuthContext UserInfo
+const convertTokenUserToAuthUser = (tokenUser: TokenUserInfo): UserInfo => {
+  return {
+    user_id: tokenUser.id,
+    tenant_id: tokenUser.tenantId || 'default',
+    email: tokenUser.email,
+    first_name: tokenUser.name?.split(' ')[0],
+    last_name: tokenUser.name?.split(' ').slice(1).join(' '),
+    role: tokenUser.role
+  };
+};
+
+// Helper function to convert AuthContext UserInfo to TokenService UserInfo
+const convertAuthUserToTokenUser = (authUser: UserInfo): TokenUserInfo => {
+  return {
+    id: authUser.user_id,
+    email: authUser.email,
+    name: `${authUser.first_name || ''} ${authUser.last_name || ''}`.trim(),
+    role: authUser.role,
+    tenantId: authUser.tenant_id
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(TokenService.getToken());
-  const [user, setUser] = useState<UserInfo | null>(TokenService.getUserInfo());
+  const [user, setUser] = useState<UserInfo | null>(() => {
+    const tokenUser = TokenService.getUserInfo();
+    return tokenUser ? convertTokenUserToAuthUser(tokenUser) : null;
+  });
   const [loginAttempts, setLoginAttempts] = useState<Record<string, number>>({});
   const [lastLoginAttempt, setLastLoginAttempt] = useState<Record<string, number>>({});
-
   const fetchProfile = useCallback(async (tok: string) => {
     try {
       const profile = await safeApiFetch('/api/profile', {
         headers: { Authorization: `Bearer ${tok}` },
       });
-      TokenService.setUserInfo(profile);
-      setUser(profile as UserInfo);
+      const authUser = profile as UserInfo; // API returns AuthContext UserInfo format
+      const tokenUser = convertAuthUserToTokenUser(authUser);
+      TokenService.setUserInfo(tokenUser);
+      setUser(authUser);
     } catch {
       logout();
     }
@@ -41,7 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   }, [token]);
-
   useEffect(() => {
     const storedToken = TokenService.getToken();
     const storedUser = TokenService.getUserInfo();
@@ -50,7 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(storedToken);
       if (storedUser) {
         try {
-          setUser(storedUser);
+          const authUser = convertTokenUserToAuthUser(storedUser);
+          setUser(authUser);
         } catch {
           fetchProfile(storedToken);
         }
@@ -67,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 10 * 60 * 1000); // Refresh every 10 minutes
     
     return () => clearInterval(refreshInterval);
-  }, [fetchProfile, refreshToken]);  const login = async (email: string, password: string) => {
+  }, [fetchProfile, refreshToken]);const login = async (email: string, password: string) => {
     // Demo mode: Only use demo credentials in development/demo mode
     if (isDemoMode() && 
         (email === CONFIG.DEMO_CREDENTIALS.username || email === 'demo') && 
@@ -172,14 +199,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
-
   const updateProfile = async (first: string, last: string) => {
     const updated = await safeApiFetch('/api/profile', {
       method: 'PUT',
       body: JSON.stringify({ first_name: first, last_name: last }),
     });
-    TokenService.setUserInfo(updated);
-    setUser(updated as UserInfo);
+    const authUser = updated as UserInfo; // API returns AuthContext UserInfo format
+    const tokenUser = convertAuthUserToTokenUser(authUser);
+    TokenService.setUserInfo(tokenUser);
+    setUser(authUser);
   };
 
   const logout = () => {

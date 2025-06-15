@@ -25,7 +25,8 @@
     "profile": "Profile",
     "dashboard": "Dashboard",
     "logout": "Logout",
-    "login": "Login"
+    "login": "Login",
+    "backToHome": "Back to Home"
   },
   "hero": {
     "title": "VeloFlux",
@@ -503,7 +504,7 @@
           },
           "documentation": {
             "question": "Where can I find documentation?",
-            "answer": "Our complete documentation is available at docs.veloflux.com"
+            "answer": "Our complete documentation is available at docs.veloflux.io."
           }
         }
       }
@@ -613,7 +614,7 @@
     "contact": {
       "title": "Legal Contact",
       "description": "For legal matters",
-      "email": "legal@veloflux.com",
+      "email": "legal@veloflux.io",
       "address": "Address",
       "addressValue": "San Francisco, CA, USA"
     },

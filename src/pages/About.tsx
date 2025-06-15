@@ -1,9 +1,9 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, 
   Users, 
   Target, 
   Brain, 
@@ -14,270 +14,269 @@ import {
   Coffee,
   Github,
   Linkedin,
-  Twitter
+  Twitter,
+  Home,
+  Sparkles,
+  Code,
+  Rocket,
+  Shield,
+  Server,
+  Star,
+  CheckCircle
 } from 'lucide-react';
 
 const About = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-
-  const team = [
-    {
-      name: "Alex Chen",
-      role: "CEO & Founder",
-      description: "Former Google engineer with 10+ years in distributed systems",
-      avatar: "👨‍💻",
-      social: { github: "#", linkedin: "#", twitter: "#" }
-    },
-    {
-      name: "Sarah Johnson",
-      role: "CTO",
-      description: "AI/ML expert with PhD in Computer Science from MIT",
-      avatar: "👩‍🔬",
-      social: { github: "#", linkedin: "#", twitter: "#" }
-    },
-    {
-      name: "Miguel Rodriguez",
-      role: "Head of Engineering",
-      description: "Infrastructure architect specializing in load balancing",
-      avatar: "👨‍🔧",
-      social: { github: "#", linkedin: "#", twitter: "#" }
-    },
-    {
-      name: "Emily Park",
-      role: "Head of AI Research",
-      description: "Published researcher in predictive analytics and ML optimization",
-      avatar: "👩‍💼",
-      social: { github: "#", linkedin: "#", twitter: "#" }
-    }
-  ];
 
   const values = [
     {
-      icon: Brain,
-      title: "Innovation First",
-      description: "We believe AI and machine learning are the future of infrastructure"
-    },
-    {
-      icon: Users,
-      title: "Community Driven",
-      description: "Open source at heart, building with and for the developer community"
-    },
-    {
       icon: Zap,
-      title: "Performance Obsessed",
-      description: "Every millisecond matters - we optimize for speed and reliability"
+      title: "Performance",
+      description: "Lightning-fast load balancing with intelligent algorithms",
+      color: "from-yellow-500 to-orange-500"
     },
     {
-      icon: Heart,
-      title: "Developer Experience",
-      description: "Beautiful, intuitive tools that developers love to use"
+      icon: Shield,
+      title: "Security",
+      description: "Enterprise-grade security with built-in WAF and DDoS protection",
+      color: "from-green-500 to-emerald-500"
+    },
+    {
+      icon: Brain,
+      title: "Intelligence",
+      description: "AI-powered traffic optimization and predictive scaling",
+      color: "from-purple-500 to-pink-500"
     },
     {
       icon: Globe,
       title: "Global Scale",
-      description: "Built for the modern, distributed, multi-cloud world"
-    },
-    {
-      icon: Award,
-      title: "Enterprise Ready",
-      description: "Production-grade security, compliance, and support"
+      description: "Worldwide distribution with edge computing capabilities",
+      color: "from-blue-500 to-cyan-500"
     }
   ];
 
-  const milestones = [
-    { year: "2023", title: "VeloFlux Founded", description: "Started with a vision to revolutionize load balancing with AI" },
-    { year: "2024", title: "Open Source Launch", description: "Released VeloFlux LB as open source to the community" },
-    { year: "2024", title: "AI Features Beta", description: "Introduced predictive analytics and intelligent routing" },
-    { year: "2025", title: "Enterprise Platform", description: "Launched SaaS platform with advanced AI/ML capabilities" }
+  const author = {
+    name: "Elton Ciatto",
+    role: "Creator & Lead Developer",
+    description: "Full-stack developer and infrastructure architect passionate about building high-performance systems that scale globally",
+    avatar: "👨‍💻",
+    specialties: ["Load Balancing", "Distributed Systems", "React/TypeScript", "Go Backend", "Cloud Architecture"],
+    social: { github: "#", linkedin: "#", twitter: "#" }
+  };
+
+  const achievements = [
+    { icon: Server, text: "High-Performance Load Balancer" },
+    { icon: Brain, text: "AI-Powered Traffic Optimization" },
+    { icon: Shield, text: "Enterprise Security Features" },
+    { icon: Globe, text: "Multi-Cloud Support" },
+    { icon: Code, text: "Open Source Community" },
+    { icon: Rocket, text: "Production Ready" }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      {/* Header */}
-      <div className="bg-slate-900/50 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Modern Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.15),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(139,92,246,0.15),transparent_50%)]"></div>
+      
+      {/* Floating Elements */}
+      <div className="absolute top-20 left-20 w-2 h-2 bg-blue-400 rounded-full animate-pulse opacity-60"></div>
+      <div className="absolute top-40 right-32 w-1 h-1 bg-purple-400 rounded-full animate-ping opacity-40"></div>
+      <div className="absolute bottom-40 left-40 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse opacity-50"></div>
+
+      {/* Navigation Header */}
+      <div className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/')}
-              className="text-blue-200 hover:text-white hover:bg-blue-600/20"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('navigation.backToHome')}
-            </Button>
-            <div className="flex items-center space-x-2">
-              <Users className="w-6 h-6 text-blue-400" />
-              <span className="text-white font-semibold text-lg">About VeloFlux</span>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="text-blue-200 hover:text-white hover:bg-white/10"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Home
+              </Button>
+              <div className="h-6 w-px bg-white/20"></div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                About VeloFlux
+              </h1>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto p-6">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center">
-            <Brain className="w-10 h-10 mr-4 text-blue-400" />
-            About VeloFlux
+        <div className="text-center mb-16 pt-8">
+          <Badge className="mb-6 bg-gradient-to-r from-purple-600/40 to-blue-600/40 text-purple-100 border-purple-400/60 font-semibold px-4 py-2 inline-flex items-center rounded-full">
+            <Sparkles className="w-4 h-4 mr-2" />
+            About Our Mission
+          </Badge>
+          
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent mb-6">
+            Building the Future of
+            <br />
+            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              Load Balancing
+            </span>
           </h1>
-          <p className="text-blue-200 text-lg max-w-3xl mx-auto mb-8">
-            We're on a mission to revolutionize infrastructure with AI-powered load balancing. 
-            Built by developers, for developers, with the enterprise in mind.
+          
+          <p className="text-xl text-blue-200 mb-8 max-w-3xl mx-auto leading-relaxed">
+            VeloFlux is more than just a load balancer - it's an intelligent traffic orchestration platform
+            that adapts and learns from your infrastructure to deliver optimal performance.
           </p>
         </div>
 
-        {/* Mission & Vision */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-8">
-            <div className="flex items-center mb-6">
-              <Target className="w-8 h-8 text-blue-400 mr-3" />
-              <h2 className="text-2xl font-bold text-white">Our Mission</h2>
-            </div>
-            <p className="text-blue-100 leading-relaxed">
-              To democratize intelligent infrastructure by making AI-powered load balancing 
-              accessible to every developer and organization. We believe that advanced traffic 
-              management shouldn't require a team of PhD researchers - it should just work, 
-              beautifully and intelligently.
-            </p>
-          </div>
-
-          <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-8">
-            <div className="flex items-center mb-6">
-              <Globe className="w-8 h-8 text-purple-400 mr-3" />
-              <h2 className="text-2xl font-bold text-white">Our Vision</h2>
-            </div>
-            <p className="text-blue-100 leading-relaxed">
-              A world where every application automatically optimizes itself, predicts traffic 
-              patterns, and adapts to changing conditions without human intervention. Where 
-              downtime is a thing of the past and performance optimization happens in real-time, 
-              powered by machine learning.
-            </p>
-          </div>
-        </div>
-
-        {/* Values */}
+        {/* Values Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="text-3xl font-bold text-center text-white mb-12">Our Core Values</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => {
               const IconComponent = value.icon;
               return (
-                <div key={index} className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-6 hover:bg-slate-800/50 transition-all duration-200">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-blue-600 p-3 rounded-lg mr-4">
-                      <IconComponent className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">{value.title}</h3>
+                <Card key={index} className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-6 rounded-2xl hover:scale-105 transition-transform duration-300">
+                  <div className={`w-12 h-12 bg-gradient-to-r ${value.color} rounded-xl flex items-center justify-center mb-4`}>
+                    <IconComponent className="w-6 h-6 text-white" />
                   </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{value.title}</h3>
                   <p className="text-blue-200 text-sm">{value.description}</p>
-                </div>
+                </Card>
               );
             })}
           </div>
         </div>
 
-        {/* Team */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Meet Our Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {team.map((member, index) => (
-              <div key={index} className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-slate-800/50 transition-all duration-200">
-                <div className="text-6xl mb-4">{member.avatar}</div>
-                <h3 className="text-lg font-semibold text-white mb-2">{member.name}</h3>
-                <p className="text-blue-400 font-medium mb-3">{member.role}</p>
-                <p className="text-blue-200 text-sm mb-4">{member.description}</p>
-                <div className="flex justify-center space-x-3">
-                  <a href={member.social.github} className="text-slate-400 hover:text-white transition-colors">
-                    <Github className="w-4 h-4" />
-                  </a>
-                  <a href={member.social.linkedin} className="text-slate-400 hover:text-white transition-colors">
-                    <Linkedin className="w-4 h-4" />
-                  </a>
-                  <a href={member.social.twitter} className="text-slate-400 hover:text-white transition-colors">
-                    <Twitter className="w-4 h-4" />
-                  </a>
+        {/* Author Section */}
+        <Card className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 rounded-2xl mb-16">
+          <div className="flex items-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center text-2xl mr-6">
+              {author.avatar}
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                Meet the Creator
+              </h2>
+              <p className="text-blue-300">The mind behind VeloFlux</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-2">{author.name}</h3>
+              <p className="text-purple-300 font-semibold mb-4">{author.role}</p>
+              <p className="text-blue-200 mb-6 leading-relaxed">{author.description}</p>
+              
+              <div className="mb-6">
+                <h4 className="text-white font-semibold mb-3">Specialties:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {author.specialties.map((specialty, index) => (
+                    <Badge key={index} className="bg-blue-600/30 text-blue-200 border-blue-400/40">
+                      {specialty}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Timeline */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Journey</h2>
-          <div className="space-y-6">
-            {milestones.map((milestone, index) => (
-              <div key={index} className="flex items-start">
-                <div className="bg-blue-600 rounded-full p-2 mr-6 mt-1">
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                </div>
-                <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-6 flex-1">
-                  <div className="flex items-center mb-2">
-                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium mr-4">
-                      {milestone.year}
-                    </span>
-                    <h3 className="text-lg font-semibold text-white">{milestone.title}</h3>
-                  </div>
-                  <p className="text-blue-200">{milestone.description}</p>
-                </div>
+              <div className="flex space-x-4">
+                <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-200 hover:bg-blue-600/30">
+                  <Github className="w-4 h-4 mr-2" />
+                  GitHub
+                </Button>
+                <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-200 hover:bg-blue-600/30">
+                  <Linkedin className="w-4 h-4 mr-2" />
+                  LinkedIn
+                </Button>
+                <Button variant="outline" size="sm" className="border-blue-400/50 text-blue-200 hover:bg-blue-600/30">
+                  <Twitter className="w-4 h-4 mr-2" />
+                  Twitter
+                </Button>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Stats */}
-        <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-8 mb-16">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">By the Numbers</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400 mb-2">50K+</div>
-              <div className="text-blue-200 text-sm">Active Deployments</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-400 mb-2">99.99%</div>
-              <div className="text-blue-200 text-sm">Uptime SLA</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400 mb-2">2.5M+</div>
-              <div className="text-blue-200 text-sm">Requests/Second</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-400 mb-2">150+</div>
-              <div className="text-blue-200 text-sm">Countries</div>
+            <div>
+              <h4 className="text-xl font-bold text-white mb-4">Project Achievements</h4>
+              <div className="space-y-3">
+                {achievements.map((achievement, index) => {
+                  const IconComponent = achievement.icon;
+                  return (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-slate-700/30 border border-slate-500/30 rounded-xl">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                        <IconComponent className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-white">{achievement.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* CTA */}
+        {/* Project Story */}
+        <Card className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 rounded-2xl mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-4">
+              The VeloFlux Story
+            </h2>
+            <p className="text-blue-300">How it all began</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">The Problem</h3>
+              <p className="text-blue-200 text-sm">
+                Traditional load balancers lack intelligence and adaptability in modern cloud environments.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">The Vision</h3>
+              <p className="text-blue-200 text-sm">
+                Create an AI-powered load balancer that learns and adapts to optimize traffic automatically.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Rocket className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">The Solution</h3>
+              <p className="text-blue-200 text-sm">
+                VeloFlux LB - intelligent, secure, and scalable load balancing for the modern web.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Call to Action */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Want to Join Our Mission?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to Experience VeloFlux?</h2>
           <p className="text-blue-200 mb-8 max-w-2xl mx-auto">
-            We're always looking for talented individuals who share our passion for building 
-            the future of intelligent infrastructure.
+            Join thousands of developers who trust VeloFlux for their load balancing needs.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button
-              onClick={() => navigate('/pricing')}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+            <Button 
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 font-semibold shadow-lg"
+              onClick={() => navigate('/dashboard')}
             >
+              <Rocket className="w-5 h-5 mr-2" />
               Get Started
             </Button>
-            <Button
-              onClick={() => navigate('/contact')}
-              variant="outline"
-              className="border-blue-400 text-blue-200 hover:bg-blue-600/20"
+            <Button 
+              variant="outline" 
+              className="border-2 border-blue-400/70 text-blue-100 hover:bg-blue-600/30 bg-slate-800/50 px-8 py-3 font-semibold"
+              onClick={() => navigate('/docs')}
             >
-              <Coffee className="w-4 h-4 mr-2" />
-              Chat with Us
-            </Button>
-            <Button
-              onClick={() => window.open('https://github.com/eltonciatto/VeloFlux', '_blank')}
-              variant="outline"
-              className="border-green-400 text-green-200 hover:bg-green-600/20"
-            >
-              <Github className="w-4 h-4 mr-2" />
-              Contribute
+              <Users className="w-5 h-5 mr-2" />
+              Learn More
             </Button>
           </div>
         </div>
