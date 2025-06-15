@@ -495,6 +495,91 @@
       "analytics": "Análises",
       "maintenance": "Manutenção"
     },
+    "about": {
+      "title": "Sobre o VeloFlux",
+      "navigation": {
+        "home": "Início",
+        "title": "Sobre o VeloFlux"
+      },
+      "hero": {
+        "badge": "Sobre Nossa Missão",
+        "title": {
+          "part1": "Construindo o Futuro do",
+          "part2": "Load Balancing"
+        },
+        "description": "VeloFlux é mais que apenas um load balancer - é uma plataforma inteligente de orquestração de tráfego que se adapta e aprende com sua infraestrutura para entregar performance ótima."
+      },
+      "values": {
+        "title": "Nossos Valores Fundamentais",
+        "performance": {
+          "title": "Performance",
+          "description": "Load balancing ultrarrápido com algoritmos inteligentes"
+        },
+        "security": {
+          "title": "Segurança",
+          "description": "Segurança de nível empresarial com WAF integrado e proteção DDoS"
+        },
+        "intelligence": {
+          "title": "Inteligência",
+          "description": "Otimização de tráfego com IA e escala preditiva"
+        },
+        "globalScale": {
+          "title": "Escala Global",
+          "description": "Distribuição mundial com capacidades de edge computing"
+        }
+      },
+      "author": {
+        "badge": "Conheça o Criador",
+        "subtitle": "A mente por trás do VeloFlux",
+        "name": "Elton Ciatto",
+        "role": "Criador e Desenvolvedor Principal",
+        "description": "Desenvolvedor full-stack e arquiteto de infraestrutura apaixonado por construir sistemas de alta performance que escalam globalmente",
+        "specialties": {
+          "title": "Especialidades:",
+          "loadBalancing": "Load Balancing",
+          "distributedSystems": "Sistemas Distribuídos",
+          "reactTypeScript": "React/TypeScript",
+          "goBackend": "Go Backend",
+          "cloudArchitecture": "Arquitetura Cloud"
+        },
+        "achievements": {
+          "title": "Conquistas do Projeto",
+          "highPerformance": "Load Balancer de Alta Performance",
+          "aiPowered": "Otimização de Tráfego com IA",
+          "enterpriseSecurity": "Recursos de Segurança Empresarial",
+          "multiCloud": "Suporte Multi-Cloud",
+          "openSource": "Comunidade Open Source",
+          "productionReady": "Pronto para Produção"
+        },
+        "social": {
+          "github": "GitHub",
+          "linkedin": "LinkedIn",
+          "twitter": "Twitter"
+        }
+      },
+      "story": {
+        "title": "A História do VeloFlux",
+        "subtitle": "Como tudo começou",
+        "problem": {
+          "title": "O Problema",
+          "description": "Load balancers tradicionais carecem de inteligência e adaptabilidade em ambientes cloud modernos."
+        },
+        "vision": {
+          "title": "A Visão",
+          "description": "Criar um load balancer com IA que aprende e se adapta para otimizar tráfego automaticamente."
+        },
+        "solution": {
+          "title": "A Solução",
+          "description": "VeloFlux LB - load balancing inteligente, seguro e escalável para a web moderna."
+        }
+      },
+      "cta": {
+        "title": "Pronto para Experimentar o VeloFlux?",
+        "description": "Junte-se a milhares de desenvolvedores que confiam no VeloFlux para suas necessidades de load balancing.",
+        "getStarted": "Começar",
+        "learnMore": "Saiba Mais"
+      }
+    },
     "privacy": {
       "title": "Política de Privacidade",
       "description": "Como protegemos seus dados",
@@ -1304,5 +1389,70 @@
     "viewDemo": "Ver Demo",
     "signUp": "Cadastrar",
     "logIn": "Entrar"
+  },
+  "auth": {
+    "login": "Entrar",
+    "loginTitle": "Entre na sua conta",
+    "loginSubtitle": "Bem-vindo de volta! Por favor, insira seus dados",
+    "email": "E-mail",
+    "emailPlaceholder": "Digite seu e-mail",
+    "password": "Senha",
+    "passwordPlaceholder": "Digite sua senha",
+    "confirmPassword": "Confirmar Senha",
+    "confirmPasswordPlaceholder": "Confirme sua senha",
+    "rememberMe": "Lembrar de mim",
+    "forgotPassword": "Esqueceu a senha?",
+    "signUp": "Cadastrar",
+    "signUpTitle": "Crie sua conta",
+    "signUpSubtitle": "Junte-se ao VeloFlux hoje",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "dontHaveAccount": "Não tem uma conta?",
+    "createAccount": "Criar conta",
+    "loginWithGoogle": "Continuar com Google",
+    "loginWithGitHub": "Continuar com GitHub",
+    "orContinueWith": "Ou continue com",
+    "signingIn": "Entrando...",
+    "signingUp": "Criando conta...",
+    "loggedIn": "Login realizado com sucesso",
+    "accountCreated": "Conta criada com sucesso",
+    "invalidCredentials": "E-mail ou senha inválidos",
+    "emailRequired": "E-mail é obrigatório",
+    "passwordRequired": "Senha é obrigatória",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
+    "passwordsDoNotMatch": "As senhas não coincidem",
+    "invalidEmail": "Por favor, insira um e-mail válido",
+    "accountExists": "Uma conta com este e-mail já existe",
+    "logout": "Sair",
+    "loggingOut": "Saindo...",
+    "loggedOut": "Logout realizado com sucesso",
+    "sessionExpired": "Sua sessão expirou. Por favor, faça login novamente.",
+    "unauthorized": "Você não está autorizado a acessar este recurso",
+    "profile": "Perfil",
+    "settings": "Configurações",
+    "tenant": "Tenant",
+    "selectTenant": "Selecionar Tenant",
+    "noTenantsAvailable": "Nenhum tenant disponível",
+    "switchTenant": "Trocar Tenant",
+    "currentTenant": "Tenant Atual"
+  },
+  "errors": {
+    "general": "Algo deu errado. Por favor, tente novamente.",
+    "network": "Erro de rede. Verifique sua conexão.",
+    "unauthorized": "Você não está autorizado a realizar esta ação.",
+    "notFound": "O recurso solicitado não foi encontrado.",
+    "serverError": "Erro interno do servidor. Tente novamente mais tarde.",
+    "validationError": "Verifique sua entrada e tente novamente.",
+    "loginFailed": "Falha no login. Verifique suas credenciais.",
+    "signupFailed": "Falha na criação da conta. Tente novamente.",
+    "loadingFailed": "Falha ao carregar dados. Atualize a página.",
+    "saveFailed": "Falha ao salvar alterações. Tente novamente.",
+    "deleteFailed": "Falha ao excluir item. Tente novamente.",
+    "updateFailed": "Falha ao atualizar. Tente novamente.",
+    "connectionLost": "Conexão perdida. Tentando reconectar...",
+    "sessionExpired": "Sua sessão expirou. Faça login novamente.",
+    "permissionDenied": "Permissão negada. Entre em contato com o administrador.",
+    "rateLimitExceeded": "Muitas solicitações. Aguarde e tente novamente.",
+    "maintenanceMode": "Sistema em manutenção. Tente novamente mais tarde.",
+    "featureNotAvailable": "Este recurso não está disponível no seu plano."
   }
 }
