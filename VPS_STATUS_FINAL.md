@@ -113,9 +113,9 @@ Após as correções:
 - ✅ `https://api.veloflux.io` - API funcional com CORS
 - ✅ `https://admin.veloflux.io` - Painel administrativo completo
 - ✅ `https://lb.veloflux.io` - Interface do load balancer
-- ✅ `https://metrics.veloflux.io` - Métricas (já funcionando)
+- ✅ `https://metrics.veloflux.io` - Métricas 
 - ✅ `https://grafana.veloflux.io` - Grafana (já funcionando)
-- ✅ `https://prometheus.veloflux.io` - Prometheus
+- ✅ `https://prometheus.veloflux.io` - Prometheus (já funcionando)
 
 ## 📞 Próximos Passos
 
