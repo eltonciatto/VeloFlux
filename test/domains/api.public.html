@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Services - Public Domain</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #e3f2fd; }
+        .server { background: #0277bd; color: white; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 600px; }
+        .domain { font-size: 18px; font-weight: bold; margin: 10px 0; color: #01579b; }
+        .info { margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 5px; display: inline-block; }
+        code { background: #e1f5fe; color: #01579b; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>🔌 API Services</h1>
+        <div class="domain">Domain: api.public.dev.veloflux.io</div>
+        <p>VeloFlux API Gateway Demo</p>
+        <p>Timestamp: <span id="time"></span></p>
+        <div class="info">
+            <p>API Endpoints:</p>
+            <code>GET /api/health</code> - Health Check<br>
+            <code>GET /api/status</code> - System Status<br>
+            <code>GET /api/metrics</code> - Performance Metrics<br>
+            <p>IP: 74.249.85.193</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>

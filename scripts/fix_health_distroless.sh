@@ -1,3 +1,23 @@
+#!/bin/bash
+# Script para corrigir problemas de health check no VeloFlux (distroless e nginx)
+# Author: GitHub Copilot
+# Date: $(date +%Y-%m-%d)
+
+echo "===================================="
+echo "Iniciando script de correção de health checks"
+echo "===================================="
+
+# Diretório base
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd $BASE_DIR
+
+echo -e "\n[1] Parando containers"
+docker-compose down
+
+echo -e "\n[2] Corrigindo health check do VeloFlux-LB (imagem distroless)"
+# Modificando docker-compose.yml para usar healthcheck nativo do distroless
+cp docker-compose.yml docker-compose.yml.bak
+cat > docker-compose.yml << EOF
 # VeloFlux Docker Compose
 # Configuração profissional para multi-tenant
 
@@ -21,7 +41,7 @@ services:
       - ./config:/etc/veloflux
       - ./certs:/etc/ssl/certs/veloflux
     healthcheck:
-      test: ["NONE"]
+      test: ["CMD", "/bin/veloflux"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -106,7 +126,7 @@ services:
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)(11743|/)'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)($$|/)'
     networks:
       - veloflux-net
 
@@ -118,3 +138,78 @@ volumes:
 networks:
   veloflux-net:
     driver: bridge
+EOF
+
+echo -e "\n[3] Verificando health files para os backends"
+# Verifique se os arquivos health existem e crie-os caso necessário
+for tenant in tenant1 tenant2 admin api public; do
+  if [ ! -f "test/$tenant/health" ]; then
+    echo "Criando arquivo health para $tenant"
+    mkdir -p "test/$tenant"
+    cat > "test/$tenant/health" << EOF
+{
+  "status": "healthy",
+  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")"
+}
+EOF
+  else
+    echo "Arquivo health para $tenant já existe"
+  fi
+done
+
+echo -e "\n[4] Reiniciando serviços"
+docker-compose up -d
+
+# Esperar serviços iniciarem
+echo "Aguardando serviços iniciarem..."
+sleep 15
+
+echo -e "\n[5] Verificando status dos containers"
+docker ps
+
+echo -e "\n[6] Verificando health status"
+for container in veloflux-lb veloflux-tenant1 veloflux-tenant2 veloflux-redis; do
+  echo "$container:"
+  docker inspect --format='{{json .State.Health.Status}}' $container
+done
+
+echo -e "\n[7] Testando healthchecks manualmente"
+echo "VeloFlux Metrics:"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8880/metrics
+echo " (HTTP 200 = OK)"
+
+echo "Tenant1 Health:"
+curl -s http://localhost/health
+echo ""
+
+echo "Tenant2 Health:"
+curl -s -H "Host: tenant2.public.dev.veloflux.io" http://localhost/health
+echo ""
+
+echo -e "\n[8] Verificando acesso aos domínios"
+echo "Domínio principal:"
+curl -s -o /dev/null -w "%{http_code}" http://localhost/
+echo " (HTTP 200 = OK)"
+
+echo "Tenant1 (com Host header):"
+curl -s -o /dev/null -w "%{http_code}" -H "Host: tenant1.public.dev.veloflux.io" http://localhost/
+echo " (HTTP 200 = OK)"
+
+echo "Tenant2 (com Host header):"
+curl -s -o /dev/null -w "%{http_code}" -H "Host: tenant2.public.dev.veloflux.io" http://localhost/
+echo " (HTTP 200 = OK)"
+
+echo "API:"
+curl -s -o /dev/null -w "%{http_code}" -H "Host: api.public.dev.veloflux.io" http://localhost/api/
+echo " (HTTP 200 = OK)"
+
+echo "Admin:"
+curl -s -o /dev/null -w "%{http_code}" -H "Host: admin.public.dev.veloflux.io" http://localhost/admin/
+echo " (HTTP 200 = OK)"
+
+echo -e "\n[9] Verificando logs do VeloFlux"
+docker logs veloflux-lb | tail -n 20
+
+echo -e "\n===================================="
+echo "Script de correção completo!"
+echo "===================================="

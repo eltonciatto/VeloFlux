@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Portal - Public Domain</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #ffebee; }
+        .server { background: #c62828; color: white; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 600px; }
+        .domain { font-size: 18px; font-weight: bold; margin: 10px 0; color: #b71c1c; }
+        .info { margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 5px; display: inline-block; }
+        .secure { color: #c62828; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>⚙️ Admin Portal</h1>
+        <div class="domain">Domain: admin.public.dev.veloflux.io</div>
+        <p>VeloFlux Administration Interface</p>
+        <p>Timestamp: <span id="time"></span></p>
+        <div class="info">
+            <p>This is a <span class="secure">SECURE AREA</span></p>
+            <p>Authentication required to access admin functions</p>
+            <p>IP: 74.249.85.193</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>

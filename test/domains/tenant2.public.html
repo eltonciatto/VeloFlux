@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tenant 2 - Public Domain</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #fff8e1; }
+        .server { background: #ff8f00; color: white; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 600px; }
+        .domain { font-size: 18px; font-weight: bold; margin: 10px 0; color: #e65100; }
+        .info { margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>🏭 Tenant 2 - Public</h1>
+        <div class="domain">Domain: tenant2.public.dev.veloflux.io</div>
+        <p>VeloFlux Multi-tenant Demo</p>
+        <p>Timestamp: <span id="time"></span></p>
+        <div class="info">
+            <p>Este é o serviço público do Tenant 2</p>
+            <p>IP: 74.249.85.193</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>

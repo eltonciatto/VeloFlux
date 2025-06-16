@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Main Portal - Public Domain</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f3e5f5; }
+        .server { background: #7b1fa2; color: white; padding: 20px; border-radius: 10px; display: inline-block; width: 80%; max-width: 600px; }
+        .domain { font-size: 18px; font-weight: bold; margin: 10px 0; color: #4a148c; }
+        .info { margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 5px; display: inline-block; }
+        .links { margin-top: 20px; }
+        .links a { display: inline-block; margin: 5px; padding: 10px; background: #4a148c; color: white; text-decoration: none; border-radius: 5px; }
+        .links a:hover { background: #6a1b9a; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>🏠 VeloFlux Portal</h1>
+        <div class="domain">Domain: public.dev.veloflux.io</div>
+        <p>VeloFlux Multi-tenant Gateway</p>
+        <p>Timestamp: <span id="time"></span></p>
+        <div class="info">
+            <p>Esta é a página principal do VeloFlux</p>
+            <p>IP: 74.249.85.193</p>
+        </div>
+        <div class="links">
+            <a href="http://tenant1.public.dev.veloflux.io">Tenant 1</a>
+            <a href="http://tenant2.public.dev.veloflux.io">Tenant 2</a>
+            <a href="http://api.public.dev.veloflux.io">API</a>
+            <a href="http://admin.public.dev.veloflux.io">Admin</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>
