@@ -192,7 +192,7 @@ print_success "Repositório clonado"
 # Configure environment
 print_step "Configurando ambiente..."
 ADMIN_PASS=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-16)
-JWT_SECRET=$(openssl rand -base64 64)
+JWT_SECRET=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-32)
 REDIS_PASS=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
 
 cat > .env << EOF
