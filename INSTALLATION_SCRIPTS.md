@@ -21,7 +21,7 @@ Este documento resume todos os scripts de instalação rápida criados para faci
 ./scripts/master-install.sh
 
 # Instalação direta
-./scripts/master-install.sh production -d meudominio.com -e admin@meudominio.com
+./scripts/master-install.sh production -d veloflux.io admin@veloflux.io
 ./scripts/master-install.sh docker
 ./scripts/master-install.sh development
 ./scripts/master-install.sh cloud

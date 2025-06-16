@@ -188,7 +188,7 @@ Todos os scripts respeitam estas variáveis:
 
 ```bash
 # Configuração de domínio
-export DOMAIN="yourdomain.com"
+export DOMAIN="veloflux.io"
 export API_SUBDOMAIN="api"
 export ADMIN_SUBDOMAIN="admin"
 
@@ -197,8 +197,8 @@ export ADMIN_USER="admin"
 export ADMIN_PASS="your-secure-password"
 
 # URLs de API (para Coolify)
-export API_URL="https://api.yourdomain.com"
-export ADMIN_URL="https://admin.yourdomain.com"
+export API_URL="https://api.veloflux.io"
+export ADMIN_URL="https://admin.veloflux.io"
 ```
 
 ### Customização de Scripts
