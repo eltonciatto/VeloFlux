@@ -1,13 +1,149 @@
 
-🚫 **Not for Commercial Use Without License**  
-📜 Licensed under **VeloFlux Public Source License (VPSL) v1.0** — See [`LICENSE`](./LICENSE) for details.  
-💼 For commercial licensing, visit **https://veloflux.io** or contact **contact@veloflux.io**.
+# � VeloFlux - High-Performance Load Balancer
 
-# VeloFlux SaaS - AI-Powered Load Balancer Platform
+VeloFlux is a modern, high-performance load balancer written in Go, designed for production environments with enterprise-grade features.
 
-[![License](https://img.shields.io/badge/license-VPSL--1.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](package.json)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
+## ✨ Features
+
+- **Smart Load Balancing** - Round-robin, weighted, and health-check based routing
+- **Real-time Health Checks** - Automatic backend health monitoring
+- **High Performance** - Built with Go for maximum throughput
+- **Easy Configuration** - Simple YAML-based configuration
+- **Production Ready** - Systemd integration, logging, and monitoring
+- **Security** - Built-in rate limiting and security headers
+
+## 🚀 Quick Installation
+
+### Prerequisites
+- Ubuntu 18.04+ or Debian 9+
+- Minimum 1GB RAM
+- 5GB disk space
+- Root access
+
+### One-Command Installation
+
+```bash
+# Download and run installer
+curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/install.sh | sudo bash
+```
+
+### Manual Installation
+
+```bash
+# Clone repository
+git clone https://github.com/eltonciatto/VeloFlux.git
+cd VeloFlux
+
+# Make installer executable and run
+chmod +x install.sh
+sudo ./install.sh
+```
+
+## 🌐 Access Points
+
+After installation, VeloFlux will be available at:
+
+- **Main Application**: `http://your-server-ip/`
+- **Admin Panel**: `http://your-server-ip/admin`
+- **Health Check**: `http://your-server-ip/health`
+
+## 🔧 Configuration
+
+Configuration file is located at `/etc/veloflux/config.yaml`:
+
+```yaml
+# VeloFlux Configuration
+server:
+  bind_address: "0.0.0.0:8080"
+  admin_address: "0.0.0.0:9000"
+  
+logging:
+  level: "info"
+  file: "/var/log/veloflux/veloflux.log"
+
+backends:
+  - name: "backend1"
+    url: "http://127.0.0.1:3001"
+    weight: 100
+    health_check:
+      path: "/health"
+      interval: "30s"
+
+load_balancing:
+  algorithm: "round_robin"
+  
+security:
+  rate_limit:
+    requests_per_minute: 100
+    burst: 10
+```
+
+## 🛠️ Management Commands
+
+```bash
+# Service management
+sudo systemctl start veloflux
+sudo systemctl stop veloflux
+sudo systemctl restart veloflux
+sudo systemctl status veloflux
+
+# View logs
+sudo journalctl -fu veloflux
+sudo tail -f /var/log/veloflux/veloflux.log
+
+# Configuration test
+sudo /opt/veloflux/bin/veloflux-lb -config /etc/veloflux/config.yaml -test
+```
+
+## 🧹 Cleanup
+
+To completely remove VeloFlux:
+
+```bash
+# Download and run cleanup script
+curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/cleanup.sh | sudo bash
+
+# Or manually
+sudo ./cleanup.sh
+```
+
+## 📊 Monitoring
+
+VeloFlux provides built-in monitoring endpoints:
+
+- **Health**: `/health` - Service health status
+- **Metrics**: `/admin/metrics` - Performance metrics
+- **Status**: `/admin/status` - Backend status
+
+## 🔒 Security
+
+VeloFlux includes security features:
+
+- Rate limiting
+- Security headers
+- Request filtering
+- Access logging
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/eltonciatto/VeloFlux/issues)
+- **Documentation**: [Wiki](https://github.com/eltonciatto/VeloFlux/wiki)
+
+---
+
+**Made with ❤️ for high-performance load balancing**
 
 A production-grade, container-native SaaS load balancer built in Go with AI intelligence, SSL termination, HTTP/3 support, automatic health checks, and geo-aware routing.
 
