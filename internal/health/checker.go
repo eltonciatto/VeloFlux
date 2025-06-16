@@ -9,6 +9,7 @@ import (
 
 	"github.com/eltonciatto/veloflux/internal/config"
 	"go.uber.org/zap"
+	"github.com/eltonciatto/veloflux/internal/metrics"
 )
 
 type BackendHealthUpdater interface {

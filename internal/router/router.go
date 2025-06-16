@@ -17,6 +17,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+	"github.com/eltonciatto/veloflux/internal/metrics"
 )
 
 type Router struct {
@@ -153,7 +154,11 @@ func (r *Router) middleware(next http.Handler) http.Handler {
 }
 
 func (r *Router) createProxyHandler(poolName string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+        start := time.Now()
+        clientIP := r.getClientIP(req)
+        sessionID := r.getSessionID(req)
+
 		start := time.Now()
 		clientIP := r.getClientIP(req)
 		sessionID := r.getSessionID(req)
@@ -185,8 +190,17 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 		}
 
 		// Increment connection count
-		r.balancer.IncrementConnections(poolName, backend.Address)
-		defer r.balancer.DecrementConnections(poolName, backend.Address)
+        // Incrementar contador de conexões
+        r.balancer.IncrementConnections(poolName, backend.Address)
+        defer r.balancer.DecrementConnections(poolName, backend.Address)
+        
+        // Atualizar métricas de conexões ativas
+        metrics.UpdateActiveConnections(backend.Address, true)
+        defer metrics.UpdateActiveConnections(backend.Address, false)
+        
+        // Atualizar métrica de saúde do backend
+        metrics.UpdateBackendHealth(poolName, backend.Address, true)
+
 
 		// Create reverse proxy
 		target, err := url.Parse(fmt.Sprintf("http://%s", backend.Address))
@@ -253,7 +267,10 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 		req.Header.Set("X-Real-IP", clientIP.String())
 		req.Header.Set("X-Forwarded-Proto", r.getScheme(req))
 
-		proxy.ServeHTTP(w, req)
+        // Wrapper para capturar métricas
+        metricsHandler := metrics.MetricsMiddleware(proxy, poolName)
+        metricsHandler.ServeHTTP(w, req)
+
 	})
 }
 
