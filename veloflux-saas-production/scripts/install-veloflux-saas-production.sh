@@ -254,7 +254,7 @@ build_veloflux() {
     fi
     
     cd "$INSTALL_DIR"
-    git clone https://github.com/VeloFlux/VeloFlux.git src
+    git clone https://github.com/eltonciatto/VeloFlux.git src
     cd src
     
     log_step "Building backend..."

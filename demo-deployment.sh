@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash .
 
 # VeloFlux SaaS Production - One-Click Deployment Demo
 # This script demonstrates how to deploy VeloFlux SaaS to production
@@ -13,7 +13,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Configuration
-VPS_IP="146.190.152.103"
+VPS_IP="190.93.119.61"
 PACKAGE_FILE="veloflux-saas-production-final.tar.gz"
 
 echo -e "${BLUE}🚀 VeloFlux SaaS Production Deployment Demo${NC}"
