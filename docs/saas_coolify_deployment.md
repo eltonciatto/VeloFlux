@@ -58,8 +58,8 @@ Esta é a abordagem nativa do VeloFlux, mais simples e sem dependências externa
 3. Defina variáveis de ambiente para credenciais de administrador:
    ```
    ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=senha-segura
-   JWT_SECRET=chave-secreta-muito-segura
+   ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD>
+   JWT_SECRET=<YOUR_JWT_SECRET>
    ```
 
 #### Opção B: Autenticação com Keycloak (Para integrações corporativas)
@@ -76,7 +76,7 @@ Para casos que exigem federação de identidade ou integração com sistemas ext
 2. Configure as variáveis de ambiente do Keycloak:
    ```
    KEYCLOAK_ADMIN=admin
-   KEYCLOAK_ADMIN_PASSWORD=senha-segura
+   KEYCLOAK_ADMIN_PASSWORD=<YOUR_KEYCLOAK_PASSWORD>
    KC_PROXY=edge
    ```
 
@@ -126,14 +126,14 @@ O VeloFlux utiliza Redis como seu banco de dados principal para armazenamento de
    ```
    VFX_CONFIG=/etc/veloflux/config.yaml
    VFX_LOG_LEVEL=info
-   JWT_SECRET=chave-muito-secreta-gerada-aleatoriamente
+   JWT_SECRET=<YOUR_JWT_SECRET>
    ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=senha-admin-segura
+   ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD>
    OIDC_ISSUER_URL=https://auth.veloflux.io/realms/veloflux
    OIDC_CLIENT_ID=veloflux-admin
    OIDC_REDIRECT_URI=https://admin.veloflux.io/auth/callback
    REDIS_ADDRESS=veloflux-redis:6379
-   REDIS_PASSWORD=senha-redis-gerada-pelo-coolify
+   REDIS_PASSWORD=<YOUR_REDIS_PASSWORD>
    ```
 
 4. Configure domínios personalizados:
@@ -147,9 +147,9 @@ Utilize este modelo de configuração como base para o arquivo config.yaml:
 ```yaml
 # VeloFlux LB Configuration - SaaS Mode
 global:
-  bind_address: "0.0.0.0:80"
-  tls_bind_address: "0.0.0.0:443"
-  metrics_address: "0.0.0.0:8080"
+  bind_address: "<YOUR_IP_ADDRESS>:80"
+  tls_bind_address: "<YOUR_IP_ADDRESS>:443"
+  metrics_address: "<YOUR_IP_ADDRESS>:8080"
   
   # TLS Configuration
   tls:
@@ -206,7 +206,7 @@ cluster:
 
 # API Server Configuration
 api:
-  bind_address: "0.0.0.0:9090"
+  bind_address: "<YOUR_IP_ADDRESS>:9090"
   auth_enabled: true
   username: "${ADMIN_USERNAME}"  # Use variável de ambiente do Coolify
   password: "${ADMIN_PASSWORD}"  # Use variável de ambiente do Coolify
@@ -215,7 +215,7 @@ api:
 billing:
   enabled: true
   provider: "gerencianet"  # ou "stripe"
-  api_key: "${BILLING_API_KEY}"
+  api_key: "${YOUR_API_KEY}"
   webhook_secret: "${BILLING_WEBHOOK_SECRET}"
   public_key: "${BILLING_PUBLIC_KEY}"
   webhook_endpoint: "/api/v1/billing/webhook"

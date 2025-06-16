@@ -12,10 +12,10 @@
 
 ```bash
 # 1. Envie o pacote para seu servidor VPS
-scp veloflux-saas-production-final.tar.gz root@146.190.152.103:/tmp/
+scp veloflux-saas-production-final.tar.gz root@<YOUR_IP_ADDRESS>:/tmp/
 
 # 2. Conecte-se ao servidor
-ssh root@146.190.152.103
+ssh root@<YOUR_IP_ADDRESS>
 
 # 3. Extraia e instale
 cd /tmp
@@ -87,7 +87,7 @@ curl http://localhost:9090/    # Prometheus
 
 ## 🌐 Pontos de Acesso
 
-Substitua `YOUR_SERVER_IP` pelo IP do seu servidor (146.190.152.103):
+Substitua `YOUR_SERVER_IP` pelo IP do seu servidor (<YOUR_IP_ADDRESS>):
 
 - **🏠 Aplicação Principal**: http://YOUR_SERVER_IP/
 - **⚡ Health Check**: http://YOUR_SERVER_IP/health
@@ -156,9 +156,9 @@ Substitua `YOUR_SERVER_IP` pelo IP do seu servidor (146.190.152.103):
 Aponte seus domínios para o IP do servidor:
 
 ```
-A     seudominio.com        → 146.190.152.103
-A     admin.seudominio.com  → 146.190.152.103
-A     api.seudominio.com    → 146.190.152.103
+A     seudominio.com        → <YOUR_IP_ADDRESS>
+A     admin.seudominio.com  → <YOUR_IP_ADDRESS>
+A     api.seudominio.com    → <YOUR_IP_ADDRESS>
 ```
 
 ### 2. SSL Automático

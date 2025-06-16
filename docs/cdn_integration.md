@@ -45,8 +45,8 @@ global:
   proxy_protocol:
     enabled: true
     trusted_ips:
-      - 173.245.48.0/20
-      - 103.21.244.0/22
+      - <YOUR_IP_ADDRESS>/20
+      - <YOUR_IP_ADDRESS>/22
       # Adicione todos os IPs do Cloudflare
 ```
 

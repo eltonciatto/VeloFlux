@@ -13,7 +13,7 @@ O roteamento do Nginx está direcionando todos os subdomínios para os serviços
 **Solução:** Rotear para o container do frontend (porta 3000)
 ```nginx
 location / {
-    proxy_pass http://172.20.0.4:3000;  # Frontend container
+    proxy_pass http://<YOUR_IP_ADDRESS>:3000;  # Frontend container
 }
 ```
 
@@ -22,7 +22,7 @@ location / {
 **Solução:** Rotear para a API do VeloFlux (porta 9000)
 ```nginx
 location / {
-    proxy_pass http://172.20.0.6:9000;  # VeloFlux Admin API
+    proxy_pass http://<YOUR_IP_ADDRESS>:9000;  # VeloFlux Admin API
 }
 ```
 
@@ -31,10 +31,10 @@ location / {
 **Solução:** Rotear para o frontend com endpoints de API
 ```nginx
 location / {
-    proxy_pass http://172.20.0.4:3000;  # Frontend para UI
+    proxy_pass http://<YOUR_IP_ADDRESS>:3000;  # Frontend para UI
 }
 location /api/ {
-    proxy_pass http://172.20.0.6:9000/;  # API para funcionalidades
+    proxy_pass http://<YOUR_IP_ADDRESS>:9000/;  # API para funcionalidades
 }
 ```
 
@@ -43,20 +43,20 @@ location /api/ {
 **Solução:** Rotear para a porta principal do load balancer
 ```nginx
 location / {
-    proxy_pass http://172.20.0.6:80;   # VeloFlux Load Balancer main port
+    proxy_pass http://<YOUR_IP_ADDRESS>:80;   # VeloFlux Load Balancer main port
 }
 ```
 
 ## Arquitetura dos Containers
 
 Com base no docker-compose.prod.fixed.yml:
-- **172.20.0.2**: Redis
-- **172.20.0.3**: Prometheus  
-- **172.20.0.4**: Frontend (Vite/React)
-- **172.20.0.5**: Grafana
-- **172.20.0.6**: VeloFlux Load Balancer
-- **172.20.0.7**: Backend Demo 1
-- **172.20.0.8**: Backend Demo 2
+- **<YOUR_IP_ADDRESS>**: Redis
+- **<YOUR_IP_ADDRESS>**: Prometheus  
+- **<YOUR_IP_ADDRESS>**: Frontend (Vite/React)
+- **<YOUR_IP_ADDRESS>**: Grafana
+- **<YOUR_IP_ADDRESS>**: VeloFlux Load Balancer
+- **<YOUR_IP_ADDRESS>**: Backend Demo 1
+- **<YOUR_IP_ADDRESS>**: Backend Demo 2
 
 ## Recursos Adicionados
 

@@ -284,7 +284,7 @@ SE (
 ```bash
 # Verificar dados Redis
 redis-cli -h localhost -p 6379
-127.0.0.1:6379> KEYS vf:tenant:*
+<YOUR_IP_ADDRESS>:6379> KEYS vf:tenant:*
 
 # Verificar métricas
 curl http://localhost:8080/metrics | grep veloflux

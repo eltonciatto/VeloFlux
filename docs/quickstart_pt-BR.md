@@ -106,7 +106,7 @@ O VeloFlux pode ser implantado em múltiplas regiões enquanto compartilha um cl
 
 ```bash
 # Iniciar Redis Sentinel para alta disponibilidade
-redis-sentinel /etc/sentinel.conf --sentinel monitor veloflux 127.0.0.1 26379 2
+redis-sentinel /etc/sentinel.conf --sentinel monitor veloflux <YOUR_IP_ADDRESS> 26379 2
 
 # Configurar instâncias VeloFlux em cada região para usar o mesmo cluster Redis
 export VFX_REDIS_ADDRESS=redis-sentinel:26379

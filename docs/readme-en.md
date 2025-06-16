@@ -80,8 +80,8 @@ Create a `config.yaml` file:
 
 ```yaml
 global:
-  bind_address: "0.0.0.0:80"
-  tls_bind_address: "0.0.0.0:443"
+  bind_address: "<YOUR_IP_ADDRESS>:80"
+  tls_bind_address: "<YOUR_IP_ADDRESS>:443"
   
   # Redis configuration
   redis:
@@ -104,9 +104,9 @@ pools:
       path: "/health"
     
     backends:
-      - address: "192.168.1.100:8080"
+      - address: "<YOUR_IP_ADDRESS>:8080"
         weight: 100
-      - address: "192.168.1.101:8080"
+      - address: "<YOUR_IP_ADDRESS>:8080"
         weight: 100
 
 # Routing rules
@@ -336,7 +336,7 @@ kubectl apply -f k8s/production/
 ```bash
 # Required
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-secret-key
+JWT_SECRET=<YOUR_JWT_SECRET>
 
 # Optional
 OIDC_CLIENT_SECRET=your-oidc-secret

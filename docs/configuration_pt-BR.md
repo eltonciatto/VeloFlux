@@ -6,10 +6,10 @@ O VeloFlux suporta configuração via arquivo YAML e dinamicamente através de s
 
 ```yaml
 global:
-  bind_address: "0.0.0.0:80"        # Endereço de escuta HTTP
-  tls_bind_address: "0.0.0.0:443"   # Endereço de escuta HTTPS
-  metrics_address: "0.0.0.0:8080"   # Métricas Prometheus
-  admin_address: "0.0.0.0:9000"     # Endereço da API de administração
+  bind_address: "<YOUR_IP_ADDRESS>:80"        # Endereço de escuta HTTP
+  tls_bind_address: "<YOUR_IP_ADDRESS>:443"   # Endereço de escuta HTTPS
+  metrics_address: "<YOUR_IP_ADDRESS>:8080"   # Métricas Prometheus
+  admin_address: "<YOUR_IP_ADDRESS>:9000"     # Endereço da API de administração
 
   tls:
     auto_cert: true                 # Obter certificados via Let's Encrypt

@@ -280,7 +280,7 @@ veloflux_active_connections{backend="api-1:8080",pool="api-servers"}
   "request_id": "req-789abc",
   "duration_ms": 1.23,
   "metadata": {
-    "client_ip": "192.168.1.100",
+    "client_ip": "<YOUR_IP_ADDRESS>",
     "user_agent": "Mozilla/5.0...",
     "geographic_region": "sa-east-1"
   }
@@ -791,8 +791,8 @@ Risk Level: Impact × Probability
 production:
   global:
     log_level: "info"
-    bind_address: "0.0.0.0:80"
-    tls_bind_address: "0.0.0.0:443"
+    bind_address: "<YOUR_IP_ADDRESS>:80"
+    tls_bind_address: "<YOUR_IP_ADDRESS>:443"
     
   redis:
     cluster: true

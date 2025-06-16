@@ -55,12 +55,12 @@ Um chart Helm pronto para produção está disponível no diretório `charts/`. 
 ```bash
 # Para instalação single-tenant
 helm install veloflux ./charts/veloflux \
-  --set redis.auth.password=senha-segura \
+  --set redis.auth.password=<YOUR_SECURE_PASSWORD> \
   --set ingress.enabled=true
 
 # Para implantação SaaS multi-tenant
 helm install veloflux ./charts/veloflux \
-  --set redis.auth.password=senha-segura \
+  --set redis.auth.password=<YOUR_SECURE_PASSWORD> \
   --set ingress.enabled=true \
   --set multiTenant.enabled=true \
   --set oidc.provider=auth0 \
@@ -68,7 +68,7 @@ helm install veloflux ./charts/veloflux \
   
 # Habilitando todos os recursos incluindo IA/ML
 helm install veloflux ./charts/veloflux \
-  --set redis.auth.password=senha-segura \
+  --set redis.auth.password=<YOUR_SECURE_PASSWORD> \
   --set ingress.enabled=true \
   --set multiTenant.enabled=true \
   --set billing.enabled=true \
@@ -127,7 +127,7 @@ billing:
   enabled: true
   # Escolha entre "stripe" ou "gerencianet"
   provider: "stripe"
-  apiKey: "sk_test_sua_chave_api_stripe"
+  apiKey: "<YOUR_API_KEY>"
   webhookSecret: "whsec_seu_webhook_secret"
   # Para exportação automática de dados
   exportSchedule: "0 1 * * *"  # Formato cron (diariamente às 01:00)

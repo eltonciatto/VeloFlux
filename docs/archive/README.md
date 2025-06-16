@@ -54,8 +54,8 @@ Configuration file is located at `/etc/veloflux/config.yaml`:
 ```yaml
 # VeloFlux Configuration
 server:
-  bind_address: "0.0.0.0:8080"
-  admin_address: "0.0.0.0:9000"
+  bind_address: "<YOUR_IP_ADDRESS>:8080"
+  admin_address: "<YOUR_IP_ADDRESS>:9000"
   
 logging:
   level: "info"
@@ -63,7 +63,7 @@ logging:
 
 backends:
   - name: "backend1"
-    url: "http://127.0.0.1:3001"
+    url: "http://<YOUR_IP_ADDRESS>:3001"
     weight: 100
     health_check:
       path: "/health"
@@ -199,7 +199,7 @@ docker-compose up -d
 ### Multi-Region Example
 Deploy VeloFlux in multiple regions while sharing a Redis cluster:
 ```bash
-redis-sentinel /etc/sentinel.conf --sentinel monitor veloflux 127.0.0.1 26379 2
+redis-sentinel /etc/sentinel.conf --sentinel monitor veloflux <YOUR_IP_ADDRESS> 26379 2
 ```
 
 
@@ -284,9 +284,9 @@ Create `config.yaml`:
 
 ```yaml
 global:
-  bind_address: "0.0.0.0:80"
-  tls_bind_address: "0.0.0.0:443"
-  metrics_address: "0.0.0.0:8080"
+  bind_address: "<YOUR_IP_ADDRESS>:80"
+  tls_bind_address: "<YOUR_IP_ADDRESS>:443"
+  metrics_address: "<YOUR_IP_ADDRESS>:8080"
   
   tls:
     auto_cert: true
@@ -413,7 +413,7 @@ Structured JSON logs with configurable levels:
   "msg": "Request processed",
   "method": "GET",
   "url": "/api/users",
-  "client_ip": "192.168.1.100",
+  "client_ip": "<YOUR_IP_ADDRESS>",
   "status_code": 200,
   "duration": "45.2ms",
   "request_id": "req-12345"

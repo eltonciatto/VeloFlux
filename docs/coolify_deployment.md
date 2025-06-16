@@ -141,9 +141,9 @@ Ao configurar o volume para o arquivo de configuração no Coolify, use o modelo
 ```yaml
 # VeloFlux LB Configuration - SaaS Mode
 global:
-  bind_address: "0.0.0.0:80"
-  tls_bind_address: "0.0.0.0:443"
-  metrics_address: "0.0.0.0:8080"
+  bind_address: "<YOUR_IP_ADDRESS>:80"
+  tls_bind_address: "<YOUR_IP_ADDRESS>:443"
+  metrics_address: "<YOUR_IP_ADDRESS>:8080"
   
   # TLS Configuration
   tls:
@@ -200,7 +200,7 @@ cluster:
 
 # API Server Configuration
 api:
-  bind_address: "0.0.0.0:9090"
+  bind_address: "<YOUR_IP_ADDRESS>:9090"
   auth_enabled: true
   username: "${ADMIN_USERNAME}"  # Use variável de ambiente do Coolify
   password: "${ADMIN_PASSWORD}"  # Use variável de ambiente do Coolify
@@ -283,9 +283,9 @@ pools:
 No Coolify, configure as seguintes variáveis de ambiente para o modo SaaS:
 
 ```
-JWT_SECRET=sua-chave-secreta-muito-segura
+JWT_SECRET=<YOUR_JWT_SECRET>
 ADMIN_USERNAME=admin-username
-ADMIN_PASSWORD=senha-super-segura
+ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD>
 
 # OIDC
 OIDC_ISSUER_URL=https://auth.veloflux.io/realms/veloflux
@@ -294,7 +294,7 @@ OIDC_REDIRECT_URI=https://admin.veloflux.io/auth/callback
 
 # Redis
 REDIS_ADDRESS=redis-host:6379
-REDIS_PASSWORD=sua-senha-redis
+REDIS_PASSWORD=<YOUR_REDIS_PASSWORD>
 
 # Backends para tenant1
 TENANT1_BACKEND1=tenant1-backend1:80

@@ -153,7 +153,7 @@ Para clientes que precisam de isolamento total, recursos dedicados ou alta custo
 # Via Helm manual - se necessário
 helm install velo-cliente1 veloflux/veloflux \
   --set tenantId=cliente1 \
-  --set redis.auth.password=**** \
+  --set redis.auth.password=<YOUR_SECURE_PASSWORD> \
   --namespace cliente1-namespace \
   --set resources.requests.cpu=200m \
   --set autoscaling.enabled=true

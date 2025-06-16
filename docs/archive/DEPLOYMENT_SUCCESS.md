@@ -1,7 +1,7 @@
 # 🚀 DEPLOY VELOFLUX SAAS NO SEU VPS
 
 ## 📋 Informações do Servidor
-- **IP**: 190.93.119.61  
+- **IP**: <YOUR_IP_ADDRESS>  
 - **User**: root  
 - **Status**: ✅ Online (nginx ativo)
 
@@ -9,12 +9,12 @@
 
 ### 1️⃣ Upload do Pacote
 ```bash
-scp veloflux-saas-production-fixed.tar.gz root@190.93.119.61:/tmp/
+scp veloflux-saas-production-fixed.tar.gz root@<YOUR_IP_ADDRESS>:/tmp/
 ```
 
 ### 2️⃣ Conexão SSH
 ```bash
-ssh root@190.93.119.61
+ssh root@<YOUR_IP_ADDRESS>
 ```
 
 ### 3️⃣ Instalação no Servidor
@@ -28,18 +28,18 @@ cd veloflux-saas-production
 
 ## 🔄 Comando One-Liner (Alternativo)
 ```bash
-scp veloflux-saas-production-fixed.tar.gz root@190.93.119.61:/tmp/ && \
-ssh root@190.93.119.61 "cd /tmp && tar xzf veloflux-saas-production-fixed.tar.gz && cd veloflux-saas-production && ./install.sh"
+scp veloflux-saas-production-fixed.tar.gz root@<YOUR_IP_ADDRESS>:/tmp/ && \
+ssh root@<YOUR_IP_ADDRESS> "cd /tmp && tar xzf veloflux-saas-production-fixed.tar.gz && cd veloflux-saas-production && ./install.sh"
 ```
 
 ## 🌐 Pontos de Acesso Após Instalação
 
-- **🏠 Aplicação Principal**: http://190.93.119.61/
-- **⚡ Health Check**: http://190.93.119.61/health
-- **📊 Grafana**: http://190.93.119.61:3000 (admin/admin)
-- **📈 Prometheus**: http://190.93.119.61:9090
-- **🔧 Admin Panel**: http://190.93.119.61/admin
-- **🔗 API**: http://190.93.119.61/api
+- **🏠 Aplicação Principal**: http://<YOUR_IP_ADDRESS>/
+- **⚡ Health Check**: http://<YOUR_IP_ADDRESS>/health
+- **📊 Grafana**: http://<YOUR_IP_ADDRESS>:3000 (admin/admin)
+- **📈 Prometheus**: http://<YOUR_IP_ADDRESS>:9090
+- **🔧 Admin Panel**: http://<YOUR_IP_ADDRESS>/admin
+- **🔗 API**: http://<YOUR_IP_ADDRESS>/api
 
 ## 🔍 Verificação Pós-Instalação
 ```bash
