@@ -217,7 +217,7 @@ services:
       context: .
       dockerfile: Dockerfile.test
     ports:
-      - "8080:80"
+      - "8081:80"
       - "9080:8080"  # metrics
       - "9090:9000"  # admin API
     environment:
@@ -254,7 +254,7 @@ EOL
 
     # Cria um Dockerfile para teste
     cat > "$TEST_DIR/Dockerfile.test" <<EOL
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates gcc musl-dev
 
@@ -343,15 +343,15 @@ start_test() {
     
     # Testamos se está respondendo
     log "Testando conectividade..."
-    if curl -s http://localhost:8080 > /dev/null; then
-        log "✅ VeloFlux está respondendo na porta 8080!"
+    if curl -s http://localhost:8081 > /dev/null; then
+        log "✅ VeloFlux está respondendo na porta 8081!"
         echo ""
         echo -e "${GREEN}====================================================${NC}"
         echo -e "${GREEN}    TESTE BEM-SUCEDIDO - VELOFLUX ESTÁ RODANDO     ${NC}"
         echo -e "${GREEN}====================================================${NC}"
         echo ""
         echo "Você pode acessar:"
-        echo " - VeloFlux (balanceador): http://localhost:8080"
+        echo " - VeloFlux (balanceador): http://localhost:8081"
         echo " - Métricas: http://localhost:9080"
         echo " - API de administração: http://localhost:9090"
         echo ""
