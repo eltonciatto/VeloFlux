@@ -25,13 +25,13 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Configuration
-DOMAIN="veloflux.io"
-DOMAIN="admin.veloflux.io"
-DOMAIN="api.veloflux.io"
-DOMAIN="metrics.veloflux.io"
-DOMAIN="grafana.veloflux.io"
-DOMAIN="prometheus.veloflux.io"
-DOMAIN="lb.veloflux.io"
+MAIN_DOMAIN="veloflux.io"
+ADMIN_DOMAIN="admin.veloflux.io"
+API_DOMAIN="api.veloflux.io"
+METRICS_DOMAIN="metrics.veloflux.io"
+GRAFANA_DOMAIN="grafana.veloflux.io"
+PROMETHEUS_DOMAIN="prometheus.veloflux.io"
+LB_DOMAIN="lb.veloflux.io"
 EMAIL="admin@veloflux.io"
 GITHUB_REPO="https://github.com/eltonciatto/VeloFlux.git"
 COMPOSE_VERSION="2.24.0"
@@ -99,7 +99,10 @@ fi
 print_success "Requisitos do sistema atendidos"
 
 print_step "Iniciando instalação robusta do VeloFlux SaaS..."
-print_info "Domínio: $DOMAIN"
+print_info "Domínio Principal: $MAIN_DOMAIN"
+print_info "Admin Panel: $ADMIN_DOMAIN"
+print_info "API Domain: $API_DOMAIN"
+print_info "Grafana: $GRAFANA_DOMAIN"
 print_info "Email: $EMAIL"
 print_info "Repositório: $GITHUB_REPO"
 print_info "RAM: ${RAM_MB}MB | Disk: ${DISK_GB}GB"
@@ -178,12 +181,12 @@ fi
 
 # Clone VeloFlux repository
 print_step "Clonando repositório VeloFlux..."
-cd /opt
-if [ -d "veloflux" ]; then
-    rm -rf veloflux
+cd /root
+if [ -d "VeloFlux" ]; then
+    rm -rf VeloFlux
 fi
-git clone $GITHUB_REPO veloflux
-cd veloflux
+git clone $GITHUB_REPO VeloFlux
+cd VeloFlux
 print_success "Repositório clonado"
 
 # Configure environment
@@ -195,21 +198,26 @@ REDIS_PASS=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
 cat > .env << EOF
 # VeloFlux Production Environment
 NODE_ENV=production
-VF_DOMAIN=$DOMAIN
-VF_ADMIN_USER=eltonciatto
+VF_DOMAIN=$MAIN_DOMAIN
+VF_ADMIN_USER=admin
 VF_ADMIN_PASS=$ADMIN_PASS
 VF_JWT_SECRET=$JWT_SECRET
 VF_SSL_ENABLED=true
 VF_SSL_EMAIL=$EMAIL
 
 # Database Configuration
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://redis:6379
 REDIS_PASSWORD=$REDIS_PASS
 
 # Production settings
 VF_MONITORING_ENABLED=true
 VF_BACKUP_ENABLED=true
 GRAFANA_PASSWORD=$ADMIN_PASS
+
+# VeloFlux Load Balancer Configuration
+VFX_CONFIG=/root/VeloFlux/config/config.yaml
+VFX_REDIS_ADDRESS=redis:6379
+VFX_REDIS_PASSWORD=$REDIS_PASS
 EOF
 
 print_success "Ambiente configurado"
@@ -220,11 +228,10 @@ cat > docker-compose.prod.yml << EOF
 version: '3.8'
 
 services:
+  # Redis para VeloFlux
   redis:
     image: redis:7-alpine
     container_name: veloflux-redis
-    ports:
-      - "6379:6379"
     command: redis-server --requirepass $REDIS_PASS --appendonly yes --appendfsync everysec
     volumes:
       - redis-data:/data
@@ -235,7 +242,55 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - veloflux-network
 
+  # VeloFlux Load Balancer Principal
+  veloflux-lb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veloflux-lb
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "9000:9000"
+    environment:
+      - VFX_CONFIG=/app/config/config.yaml
+      - VFX_REDIS_ADDRESS=redis:6379
+      - VFX_REDIS_PASSWORD=$REDIS_PASS
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=$ADMIN_PASS
+    volumes:
+      - ./config:/app/config:ro
+      - veloflux-certs:/app/certs
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - veloflux-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React (Dashboard AI)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: veloflux-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_MODE=production
+      - VITE_API_URL=http://veloflux-lb:9000
+    restart: unless-stopped
+    networks:
+      - veloflux-network
+
+  # Prometheus para métricas
   prometheus:
     image: prom/prometheus:latest
     container_name: veloflux-prometheus
@@ -253,13 +308,16 @@ services:
       - '--web.enable-admin-api'
     restart: unless-stopped
     depends_on:
-      - node-exporter
+      - veloflux-lb
+    networks:
+      - veloflux-network
 
+  # Grafana para dashboards
   grafana:
     image: grafana/grafana:latest
     container_name: veloflux-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=$ADMIN_PASS
       - GF_SECURITY_ADMIN_USER=admin
@@ -272,7 +330,10 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
+    networks:
+      - veloflux-network
 
+  # Node Exporter para métricas do sistema
   node-exporter:
     image: prom/node-exporter:latest
     container_name: veloflux-node-exporter
@@ -288,29 +349,40 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)(\$|/)'
       - '--web.listen-address=:9100'
     restart: unless-stopped
+    networks:
+      - veloflux-network
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: veloflux-cadvisor
+  # Backends demo para teste
+  backend-1:
+    image: nginx:alpine
+    container_name: veloflux-backend-1
     ports:
-      - "8081:8080"
+      - "8001:80"
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    privileged: true
+      - ./examples/demo-backend.html:/usr/share/nginx/html/index.html:ro
     restart: unless-stopped
+    networks:
+      - veloflux-network
+
+  backend-2:
+    image: nginx:alpine
+    container_name: veloflux-backend-2
+    ports:
+      - "8002:80"
+    volumes:
+      - ./examples/demo-backend.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
+    networks:
+      - veloflux-network
 
 volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  veloflux-certs:
 
 networks:
-  default:
-    name: veloflux-network
+  veloflux-network:
     driver: bridge
 EOF
 
@@ -336,17 +408,13 @@ scrape_configs:
 
   - job_name: 'veloflux-lb'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['veloflux-lb:8080']
     metrics_path: '/metrics'
     scrape_interval: 5s
 
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
-
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']
 
   - job_name: 'redis'
     static_configs:
@@ -478,19 +546,111 @@ print_success "Configurações de monitoramento criadas"
 
 # Build frontend
 print_step "Construindo frontend..."
-npm install
-npm run build
-print_success "Frontend construído"
+if [ -f "package.json" ]; then
+    npm install
+    npm run build
+    print_success "Frontend construído"
+else
+    print_info "package.json não encontrado, pulando build do frontend"
+fi
+
+# Create VeloFlux config
+print_step "Criando configuração do VeloFlux..."
+mkdir -p config
+cat > config/config.yaml << EOF
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8080"
+  admin_address: "0.0.0.0:9000"
+  
+  redis:
+    address: "redis:6379"
+    password: "$REDIS_PASS"
+    db: 0
+  
+  tls:
+    auto_cert: true
+    acme_email: "$EMAIL"
+    cert_dir: "/app/certs"
+  
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+# Backend pools para demonstração
+pools:
+  - name: "demo-backends"
+    algorithm: "round_robin"
+    sticky_sessions: false
+    health_check:
+      interval: "30s"
+      timeout: "5s"
+      path: "/"
+    backends:
+      - address: "backend-1:80"
+        weight: 100
+      - address: "backend-2:80"
+        weight: 100
+
+# Roteamento básico
+routes:
+  - host: "$MAIN_DOMAIN"
+    pool: "demo-backends"
+    path_prefix: "/"
+EOF
+
+print_success "Configuração do VeloFlux criada"
 
 # Build backend
 print_step "Construindo backend Go..."
 export PATH=$PATH:/usr/local/go/bin
-cd cmd/velofluxlb
-go mod tidy
-go build -o /opt/veloflux/veloflux-lb .
-cd /opt/veloflux
-chmod +x veloflux-lb
-print_success "Backend construído"
+export GOPATH=/opt/go
+
+# Verificar se existe cmd/velofluxlb
+if [ -d "cmd/velofluxlb" ]; then
+    cd cmd/velofluxlb
+    go mod tidy
+    go build -o /root/VeloFlux/veloflux-lb .
+    cd /root/VeloFlux
+    chmod +x veloflux-lb
+    print_success "Backend construído"
+else
+    print_info "Diretório cmd/velofluxlb não encontrado, usando Dockerfile para build"
+fi
+
+# Create demo backend page
+print_step "Criando páginas demo..."
+mkdir -p examples
+cat > examples/demo-backend.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VeloFlux Demo Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { background: #4CAF50; color: white; padding: 10px; border-radius: 5px; }
+        .hostname { background: #f0f0f0; padding: 10px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 VeloFlux Demo Backend</h1>
+        <div class="status">✅ Status: Healthy</div>
+        <div class="hostname">Server: Backend Demo</div>
+        <p>This is a demo backend server showing VeloFlux load balancing in action.</p>
+        <p>Timestamp: <span id="timestamp"></span></p>
+    </div>
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>
+EOF
+
+print_success "Páginas demo criadas"
 
 # Configure systemd service
 print_step "Configurando serviço systemd..."
@@ -501,14 +661,15 @@ After=network.target docker.service
 Requires=docker.service
 
 [Service]
-Type=simple
+Type=oneshot
+RemainAfterExit=yes
 User=root
-WorkingDirectory=/opt/veloflux
-ExecStartPre=/usr/bin/docker-compose -f docker-compose.prod.yml up -d
-ExecStart=/opt/veloflux/veloflux-lb
-Restart=always
-RestartSec=5
-Environment=VFX_CONFIG=/opt/veloflux/config/config.yaml
+WorkingDirectory=/root/VeloFlux
+ExecStart=/usr/bin/docker-compose -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker-compose -f docker-compose.prod.yml down
+ExecReload=/usr/bin/docker-compose -f docker-compose.prod.yml restart
+TimeoutStartSec=300
+Environment=COMPOSE_HTTP_TIMEOUT=300
 
 [Install]
 WantedBy=multi-user.target
@@ -521,9 +682,60 @@ print_success "Serviço systemd configurado"
 # Setup Nginx reverse proxy
 print_step "Configurando Nginx..."
 cat > /etc/nginx/sites-available/veloflux << EOF
+# Main domain - Load Balancer
 server {
     listen 80;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $MAIN_DOMAIN www.$MAIN_DOMAIN;
+    
+    location / {
+        proxy_pass http://localhost:80;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+
+# Admin Panel
+server {
+    listen 80;
+    server_name $ADMIN_DOMAIN;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    location /api/ {
+        proxy_pass http://localhost:9000/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+
+# API Domain
+server {
+    listen 80;
+    server_name $API_DOMAIN;
+    
+    location / {
+        proxy_pass http://localhost:9000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+
+# Metrics Domain
+server {
+    listen 80;
+    server_name $METRICS_DOMAIN;
     
     location / {
         proxy_pass http://localhost:8080;
@@ -532,19 +744,33 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
+}
+
+# Grafana Domain
+server {
+    listen 80;
+    server_name $GRAFANA_DOMAIN;
     
-    location /api {
-        proxy_pass http://localhost:9000;
+    location / {
+        proxy_pass http://localhost:3001;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
+}
+
+# Prometheus Domain
+server {
+    listen 80;
+    server_name $PROMETHEUS_DOMAIN;
     
-    location /metrics {
-        proxy_pass http://localhost:8080/metrics;
+    location / {
+        proxy_pass http://localhost:9090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
@@ -564,29 +790,44 @@ print_success "Firewall configurado"
 
 # Setup SSL with Let's Encrypt
 print_step "Configurando SSL com Let's Encrypt..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL
+# Configurar SSL para todos os domínios
+DOMAINS="$MAIN_DOMAIN,$ADMIN_DOMAIN,$API_DOMAIN,$METRICS_DOMAIN,$GRAFANA_DOMAIN,$PROMETHEUS_DOMAIN"
+certbot --nginx -d $DOMAINS --non-interactive --agree-tos --email $EMAIL
 print_success "SSL configurado"
 
 # Start Docker services
 print_step "Iniciando serviços Docker..."
 docker-compose -f docker-compose.prod.yml up -d
+sleep 10
 print_success "Serviços Docker iniciados"
 
-# Start VeloFlux service
-print_step "Iniciando VeloFlux..."
+# Start VeloFlux service (systemd)
+print_step "Iniciando VeloFlux via systemd..."
 systemctl start veloflux
-sleep 5
+sleep 10
 print_success "VeloFlux iniciado"
 
 # Health check
 print_step "Verificando saúde dos serviços..."
-sleep 10
+sleep 15
 
 # Test services
-if curl -f http://localhost:8080/health >/dev/null 2>&1; then
+if curl -f http://localhost:80 >/dev/null 2>&1; then
     print_success "✓ VeloFlux Load Balancer está funcionando"
 else
     print_error "✗ VeloFlux Load Balancer não está respondendo"
+fi
+
+if curl -f http://localhost:8080/metrics >/dev/null 2>&1; then
+    print_success "✓ Métricas VeloFlux estão funcionando"
+else
+    print_error "✗ Métricas VeloFlux não estão respondendo"
+fi
+
+if curl -f http://localhost:9000/health >/dev/null 2>&1; then
+    print_success "✓ API VeloFlux está funcionando"
+else
+    print_error "✗ API VeloFlux não está respondendo"
 fi
 
 if systemctl is-active --quiet veloflux; then
@@ -614,7 +855,13 @@ else
     print_error "✗ Prometheus não está rodando"
 fi
 
-if curl -f https://$DOMAIN >/dev/null 2>&1; then
+if docker ps | grep -q veloflux-lb; then
+    print_success "✓ VeloFlux LB Container está rodando"
+else
+    print_error "✗ VeloFlux LB Container não está rodando"
+fi
+
+if curl -f https://$MAIN_DOMAIN >/dev/null 2>&1; then
     print_success "✓ HTTPS está funcionando"
 else
     print_error "✗ HTTPS não está funcionando"
@@ -627,16 +874,20 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 echo -e "${YELLOW}${BOLD}🌐 URLs de Acesso:${NC}"
-echo -e "  ${GREEN}🚀 Site Principal:${NC}     https://$DOMAIN"
-echo -e "  ${GREEN}📊 Admin Panel:${NC}       https://$DOMAIN/api"
-echo -e "  ${GREEN}📈 Metrics:${NC}           https://$DOMAIN/metrics"
-echo -e "  ${GREEN}📉 Grafana:${NC}           http://$(curl -s ipinfo.io/ip):3000"
+echo -e "  ${GREEN}🚀 Site Principal:${NC}     https://$MAIN_DOMAIN"
+echo -e "  ${GREEN}� Admin Panel:${NC}       https://$ADMIN_DOMAIN"
+echo -e "  ${GREEN}🔌 API:${NC}               https://$API_DOMAIN"
+echo -e "  ${GREEN}📈 Metrics:${NC}           https://$METRICS_DOMAIN"
+echo -e "  ${GREEN}� Grafana:${NC}           https://$GRAFANA_DOMAIN"
+echo -e "  ${GREEN}🎯 Prometheus:${NC}        https://$PROMETHEUS_DOMAIN"
+echo -e "  ${GREEN}⚖️  Load Balancer:${NC}     https://$LB_DOMAIN"
 echo ""
 
 echo -e "${YELLOW}${BOLD}🔐 Credenciais:${NC}"
 echo -e "  ${GREEN}👤 Admin User:${NC}        admin"
 echo -e "  ${GREEN}🔑 Admin Password:${NC}    $ADMIN_PASS"
-echo -e "  ${GREEN}📉 Grafana Password:${NC}  $ADMIN_PASS"
+echo -e "  ${GREEN}📊 Grafana User:${NC}      admin"
+echo -e "  ${GREEN}� Grafana Password:${NC}  $ADMIN_PASS"
 echo ""
 
 echo -e "${YELLOW}${BOLD}🔧 Comandos de Gerenciamento:${NC}"
@@ -644,21 +895,22 @@ echo -e "  ${CYAN}📊 Ver logs:${NC}              journalctl -u veloflux -f"
 echo -e "  ${CYAN}🔄 Reiniciar:${NC}             systemctl restart veloflux"
 echo -e "  ${CYAN}⏹️  Parar:${NC}                 systemctl stop veloflux"
 echo -e "  ${CYAN}📈 Status:${NC}                systemctl status veloflux"
-echo -e "  ${CYAN}🐳 Docker Status:${NC}         docker-compose -f docker-compose.prod.yml ps"
+echo -e "  ${CYAN}🐳 Docker Status:${NC}         cd /root/VeloFlux && docker-compose -f docker-compose.prod.yml ps"
 echo ""
 
 echo -e "${YELLOW}${BOLD}📁 Arquivos Importantes:${NC}"
-echo -e "  ${CYAN}📂 Projeto:${NC}              /opt/veloflux"
-echo -e "  ${CYAN}⚙️  Configuração:${NC}         /opt/veloflux/.env"
+echo -e "  ${CYAN}📂 Projeto:${NC}              /root/VeloFlux"
+echo -e "  ${CYAN}⚙️  Configuração:${NC}         /root/VeloFlux/.env"
+echo -e "  ${CYAN}🔧 Config VeloFlux:${NC}      /root/VeloFlux/config/config.yaml"
 echo -e "  ${CYAN}🌐 Nginx:${NC}                /etc/nginx/sites-available/veloflux"
 echo -e "  ${CYAN}🔧 Serviço:${NC}              /etc/systemd/system/veloflux.service"
 echo ""
 
 echo -e "${GREEN}${BOLD}✨ Próximos Passos:${NC}"
-echo -e "  ${YELLOW}1.${NC} Acesse https://$DOMAIN para ver o site"
-echo -e "  ${YELLOW}2.${NC} Faça login no admin panel com as credenciais acima"
-echo -e "  ${YELLOW}3.${NC} Configure seus servidores backend"
-echo -e "  ${YELLOW}4.${NC} Monitore via Grafana"
+echo -e "  ${YELLOW}1.${NC} Acesse https://$MAIN_DOMAIN para ver o load balancer"
+echo -e "  ${YELLOW}2.${NC} Faça login no admin panel https://$ADMIN_DOMAIN"
+echo -e "  ${YELLOW}3.${NC} Configure seus servidores backend via API"
+echo -e "  ${YELLOW}4.${NC} Monitore via Grafana em https://$GRAFANA_DOMAIN"
 echo -e "  ${YELLOW}5.${NC} Configure alertas e backups"
 echo ""
 
@@ -669,16 +921,66 @@ echo -e "${GREEN}${BOLD}VeloFlux SaaS está agora rodando em produção! 🚀${N
 cat > /root/veloflux-credentials.txt << EOF
 VeloFlux SaaS - Credenciais de Acesso
 =====================================
-Site Principal: https://$DOMAIN
-Admin Panel: https://$DOMAIN/api
-Grafana: http://$(curl -s ipinfo.io/ip):3000
+Site Principal: https://$MAIN_DOMAIN
+Admin Panel: https://$ADMIN_DOMAIN
+API: https://$API_DOMAIN
+Metrics: https://$METRICS_DOMAIN
+Grafana: https://$GRAFANA_DOMAIN
+Prometheus: https://$PROMETHEUS_DOMAIN
 
 Admin User: admin
 Admin Password: $ADMIN_PASS
+Grafana User: admin
 Grafana Password: $ADMIN_PASS
 
+Diretório: /root/VeloFlux
 Instalado em: $(date)
 =====================================
 EOF
 
 print_info "Credenciais salvas em: /root/veloflux-credentials.txt"
+
+# Create Dockerfile.frontend for frontend build
+print_step "Criando Dockerfile.frontend..."
+cat > Dockerfile.frontend << 'EOF'
+# Frontend Dockerfile
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+EOF
+
+# Create nginx.conf for frontend
+cat > nginx.conf << 'EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+        
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
+}
+EOF
+
+print_success "Dockerfiles criados"
