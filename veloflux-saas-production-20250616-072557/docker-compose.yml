@@ -1,0 +1,68 @@
+
+version: '3.8'
+
+services:
+  veloflux-lb:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # metrics
+      - "9000:9000"  # admin API
+    environment:
+      - VFX_CONFIG=/etc/veloflux/config.yaml
+      - VFX_LOG_LEVEL=info
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=senha-super
+    volumes:
+      - ./config:/etc/veloflux
+      - ./certs:/etc/ssl/certs/veloflux
+    depends_on:
+      - backend-1
+      - backend-2
+    restart: unless-stopped
+
+  backend-1:
+    image: nginx:alpine
+    ports:
+      - "8001:80"
+    volumes:
+      - ./test/backend1.html:/usr/share/nginx/html/index.html:ro
+      - ./test/health.html:/usr/share/nginx/html/health:ro
+    
+  backend-2:
+    image: nginx:alpine
+    ports:
+      - "8002:80"
+    volumes:
+      - ./test/backend2.html:/usr/share/nginx/html/index.html:ro
+      - ./test/health.html:/usr/share/nginx/html/health:ro
+
+  # Redis for cluster state storage and coordination
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Prometheus metrics exporter for system monitoring
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)($$|/)'
+
+volumes:
+  redis-data:

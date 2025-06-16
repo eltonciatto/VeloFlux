@@ -1,0 +1,58 @@
+# VeloFlux SaaS Production Dockerfile
+# Multi-stage build for optimized production deployment
+
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build:production
+
+FROM golang:1.21-alpine AS backend-builder
+
+RUN apk add --no-cache git ca-certificates tzdata gcc musl-dev
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o veloflux-lb \
+    ./cmd/velofluxlb
+
+FROM alpine:3.18
+
+RUN apk --no-cache add ca-certificates curl wget jq htop
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S veloflux && \
+    adduser -u 1001 -S veloflux -G veloflux
+
+# Copy binaries and assets
+COPY --from=backend-builder /app/veloflux-lb /usr/local/bin/
+COPY --from=frontend-builder /app/dist /app/static/
+COPY --chown=veloflux:veloflux config/ /etc/veloflux/
+
+# Create required directories
+RUN mkdir -p /var/log/veloflux /var/lib/veloflux /etc/ssl/veloflux && \
+    chown -R veloflux:veloflux /var/log/veloflux /var/lib/veloflux /etc/ssl/veloflux
+
+# Health check
+COPY --chown=veloflux:veloflux scripts/healthcheck.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+USER veloflux
+
+EXPOSE 8080 8443 9000 8090
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
+
+ENTRYPOINT ["/usr/local/bin/veloflux-lb"]
+CMD ["--config", "/etc/veloflux/config.yaml"]
