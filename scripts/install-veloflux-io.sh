@@ -2,6 +2,15 @@
 
 # 🚀 VeloFlux SaaS - Instalação Robusta para Produção
 # Script completo com Grafana, Prometheus e modo SaaS ativado
+#URLs de Acesso
+#Serviço	URL	Descrição
+#Frontend	http://localhost	Interface principal
+#Admin Panel	http://localhost:9000	Painel administrativo
+#API Docs	http://localhost:9000/docs	Documentação da API
+#Metrics	http://localhost:8080/metrics	Métricas Prometheus
+#Grafana	http://localhost:3000	Dashboards de monitoramento
+#Backend 1	http://localhost:8001	Servidor de teste 1
+#Backend 2	http://localhost:8002	Servidor de teste 2
 
 set -e
 
