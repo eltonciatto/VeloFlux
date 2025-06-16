@@ -304,6 +304,116 @@ check_logs() {
     echo ""
 }
 
+# Verifica o ambiente de teste
+check_test_env() {
+    log "Verificando ambiente de teste VeloFlux..."
+    
+    TEST_DIR="/tmp/veloflux-test"
+    
+    if [ ! -d "$TEST_DIR" ]; then
+        warn "Diretório de teste não encontrado em $TEST_DIR"
+        return 1
+    fi
+    
+    info "Diretório de teste encontrado em $TEST_DIR"
+    
+    # Verifica se os containers de teste estão rodando
+    if docker ps | grep "veloflux-test" &> /dev/null; then
+        info "Containers de teste estão rodando"
+        
+        # Verifica portas em uso
+        log "Verificando portas em uso..."
+        
+        PORTS_IN_USE=$(netstat -tulpn 2>/dev/null | grep LISTEN || ss -tulpn | grep LISTEN)
+        
+        echo "$PORTS_IN_USE" | grep -q ":8080" && warn "Porta 8080 já está em uso no host"
+        echo "$PORTS_IN_USE" | grep -q ":8081" && warn "Porta 8081 já está em uso no host"
+        echo "$PORTS_IN_USE" | grep -q ":9080" && warn "Porta 9080 já está em uso no host"
+        echo "$PORTS_IN_USE" | grep -q ":9090" && warn "Porta 9090 já está em uso no host"
+        
+        # Verifica conectividade entre serviços
+        log "Verificando conectividade entre serviços..."
+        
+        # Instala curl no container se não estiver presente
+        docker exec veloflux-test-veloflux-lb-1 which curl &>/dev/null || {
+            log "Instalando curl no container veloflux-lb..."
+            docker exec veloflux-test-veloflux-lb-1 apk add --no-cache curl &>/dev/null
+        }
+        
+        # Instala netcat para verificação de conectividade
+        docker exec veloflux-test-veloflux-lb-1 which nc &>/dev/null || {
+            log "Instalando netcat no container veloflux-lb..."
+            docker exec veloflux-test-veloflux-lb-1 apk add --no-cache netcat-openbsd &>/dev/null
+        }
+        
+        if docker exec veloflux-test-veloflux-lb-1 curl -s http://backend-1 &>/dev/null; then
+            info "VeloFlux pode acessar backend-1"
+        else
+            error "VeloFlux não consegue acessar backend-1"
+        fi
+        
+        if docker exec veloflux-test-veloflux-lb-1 curl -s http://backend-2 &>/dev/null; then
+            info "VeloFlux pode acessar backend-2"
+        else
+            error "VeloFlux não consegue acessar backend-2"
+        fi
+        
+        if docker exec veloflux-test-veloflux-lb-1 curl -s http://backend-1/health &>/dev/null; then
+            info "Health check do backend-1 está funcionando"
+        else
+            error "Health check do backend-1 não está funcionando"
+        fi
+        
+        if docker exec veloflux-test-veloflux-lb-1 curl -s http://backend-2/health &>/dev/null; then
+            info "Health check do backend-2 está funcionando"
+        else
+            error "Health check do backend-2 não está funcionando"
+        fi
+        
+        # Verifica Redis
+        if docker exec veloflux-test-veloflux-lb-1 nc -zv redis 6379 &>/dev/null; then
+            info "VeloFlux pode conectar-se ao Redis"
+        else
+            error "VeloFlux não consegue conectar-se ao Redis"
+            
+            # Verifica configuração Redis no config.yaml
+            if grep -q "redis_address: \"redis:6379\"" "$TEST_DIR/config/config.yaml"; then
+                info "Configuração do Redis parece correta no config.yaml (redis:6379)"
+            else
+                warn "Configuração Redis pode estar incorreta no config.yaml"
+                log "Conteúdo atual da configuração Redis:"
+                grep -A 5 "cluster:" "$TEST_DIR/config/config.yaml" || echo "Configuração cluster não encontrada"
+            fi
+        fi
+        
+        # Verifica portas dentro do container
+        log "Verificando portas em uso dentro do container VeloFlux..."
+        docker exec veloflux-test-veloflux-lb-1 netstat -tulpn 2>/dev/null || 
+        docker exec veloflux-test-veloflux-lb-1 ss -tulpn
+        
+    else
+        warn "Nenhum container de teste encontrado"
+    fi
+    
+    # Verifica configuração do teste
+    log "Verificando arquivos de configuração de teste..."
+    if [ -f "$TEST_DIR/docker-compose.test.yml" ]; then
+        info "Arquivo docker-compose.test.yml encontrado"
+        log "Configuração de portas no docker-compose.test.yml:"
+        grep -A 4 "ports:" "$TEST_DIR/docker-compose.test.yml"
+    else
+        error "Arquivo docker-compose.test.yml não encontrado"
+    fi
+    
+    if [ -f "$TEST_DIR/config/config.yaml" ]; then
+        info "Arquivo config.yaml encontrado"
+    else
+        error "Arquivo config.yaml não encontrado"
+    fi
+    
+    return 0
+}
+
 # Diagnostico de ambiente de teste
 diagnose_test_environment() {
     log "Iniciando diagnóstico do ambiente de teste do VeloFlux..."
@@ -550,6 +660,9 @@ check_connectivity
 # Verificação de logs
 log "Verificando logs..."
 check_logs
+
+# Verifica o ambiente de teste
+check_test_env
 
 # Diagnóstico de ambiente de teste
 diagnose_test_environment
