@@ -59,7 +59,7 @@ create_test_files() {
     cat > "$TEST_DIR/config/config.yaml" <<EOL
 # VeloFlux Test Configuration
 global:
-  bind_address: "0.0.0.0:80"
+  bind_address: "0.0.0.0:8001"  # Changed from 80 to 8001 to avoid conflict
   metrics_address: "0.0.0.0:8080"
   admin_api_address: "0.0.0.0:9000"
   
@@ -114,6 +114,13 @@ auth:
   jwt_secret: "test-secret-key-for-development-only"
   jwt_issuer: "veloflux-test"
   token_validity: "24h"
+  
+# Redis configuration for container environment
+cluster:
+  enabled: true
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
 EOL
 
     # Cria página de teste para backend 1
@@ -217,7 +224,7 @@ services:
       context: .
       dockerfile: Dockerfile.test
     ports:
-      - "8081:80"
+      - "8081:8001"  # Changed from 80 to 8001 to avoid conflict
       - "9080:8080"  # metrics
       - "9090:9000"  # admin API
     environment:
