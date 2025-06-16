@@ -137,7 +137,7 @@ EOF
     
     log "✅ Pacote criado: ${PACKAGE_DIR}.tar.gz"
     
-    return "$PACKAGE_DIR"
+    echo "$PACKAGE_DIR"
 }
 
 # Generate installation commands
