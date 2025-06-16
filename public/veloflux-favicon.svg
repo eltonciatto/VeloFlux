@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Main gradient matching the landing page -->
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="30%" stop-color="#1e40af"/>
+      <stop offset="70%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    
+    <!-- Flux gradient for the V -->
+    <linearGradient id="fluxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="30%" stop-color="#3b82f6"/>
+      <stop offset="70%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    
+    <!-- Glow effect -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="0.8" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+    
+    <!-- Particle glow -->
+    <filter id="particleGlow">
+      <feGaussianBlur stdDeviation="0.5" result="blur"/>
+      <feMerge> 
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="16" cy="16" r="15.5" fill="url(#mainGrad)"/>
+  
+  <!-- Outer ring -->
+  <circle cx="16" cy="16" r="15" fill="none" stroke="#1e40af" stroke-width="0.5" opacity="0.6"/>
+  
+  <!-- Modern "V" representing VeloFlux -->
+  <path d="M9 7 L16 25 L23 7" 
+        stroke="url(#fluxGrad)" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none"
+        filter="url(#softGlow)"/>
+  
+  <!-- Velocity particles/stars -->
+  <circle cx="4" cy="8" r="0.8" fill="#60a5fa" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="28" cy="12" r="0.6" fill="#06b6d4" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="3" cy="24" r="0.7" fill="#8b5cf6" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="29" cy="20" r="0.5" fill="#3b82f6" filter="url(#particleGlow)">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2.2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Flow lines representing data flow -->
+  <path d="M5 16 Q16 12 27 16" 
+        stroke="#60a5fa" 
+        stroke-width="0.3" 
+        fill="none" 
+        opacity="0.4">
+    <animate attributeName="opacity" values="0.2;0.6;0.2" dur="3s" repeatCount="indefinite"/>
+  </path>
+  <path d="M5 16 Q16 20 27 16" 
+        stroke="#06b6d4" 
+        stroke-width="0.3" 
+        fill="none" 
+        opacity="0.4">
+    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="3s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Central energy point -->
+  <circle cx="16" cy="16" r="1" fill="#ffffff" opacity="0.8">
+    <animate attributeName="r" values="0.8;1.2;0.8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

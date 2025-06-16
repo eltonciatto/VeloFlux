@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with Brazilian-inspired gradient -->
+  <defs>
+    <radialGradient id="brazilGradient" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#00A859;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#0066CC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1A2E;stop-opacity:1" />
+    </radialGradient>
+    <linearGradient id="fluxGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="modernGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main circle -->
+  <circle cx="16" cy="16" r="14.5" fill="url(#brazilGradient)" stroke="#FFD700" stroke-width="1"/>
+  
+  <!-- Dynamic flux lines (representing high-speed data flow) -->
+  <g opacity="0.95">
+    <!-- Primary flux -->
+    <path d="M4 12L28 12" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" filter="url(#modernGlow)"/>
+    <path d="M22 12L30 12" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Secondary flux -->
+    <path d="M4 16L28 16" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" filter="url(#modernGlow)"/>
+    <path d="M20 16L31 16" stroke="#FFD700" stroke-width="3.5" stroke-linecap="round"/>
+    
+    <!-- Tertiary flux -->
+    <path d="M4 20L28 20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" filter="url(#modernGlow)"/>
+    <path d="M22 20L30 20" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Bold "V" for VeloFlux -->
+  <g filter="url(#strongGlow)">
+    <path d="M10 8L16 24L22 8" stroke="url(#fluxGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  
+  <!-- Modern accent elements -->
+  <g opacity="0.8">
+    <!-- Corner accents -->
+    <rect x="6" y="6" width="3" height="3" rx="1.5" fill="#FFD700"/>
+    <rect x="23" y="6" width="3" height="3" rx="1.5" fill="#00A859"/>
+    <rect x="6" y="23" width="3" height="3" rx="1.5" fill="#00A859"/>
+    
+    <!-- Tech dots -->
+    <circle cx="26" cy="26" r="1.5" fill="#FFD700" opacity="0.9"/>
+    <circle cx="24" cy="24" r="0.8" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  
+  <!-- Outer ring for premium feel -->
+  <circle cx="16" cy="16" r="14.5" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.6"/>
+</svg>
