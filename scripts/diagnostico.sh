@@ -661,8 +661,10 @@ check_connectivity
 log "Verificando logs..."
 check_logs
 
-# Verifica o ambiente de teste
-check_test_env
+# Verifica o parâmetro de chamada
+if [ "$1" == "--test-env" ]; then
+    check_test_env
+fi
 
 # Diagnóstico de ambiente de teste
 diagnose_test_environment
