@@ -309,11 +309,6 @@ TENANT2_BACKEND2=tenant2-backend2:80
 
 No Coolify, além do Redis mencionado anteriormente, você pode precisar:
 
-1. **Banco de dados PostgreSQL**: Para armazenar dados dos tenants
-   - Vá em "Resources"
-   - Adicione um novo banco PostgreSQL
-   - Configure as credenciais e adicione às variáveis de ambiente
-
 2. **Proxy Reverso**: Para gerenciar domínios personalizados
    - Vá em "Services" > seu serviço VeloFlux
    - Configure os domínios personalizados em "Domains"

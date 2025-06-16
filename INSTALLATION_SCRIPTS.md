@@ -37,7 +37,7 @@ Este documento resume todos os scripts de instalação rápida criados para faci
 **Instalação Docker otimizada e completa**
 
 **Características:**
-- ✅ Stack completa (Load Balancer + Redis + PostgreSQL + Monitoring)
+- ✅ Stack completa (Load Balancer + Redis + Monitoring)
 - ✅ Pronto em ~5 minutos
 - ✅ Inclui Prometheus + Grafana
 - ✅ SSL de desenvolvimento
@@ -52,7 +52,6 @@ Este documento resume todos os scripts de instalação rápida criados para faci
 **Serviços incluídos:**
 - VeloFlux Load Balancer (localhost:80, localhost:9000)
 - Redis (localhost:6379)
-- PostgreSQL (localhost:5432)
 - Prometheus (localhost:9090)
 - Grafana (localhost:3000)
 - Backend test servers (localhost:8001, localhost:8002)

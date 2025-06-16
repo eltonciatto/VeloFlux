@@ -60,7 +60,6 @@
 ✅ veloflux-redis          - Up (healthy)
 ✅ veloflux-backend-2      - Up (healthy)
 ✅ veloflux-prometheus     - Up (healthy)
-✅ veloflux-postgres       - Up (healthy)
 ```
 
 ### **Configuração de Rede:**

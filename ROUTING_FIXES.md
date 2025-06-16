@@ -57,7 +57,6 @@ Com base no docker-compose.prod.fixed.yml:
 - **172.20.0.6**: VeloFlux Load Balancer
 - **172.20.0.7**: Backend Demo 1
 - **172.20.0.8**: Backend Demo 2
-- **172.20.0.9**: Postgres
 
 ## Recursos Adicionados
 

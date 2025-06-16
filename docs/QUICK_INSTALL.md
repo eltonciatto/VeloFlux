@@ -60,7 +60,7 @@ cd VeloFlux
 
 **Recursos:**
 - ✅ Instalação em ~5 minutos
-- ✅ Stack completa (Load Balancer + Redis + PostgreSQL + Monitoring)
+- ✅ Stack completa (Load Balancer + Redis + Monitoring)
 - ✅ Pronto para uso imediato
 - ✅ Inclui Prometheus + Grafana
 - ✅ Auto-configuração de SSL development
