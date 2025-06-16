@@ -1,13 +1,65 @@
-# 🚀 VeloFlux Deployment Success Report
+# 🚀 DEPLOY VELOFLUX SAAS NO SEU VPS
 
-## ✅ Deployment Status: **LIVE AND RUNNING**
+## 📋 Informações do Servidor
+- **IP**: 190.93.119.61  
+- **User**: root  
+- **Status**: ✅ Online (nginx ativo)
 
-### 🌐 Frontend Applications
-- **Development Server**: http://localhost:8080 ✅ ACTIVE
-- **Production Build**: http://localhost:4173 ✅ ACTIVE
-- **Translation Coverage**: 93.7% ✅ COMPLETE
+## 🚀 Comandos de Deploy
 
-### 🔧 Backend Services
+### 1️⃣ Upload do Pacote
+```bash
+scp veloflux-saas-production-fixed.tar.gz root@190.93.119.61:/tmp/
+```
+
+### 2️⃣ Conexão SSH
+```bash
+ssh root@190.93.119.61
+```
+
+### 3️⃣ Instalação no Servidor
+```bash
+# No servidor, execute:
+cd /tmp
+tar xzf veloflux-saas-production-fixed.tar.gz
+cd veloflux-saas-production
+./install.sh
+```
+
+## 🔄 Comando One-Liner (Alternativo)
+```bash
+scp veloflux-saas-production-fixed.tar.gz root@190.93.119.61:/tmp/ && \
+ssh root@190.93.119.61 "cd /tmp && tar xzf veloflux-saas-production-fixed.tar.gz && cd veloflux-saas-production && ./install.sh"
+```
+
+## 🌐 Pontos de Acesso Após Instalação
+
+- **🏠 Aplicação Principal**: http://190.93.119.61/
+- **⚡ Health Check**: http://190.93.119.61/health
+- **📊 Grafana**: http://190.93.119.61:3000 (admin/admin)
+- **📈 Prometheus**: http://190.93.119.61:9090
+- **🔧 Admin Panel**: http://190.93.119.61/admin
+- **🔗 API**: http://190.93.119.61/api
+
+## 🔍 Verificação Pós-Instalação
+```bash
+# No servidor, após instalação:
+./check-status.sh
+
+# Ou manualmente:
+systemctl status veloflux nginx docker
+curl http://localhost/health
+```
+
+## 📦 Arquivos Disponíveis
+- ✅ `veloflux-saas-production-fixed.tar.gz` (176KB)
+- ✅ Repositório GitHub correto: https://github.com/eltonciatto/VeloFlux
+- ✅ 113 arquivos de configuração incluídos
+- ✅ Scripts de automação prontos
+
+---
+
+**🎯 Execute os comandos acima para fazer o deploy do VeloFlux SaaS no seu VPS!**
 - **Backend-1 (Test)**: http://localhost:8001 ✅ ACTIVE
 - **Backend-2 (Test)**: http://localhost:8002 ✅ ACTIVE
 - **VeloFlux Core**: Ready for configuration ⚙️
