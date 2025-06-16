@@ -1,5 +1,7 @@
 # Arquitetura de Dados VeloFlux: Redis como Banco Principal
 
+> 📋 **DOCUMENTO DEFINITIVO**: Para informações completas e atualizadas sobre a arquitetura Redis-only do VeloFlux, consulte: [`REDIS_ONLY_ARCHITECTURE.md`](./REDIS_ONLY_ARCHITECTURE.md)
+
 ## Visão Geral
 
 O VeloFlux utiliza **Redis** como seu banco de dados principal para armazenamento de estado, configurações, autenticação e dados de tenant, eliminando a necessidade de um banco de dados relacional tradicional como PostgreSQL ou MySQL. Esta arquitetura proporciona alta performance, escalabilidade e resiliência ideais para um load balancer de alto desempenho.
@@ -164,10 +166,5 @@ vf:active:<node_id> -> contador de conexões ativas
 Se eventualmente surgir necessidade de recursos mais avançados de banco relacional, recomenda-se:
 
 1. Manter o Redis como fonte primária para dados operacionais críticos
-2. Adicionar PostgreSQL apenas para:
-   - Billing e histórico detalhado
-   - Relatórios complexos e analytics
-   - Audit logs de longa duração
-   - Recursos avançados específicos que necessitem de SQL
 
 Isso permite manter todas as vantagens de performance enquanto adiciona capacidades complementares quando realmente necessárias.
