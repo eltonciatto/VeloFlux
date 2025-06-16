@@ -17,6 +17,12 @@ NC='\033[0m'
 
 # Configuration
 DOMAIN="veloflux.io"
+DOMAIN="admin.veloflux.io"
+DOMAIN="api.veloflux.io"
+DOMAIN="metrics.veloflux.io"
+DOMAIN="grafana.veloflux.io"
+DOMAIN="prometheus.veloflux.io"
+DOMAIN="lb.veloflux.io"
 EMAIL="admin@veloflux.io"
 GITHUB_REPO="https://github.com/eltonciatto/VeloFlux.git"
 COMPOSE_VERSION="2.24.0"
