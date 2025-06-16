@@ -1,89 +1,94 @@
-# VeloFlux Docker Compose
-# Configuração profissional para multi-tenant
+# VeloFlux Production Environment
+# Estrutura Organizada: Frontend + Backend + Infraestrutura
+
+version: '3.8'
 
 services:
-  # Balanceador de carga VeloFlux
-  veloflux-lb:
-    build: .
-    container_name: veloflux-lb
+  # ===== BACKEND SERVICES =====
+  
+  # VeloFlux Load Balancer (Backend em Go)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: veloflux-backend
     restart: unless-stopped
     ports:
-      - "80:80"      # HTTP principal
-      - "443:443"    # HTTPS principal
-      - "8880:8080"  # Metrics (porta externa alterada para evitar conflitos)
-      - "9900:9000"  # Admin API (porta externa alterada para evitar conflitos)
+      - "8080:8080"  # Metrics
+      - "9000:9000"  # Admin API internal
+      - "9090:9090"  # API server
     environment:
-      - VFX_CONFIG=/etc/veloflux/config.yaml
-      - VFX_LOG_LEVEL=info
+      - VFX_CONFIG=/etc/veloflux/backend-config.yaml
+      - VFX_LOG_LEVEL=debug
       - VF_ADMIN_USER=admin
       - VF_ADMIN_PASS=veloflux123
     volumes:
-      - ./config:/etc/veloflux
-      - ./certs:/etc/ssl/certs/veloflux
-    healthcheck:
-      test: ["NONE"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      - ./infra/config:/etc/veloflux:ro
+      - ./infra/certs:/etc/ssl/certs/veloflux:ro
     depends_on:
-      - backend-tenant1
-      - backend-tenant2
       - redis
     networks:
       - veloflux-net
-      
-  # Backend para tenant1
-  backend-tenant1:
-    image: nginx:alpine-wget
-    container_name: veloflux-tenant1
-    restart: unless-stopped
-    volumes:
-      # Configuração raiz - tenant1
-      - ./test/tenant1/index.html:/usr/share/nginx/html/index.html:ro
-      - ./test/tenant1/health:/usr/share/nginx/html/health:ro
-      
-      # Outros diretórios compartilhados
-      - ./test/admin:/usr/share/nginx/html/admin:ro
-      - ./test/api:/usr/share/nginx/html/api:ro
-      - ./test/public:/usr/share/nginx/html/public:ro
     healthcheck:
-      test: ["CMD", "wget", "-q", "http://localhost/health"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/metrics || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-    networks:
-      - veloflux-net
-  
-  # Backend para tenant2
-  backend-tenant2:
-    image: nginx:alpine-wget
-    container_name: veloflux-tenant2
-    restart: unless-stopped
-    volumes:
-      # Configuração raiz - tenant2
-      - ./test/tenant2/index.html:/usr/share/nginx/html/index.html:ro
-      - ./test/tenant2/health:/usr/share/nginx/html/health:ro
-      
-      # Outros diretórios compartilhados
-      - ./test/admin:/usr/share/nginx/html/admin:ro
-      - ./test/api:/usr/share/nginx/html/api:ro
-      - ./test/public:/usr/share/nginx/html/public:ro
-    healthcheck:
-      test: ["CMD", "wget", "-q", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    networks:
-      - veloflux-net
 
-  # Redis para estado do cluster
+  # ===== FRONTEND SERVICES =====
+  
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: veloflux-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"  # Frontend web interface
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== LOAD BALANCER =====
+  
+  # Main Load Balancer (routes traffic to frontend/backend)
+  loadbalancer:
+    image: nginx:alpine
+    container_name: veloflux-lb
+    restart: unless-stopped
+    ports:
+      - "80:80"    # Main HTTP entry point
+      - "443:443"  # HTTPS (future)
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/certs:/etc/ssl/certs:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== SUPPORTING SERVICES =====
+  
+  # Redis for clustering and caching
   redis:
     image: redis:alpine
     container_name: veloflux-redis
     restart: unless-stopped
     command: redis-server --appendonly yes
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     networks:
       - veloflux-net
     healthcheck:
@@ -92,29 +97,66 @@ services:
       timeout: 5s
       retries: 3
 
-  # Prometheus metrics exporter
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: veloflux-node-exporter
+  # ===== MONITORING STACK =====
+  
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veloflux-prometheus
     restart: unless-stopped
     ports:
-      - "9199:9100"  # Porta alterada para evitar conflitos
+      - "9091:9090"
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+      - ./infra/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)(11743|/)'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
     networks:
       - veloflux-net
 
-# Volumes
-volumes:
-  redis-data:
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veloflux-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=veloflux123
+      - GF_SECURITY_ADMIN_USER=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/config/grafana:/etc/grafana/provisioning:ro
+    networks:
+      - veloflux-net
 
-# Networks - melhores práticas de isolamento
+  # AlertManager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: veloflux-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infra/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - veloflux-net
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+
 networks:
   veloflux-net:
     driver: bridge

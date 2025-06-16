@@ -1,0 +1,99 @@
+# VeloFlux Docker Compose - Produção Codespace
+# IP: 74.249.85.198 | Codespace: curly-yodel-w5759w9pgvjf7j5
+
+services:
+  veloflux-lb:
+    build: .
+    container_name: veloflux-lb-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP principal - Landing Page
+      - "443:443"    # HTTPS (futuro)
+      - "8880:8080"  # Métricas (porta externa diferente para evitar conflitos)
+      - "9090:9090"  # Admin API
+    environment:
+      - VFX_CONFIG=/etc/veloflux/config-simple-test.yaml
+      - VFX_LOG_LEVEL=debug
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=veloflux123
+    volumes:
+      - ./config:/etc/veloflux
+      - ./certs:/etc/ssl/certs/veloflux
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - backend-tenant1
+      - backend-tenant2
+      - redis
+    networks:
+      - veloflux-net
+      
+  backend-tenant1:
+    image: nginx:alpine
+    container_name: veloflux-tenant1-prod
+    restart: unless-stopped
+    volumes:
+      - ./test/tenant1/index.html:/usr/share/nginx/html/index.html:ro
+      - ./test/tenant1/health:/usr/share/nginx/html/health:ro
+      - ./test/admin:/usr/share/nginx/html/admin:ro
+      - ./test/api:/usr/share/nginx/html/api:ro
+      - ./test/public:/usr/share/nginx/html/public:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - veloflux-net
+  
+  backend-tenant2:
+    image: nginx:alpine
+    container_name: veloflux-tenant2-prod
+    restart: unless-stopped
+    volumes:
+      - ./test/tenant2/index.html:/usr/share/nginx/html/index.html:ro
+      - ./test/tenant2/health:/usr/share/nginx/html/health:ro
+      - ./test/admin:/usr/share/nginx/html/admin:ro
+      - ./test/api:/usr/share/nginx/html/api:ro
+      - ./test/public:/usr/share/nginx/html/public:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - veloflux-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: veloflux-frontend-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - veloflux-net
+
+  redis:
+    image: redis:alpine
+    container_name: veloflux-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - veloflux-net
+
+volumes:
+  redis-data:
+
+networks:
+  veloflux-net:
+    driver: bridge

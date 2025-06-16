@@ -1,0 +1,80 @@
+# VeloFlux Backend Configuration
+# Configuração para arquitetura organizada: Frontend separado do Backend
+
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8080"
+  
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+  rate_limit:
+    requests_per_second: 1000
+    burst_size: 2000
+    cleanup_interval: "5m"
+
+  waf:
+    enabled: true
+    level: "standard"
+    log_violations: true
+
+  ai:
+    enabled: false
+
+# API Server Configuration
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: false
+  username: "admin"
+  password: "veloflux123"
+
+# Auth Configuration
+auth:
+  jwt_secret: "veloflux-secret-key-change-in-production"
+  jwt_issuer: "veloflux"
+  jwt_audience: "veloflux-api"
+  token_validity: "24h"
+
+# Cluster Configuration
+cluster:
+  enabled: false
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
+  instance_id: "veloflux-backend"
+  heartbeat_interval: "30s"
+  leader_election_timeout: "60s"
+
+# Backend Pools
+pools:
+  - name: "api-pool"
+    algorithm: "round_robin"
+    sticky_sessions: false
+    backends:
+      - address: "localhost:9090"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "30s"
+          timeout: "5s"
+          expected_status: 200
+
+# Routes (APIs e métricas)
+routes:
+  - host: "*"
+    pool: "api-pool"
+    path_prefix: "/api"
+    
+  - host: "*"
+    pool: "api-pool"
+    path_prefix: "/health"
+
+# Configurações de Tenant (exemplo)
+tenants:
+  - id: "default"
+    name: "Default Tenant"
+    domain: "localhost"
+    enabled: true

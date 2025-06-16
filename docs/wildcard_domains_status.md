@@ -5,7 +5,7 @@
 A configuração de domínios wildcard para o VeloFlux foi concluída com sucesso. Foram configurados:
 
 1. **`*.private.dev.veloflux.io`** - Apontando para `127.0.0.1` para acesso local
-2. **`*.public.dev.veloflux.io`** - Apontando para o IP público `187.61.220.77`
+2. **`*.public.dev.veloflux.io`** - Apontando para o IP público `74.249.85.198`
 
 ## Status dos Testes
 

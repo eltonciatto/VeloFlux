@@ -1,0 +1,120 @@
+# VeloFlux Docker Compose
+# Configuração profissional para multi-tenant
+
+services:
+  # Balanceador de carga VeloFlux
+  veloflux-lb:
+    build: .
+    container_name: veloflux-lb
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP principal
+      - "443:443"    # HTTPS principal
+      - "8880:8080"  # Metrics (porta externa alterada para evitar conflitos)
+      - "9900:9000"  # Admin API (porta externa alterada para evitar conflitos)
+    environment:
+      - VFX_CONFIG=/etc/veloflux/config.yaml
+      - VFX_LOG_LEVEL=info
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=veloflux123
+    volumes:
+      - ./config:/etc/veloflux
+      - ./certs:/etc/ssl/certs/veloflux
+    healthcheck:
+      test: ["NONE"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - backend-tenant1
+      - backend-tenant2
+      - redis
+    networks:
+      - veloflux-net
+      
+  # Backend para tenant1
+  backend-tenant1:
+    image: nginx:alpine-wget
+    container_name: veloflux-tenant1
+    restart: unless-stopped
+    volumes:
+      # Configuração raiz - tenant1
+      - ./test/tenant1/index.html:/usr/share/nginx/html/index.html:ro
+      - ./test/tenant1/health:/usr/share/nginx/html/health:ro
+      
+      # Outros diretórios compartilhados
+      - ./test/admin:/usr/share/nginx/html/admin:ro
+      - ./test/api:/usr/share/nginx/html/api:ro
+      - ./test/public:/usr/share/nginx/html/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - veloflux-net
+  
+  # Backend para tenant2
+  backend-tenant2:
+    image: nginx:alpine-wget
+    container_name: veloflux-tenant2
+    restart: unless-stopped
+    volumes:
+      # Configuração raiz - tenant2
+      - ./test/tenant2/index.html:/usr/share/nginx/html/index.html:ro
+      - ./test/tenant2/health:/usr/share/nginx/html/health:ro
+      
+      # Outros diretórios compartilhados
+      - ./test/admin:/usr/share/nginx/html/admin:ro
+      - ./test/api:/usr/share/nginx/html/api:ro
+      - ./test/public:/usr/share/nginx/html/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - veloflux-net
+
+  # Redis para estado do cluster
+  redis:
+    image: redis:alpine
+    container_name: veloflux-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus metrics exporter
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: veloflux-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9199:9100"  # Porta alterada para evitar conflitos
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)(11743|/)'
+    networks:
+      - veloflux-net
+
+# Volumes
+volumes:
+  redis-data:
+
+# Networks - melhores práticas de isolamento
+networks:
+  veloflux-net:
+    driver: bridge

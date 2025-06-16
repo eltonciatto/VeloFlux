@@ -1,0 +1,128 @@
+# VeloFlux LB - Configuração de Produção para Codespace
+# IP Público: 74.249.85.198
+# Codespace: curly-yodel-w5759w9pgvjf7j5
+
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8080"
+  
+  # TLS Configuration - Desabilitado para testes Codespace
+  tls:
+    auto_cert: false
+    cert_dir: "/etc/ssl/certs/veloflux"
+
+  # Health Check Defaults
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+  # Rate Limiting
+  rate_limit:
+    requests_per_second: 100
+    burst_size: 200
+    cleanup_interval: "5m"
+
+  # WAF
+  waf:
+    enabled: true
+    level: "standard"
+    log_violations: true
+
+# API Server  
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: true
+  username: "admin"
+  password: "veloflux-admin-password"
+
+# Backend Pools
+pools:
+  - name: "frontend-pool"
+    algorithm: "round_robin"
+    sticky_sessions: true
+    backends:
+      - address: "frontend:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+  - name: "tenant1-pool"
+    algorithm: "round_robin"
+    sticky_sessions: true
+    backends:
+      - address: "backend-tenant1:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+  - name: "tenant2-pool"
+    algorithm: "round_robin"
+    sticky_sessions: true
+    backends:
+      - address: "backend-tenant2:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+  - name: "api-pool"
+    algorithm: "least_conn"
+    sticky_sessions: false
+    backends:
+      - address: "backend-tenant1:80"
+        weight: 100
+        health_check:
+          path: "/api/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+# Routing Rules - Configuração para Codespace
+routes:
+  # API routes - rotear para backend
+  - host: "*"
+    pool: "api-pool"
+    path_prefix: "/api"
+    
+  # Admin routes - rotear para frontend
+  - host: "*"
+    pool: "frontend-pool"
+    path_prefix: "/admin"
+    
+  # Public/static content - rotear para frontend
+  - host: "*"
+    pool: "frontend-pool"
+    path_prefix: "/public"
+    
+  # Tenant specific routes - rotear para backends específicos
+  - host: "*"
+    pool: "tenant1-pool"
+    path_prefix: "/tenant1"
+    
+  - host: "*"
+    pool: "tenant2-pool"
+    path_prefix: "/tenant2"
+    
+  # Default route (root path) - rotear para frontend
+  - host: "*"
+    pool: "frontend-pool"
+    path_prefix: "/"
+
+# Cluster Configuration
+cluster:
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
+  instance_id: "veloflux-lb-prod"
+  heartbeat_interval: "30s"
+  leader_election_timeout: "60s"

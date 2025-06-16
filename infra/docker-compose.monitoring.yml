@@ -1,0 +1,68 @@
+# VeloFlux Monitoring Stack - Docker Compose
+# Prometheus + Grafana + AlertManager
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veloflux-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"  # Prometheus UI (porta alterada para não conflitar)
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring-net
+      - veloflux_veloflux-net  # Connect to VeloFlux network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veloflux-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Grafana UI
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=veloflux123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning:ro
+    networks:
+      - monitoring-net
+      - veloflux_veloflux-net
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: veloflux-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"  # AlertManager UI
+    volumes:
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - monitoring-net
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+
+networks:
+  monitoring-net:
+    driver: bridge
+  veloflux_veloflux-net:
+    external: true

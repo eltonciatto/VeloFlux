@@ -17,37 +17,39 @@ alerting:
           - alertmanager:9093
 
 scrape_configs:
-  # VeloFlux Load Balancer instances
+  # VeloFlux Load Balancer metrics
   - job_name: 'veloflux-lb'
     static_configs:
-      - targets: ['veloflux-lb-1:8090', 'veloflux-lb-2:8090']
+      - targets: ['veloflux-lb-prod:8080']
     metrics_path: /metrics
     scrape_interval: 10s
     scrape_timeout: 5s
 
-  # Redis metrics
-  - job_name: 'redis'
+  # VeloFlux API metrics (admin API)
+  - job_name: 'veloflux-api'
     static_configs:
-      - targets: ['redis-master:6379']
+      - targets: ['veloflux-lb-prod:9090']
     metrics_path: /metrics
+    scrape_interval: 15s
 
-  # PostgreSQL metrics
-  - job_name: 'postgres'
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ['postgres:5432']
+      - targets: ['localhost:9090']
 
-  # System metrics
-  - job_name: 'node'
+  # Grafana metrics (if available)
+  - job_name: 'grafana'
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ['veloflux-grafana:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
 
-  # Container metrics
-  - job_name: 'cadvisor'
+  # AlertManager metrics
+  - job_name: 'alertmanager'
     static_configs:
-      - targets: ['cadvisor:8080']
-
-  # Nginx metrics (if nginx-prometheus-exporter is installed)
-  - job_name: 'nginx'
+      - targets: ['veloflux-alertmanager:9093']
+    metrics_path: /metrics
+    scrape_interval: 30s
     static_configs:
       - targets: ['nginx-exporter:9113']
 

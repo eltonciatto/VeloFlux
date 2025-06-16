@@ -1,0 +1,57 @@
+# VeloFlux LB - Configuração Mínima Funcional
+
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8080"
+  
+  tls:
+    auto_cert: false
+    cert_dir: "/etc/ssl/certs/veloflux"
+
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+  rate_limit:
+    requests_per_second: 100
+    burst_size: 200
+    cleanup_interval: "5m"
+
+  waf:
+    enabled: false  # Desabilitado para debug
+    level: "standard"
+    log_violations: true
+
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: true
+  username: "admin"
+  password: "veloflux-admin-password"
+
+pools:
+  - name: "backend-pool"
+    algorithm: "round_robin"
+    sticky_sessions: false
+    backends:
+      - address: "backend-tenant1:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+routes:
+  - host: "*"
+    pool: "backend-pool"
+    path_prefix: ""
+
+cluster:
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
+  instance_id: "veloflux-lb-prod"
+  heartbeat_interval: "30s"
+  leader_election_timeout: "60s"

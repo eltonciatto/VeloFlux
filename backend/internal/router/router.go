@@ -154,14 +154,10 @@ func (r *Router) middleware(next http.Handler) http.Handler {
 }
 
 func (r *Router) createProxyHandler(poolName string) http.Handler {
-    handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
         start := time.Now()
         clientIP := r.getClientIP(req)
         sessionID := r.getSessionID(req)
-
-		start := time.Now()
-		clientIP := r.getClientIP(req)
-		sessionID := r.getSessionID(req)
 
 		var backend *balancer.Backend
 		var err error
@@ -190,15 +186,14 @@ func (r *Router) createProxyHandler(poolName string) http.Handler {
 		}
 
 		// Increment connection count
-        // Incrementar contador de conexões
         r.balancer.IncrementConnections(poolName, backend.Address)
         defer r.balancer.DecrementConnections(poolName, backend.Address)
         
-        // Atualizar métricas de conexões ativas
+        // Update active connections metrics
         metrics.UpdateActiveConnections(backend.Address, true)
         defer metrics.UpdateActiveConnections(backend.Address, false)
         
-        // Atualizar métrica de saúde do backend
+        // Update backend health metric
         metrics.UpdateBackendHealth(poolName, backend.Address, true)
 
 

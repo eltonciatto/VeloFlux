@@ -1,0 +1,46 @@
+# VeloFlux LB - Simple Test Configuration
+global:
+  bind_address: "0.0.0.0:80"
+  metrics_address: "0.0.0.0:8080"
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+  ai:
+    enabled: false
+
+# API Server  
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: false
+
+# Auth config
+auth:
+  jwt_secret: "test-secret"
+
+# Cluster config
+cluster:
+  enabled: false
+  redis_address: "redis:6379"
+  redis_password: ""
+  redis_db: 0
+
+# Backend Pools
+pools:
+  - name: "test-pool"
+    algorithm: "round_robin"
+    sticky_sessions: false
+    backends:
+      - address: "backend-tenant1:80"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "15s"
+          timeout: "3s"
+          expected_status: 200
+
+# Simple Routing
+routes:
+  - host: "localhost"
+    pool: "test-pool"
+    path_prefix: "/"
