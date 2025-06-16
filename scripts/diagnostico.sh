@@ -304,6 +304,178 @@ check_logs() {
     echo ""
 }
 
+# Diagnostico de ambiente de teste
+diagnose_test_environment() {
+    log "Iniciando diagnóstico do ambiente de teste do VeloFlux..."
+    
+    # Check if test environment exists
+    if [ ! -d "/tmp/veloflux-test" ]; then
+        error "Diretório de teste não encontrado. Execute o script de teste primeiro."
+        return 1
+    fi
+    
+    # Check container status
+    log "Verificando status dos containers..."
+    
+    containers=("veloflux-test-redis-1" "veloflux-test-backend-1-1" "veloflux-test-backend-2-1" "veloflux-test-veloflux-lb-1")
+    
+    for container in "${containers[@]}"; do
+        if docker ps -q -f name=${container} | grep -q .; then
+            echo -e "  ✅ ${GREEN}${container} está rodando${NC}"
+        else
+            echo -e "  ❌ ${RED}${container} não está rodando${NC}"
+        fi
+    done
+    
+    # Check Redis configuration
+    log "Verificando configuração do Redis..."
+    
+    config_file="/tmp/veloflux-test/config/config.yaml"
+    
+    if grep -q "redis_address: \"redis:6379\"" "$config_file"; then
+        echo -e "  ✅ ${GREEN}Endereço do Redis está configurado corretamente${NC}"
+    else
+        echo -e "  ❌ ${RED}Endereço do Redis não está configurado corretamente${NC}"
+        
+        log "Atualizando configuração do Redis..."
+        # Ensure the cluster section exists and redis_address is set correctly
+        if grep -q "cluster:" "$config_file"; then
+            sed -i 's/redis_address: .*/redis_address: "redis:6379"/' "$config_file"
+        else
+            echo -e "\n# Redis configuration for container environment\ncluster:\n  enabled: true\n  redis_address: \"redis:6379\"\n  redis_password: \"\"\n  redis_db: 0" >> "$config_file"
+        fi
+        
+        echo -e "  ✅ ${GREEN}Configuração do Redis atualizada${NC}"
+    fi
+    
+    # Install curl in the container if not already installed
+    if ! docker exec veloflux-test-veloflux-lb-1 which curl > /dev/null 2>&1; then
+        log "Instalando curl no container..."
+        docker exec veloflux-test-veloflux-lb-1 apk add --no-cache curl > /dev/null
+    fi
+    
+    # Check network connectivity between containers
+    log "Verificando conectividade entre containers..."
+    
+    if docker exec veloflux-test-veloflux-lb-1 curl -s backend-1 > /dev/null; then
+        echo -e "  ✅ ${GREEN}Conexão com backend-1 bem-sucedida${NC}"
+    else
+        echo -e "  ❌ ${RED}Não foi possível conectar ao backend-1${NC}"
+    fi
+    
+    if docker exec veloflux-test-veloflux-lb-1 curl -s backend-2 > /dev/null; then
+        echo -e "  ✅ ${GREEN}Conexão com backend-2 bem-sucedida${NC}"
+    else
+        echo -e "  ❌ ${RED}Não foi possível conectar ao backend-2${NC}"
+    fi
+    
+    if docker exec veloflux-test-veloflux-lb-1 ping -c 1 redis > /dev/null 2>&1; then
+        echo -e "  ✅ ${GREEN}Conexão com Redis bem-sucedida${NC}"
+    else
+        echo -e "  ❌ ${RED}Não foi possível conectar ao Redis${NC}"
+    fi
+    
+    # Check health endpoints
+    log "Verificando endpoints de health check..."
+    
+    if docker exec veloflux-test-veloflux-lb-1 curl -s backend-1/health | grep -q "OK"; then
+        echo -e "  ✅ ${GREEN}Health check do backend-1 bem-sucedido${NC}"
+    else
+        echo -e "  ❌ ${RED}Health check do backend-1 falhou${NC}"
+    fi
+    
+    if docker exec veloflux-test-veloflux-lb-1 curl -s backend-2/health | grep -q "OK"; then
+        echo -e "  ✅ ${GREEN}Health check do backend-2 bem-sucedido${NC}"
+    else
+        echo -e "  ❌ ${RED}Health check do backend-2 falhou${NC}"
+    fi
+    
+    # Check port bindings
+    log "Verificando mapeamentos de portas..."
+    
+    # Check if there are port bindings in the container
+    if docker exec veloflux-test-veloflux-lb-1 netstat -tulpn 2>/dev/null | grep -q ":80"; then
+        echo -e "  ✅ ${GREEN}Porta 80 está sendo usada dentro do container${NC}"
+        
+        # Show which process is using it
+        process=$(docker exec veloflux-test-veloflux-lb-1 netstat -tulpn 2>/dev/null | grep ":80")
+        echo -e "  ${BLUE}Processo usando a porta 80:${NC} $process"
+    else
+        echo -e "  ❓ ${YELLOW}Porta 80 não está sendo usada dentro do container${NC}"
+    fi
+    
+    # Check external port bindings
+    if docker port veloflux-test-veloflux-lb-1 | grep -q "80/tcp -> 0.0.0.0:8081"; then
+        echo -e "  ✅ ${GREEN}Porta 80 do container está corretamente mapeada para 8081 no host${NC}"
+    else
+        echo -e "  ❌ ${RED}Porta 80 do container não está mapeada corretamente para o host${NC}"
+        
+        # Show current port mappings
+        echo -e "  ${BLUE}Mapeamentos de portas atuais:${NC}"
+        docker port veloflux-test-veloflux-lb-1
+    fi
+    
+    # Check log files for issues
+    log "Analisando logs do VeloFlux..."
+    
+    # Get recent logs
+    logs=$(docker logs veloflux-test-veloflux-lb-1 --tail 20)
+    
+    # Check for common errors
+    if echo "$logs" | grep -q "connection refused"; then
+        echo -e "  ❌ ${RED}Erro de conexão detectado nos logs${NC}"
+        echo -e "  ${BLUE}Detalhes:${NC} $(echo "$logs" | grep "connection refused" | head -1)"
+    fi
+    
+    if echo "$logs" | grep -q "address already in use"; then
+        echo -e "  ❌ ${RED}Erro de porta em uso detectado nos logs${NC}"
+        echo -e "  ${BLUE}Detalhes:${NC} $(echo "$logs" | grep "address already in use" | head -1)"
+        
+        # Try to fix port conflict by modifying the configuration
+        log "Tentando corrigir conflito de porta..."
+        if grep -q "bind_address:" "$config_file"; then
+            # Change the bind address to a different port like 8000
+            sed -i 's/bind_address: "0.0.0.0:80"/bind_address: "0.0.0.0:8000"/' "$config_file"
+            echo -e "  ✅ ${GREEN}Porta alterada para 8000 na configuração${NC}"
+            
+            # Restart the container
+            log "Reiniciando o container com a nova configuração..."
+            docker restart veloflux-test-veloflux-lb-1
+            sleep 5
+        fi
+    fi
+    
+    # Test service after potential fixes
+    sleep 2
+    log "Testando o serviço VeloFlux..."
+    
+    # Test local port 8081
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 || echo "failed")
+    if [[ "$status_code" =~ ^(200|301|302|307|308)$ ]]; then
+        echo -e "  ✅ ${GREEN}VeloFlux está respondendo na porta 8081 (HTTP $status_code)${NC}"
+        
+        # Show response
+        echo -e "  ${BLUE}Primeiras linhas da resposta:${NC}"
+        curl -s http://localhost:8081 | head -5
+        echo -e "  ..."
+    else
+        echo -e "  ❌ ${RED}VeloFlux não está respondendo na porta 8081 (Status: $status_code)${NC}"
+        
+        # Try alternative port if we changed it
+        if grep -q "bind_address: \"0.0.0.0:8000\"" "$config_file"; then
+            echo -e "  ${YELLOW}Tentando porta alternativa 8000...${NC}"
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 || echo "failed")
+            if [[ "$status_code" =~ ^(200|301|302|307|308)$ ]]; then
+                echo -e "  ✅ ${GREEN}VeloFlux está respondendo na porta 8081 -> 8000 (HTTP $status_code)${NC}"
+            else
+                echo -e "  ❌ ${RED}VeloFlux não está respondendo na porta 8081 -> 8000 (Status: $status_code)${NC}"
+            fi
+        fi
+    fi
+    
+    log "Diagnóstico do ambiente de teste concluído!"
+}
+
 # Cabeçalho do diagnóstico
 echo -e "${BLUE}====================================================${NC}"
 echo -e "${BLUE}    DIAGNÓSTICO DE IMPLEMENTAÇÃO DO VELOFLUX        ${NC}"
@@ -378,6 +550,9 @@ check_connectivity
 # Verificação de logs
 log "Verificando logs..."
 check_logs
+
+# Diagnóstico de ambiente de teste
+diagnose_test_environment
 
 # Resumo
 echo -e "${BLUE}====================================================${NC}"
