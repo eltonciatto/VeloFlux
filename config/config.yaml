@@ -147,6 +147,7 @@ pools:
 
 # Routing Rules
 routes:
+  # Original routes
   - host: "example.com"
     pool: "web-servers"
     
@@ -156,3 +157,39 @@ routes:
   - host: "api.example.com"
     pool: "api-servers"
     path_prefix: "/api"
+
+  # Private development domain routes (localhost)
+  - host: "app.private.dev.veloflux.io"
+    pool: "web-servers"
+    
+  - host: "www.private.dev.veloflux.io"
+    pool: "web-servers"
+
+  - host: "api.private.dev.veloflux.io"
+    pool: "api-servers"
+    path_prefix: "/api"
+
+  - host: "admin.private.dev.veloflux.io"
+    pool: "api-servers"
+    path_prefix: "/admin"
+
+  - host: "tenant1.private.dev.veloflux.io"
+    pool: "web-servers"
+
+  - host: "tenant2.private.dev.veloflux.io"
+    pool: "web-servers"
+
+  # Public development domain routes (public IP)
+  - host: "tenant1.public.dev.veloflux.io"
+    pool: "web-servers"
+
+  - host: "api.public.dev.veloflux.io"
+    pool: "api-servers"
+    path_prefix: "/api"
+
+  # Wildcard support
+  - host: "*.private.dev.veloflux.io"
+    pool: "web-servers"
+
+  - host: "*.public.dev.veloflux.io"
+    pool: "web-servers"

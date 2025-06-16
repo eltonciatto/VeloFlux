@@ -17,22 +17,25 @@ TOTAL_REQUESTS=50
 CONCURRENT_REQUESTS=10
 BRIEF_MODE=false
 
-# Domains to test - modify as needed
+# Domains to test - usando domínios Cloudflare configurados
 declare -A DOMAINS=(
-    ["example.com"]="web-servers"
-    ["www.example.com"]="web-servers"
-    ["api.example.com"]="api-servers"
-    ["admin.example.com"]="admin-servers"
-    ["*.example.com"]="wildcard-servers"
-    ["tenant1.example.com"]="tenant1-pool"
-    ["tenant2.example.com"]="tenant2-pool"
+    ["app.private.dev.veloflux.io"]="web-servers"
+    ["www.private.dev.veloflux.io"]="web-servers"
+    ["api.private.dev.veloflux.io"]="api-servers"
+    ["admin.private.dev.veloflux.io"]="api-servers"
+    ["tenant1.private.dev.veloflux.io"]="web-servers"
+    ["tenant2.private.dev.veloflux.io"]="web-servers"
+    ["tenant1.public.dev.veloflux.io"]="web-servers"
+    ["api.public.dev.veloflux.io"]="api-servers"
+    ["*.private.dev.veloflux.io"]="web-servers"
+    ["*.public.dev.veloflux.io"]="web-servers"
 )
 
 # Additional hostnames for testing that may not be in config
 EXTRA_DOMAINS=(
-    "random-subdomain.example.com"
-    "testing.example.com"
-    "dev.example.com"
+    "test-subdomain.private.dev.veloflux.io"
+    "random.private.dev.veloflux.io"
+    "test-subdomain.public.dev.veloflux.io"
 )
 
 # Color codes for output

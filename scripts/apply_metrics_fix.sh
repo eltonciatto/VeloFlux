@@ -181,3 +181,49 @@ fi
 log "OK" "Correções aplicadas com sucesso!"
 log "INFO" "Backups foram criados em: ${BACKUP_DIR}"
 log "INFO" "Para testar as alterações, reinicie o VeloFlux e execute o script: scripts/test_prometheus_metrics_detailed.sh"
+
+# Reiniciar o VeloFlux para aplicar as alterações
+log "INFO" "Recompilando e reiniciando o VeloFlux para aplicar as alterações..."
+
+# Recompilar
+log "INFO" "Recompilando o VeloFlux..."
+go build -o velofluxlb ./cmd/velofluxlb
+if [ $? -ne 0 ]; then
+    log "ERROR" "Falha ao recompilar o VeloFlux"
+    exit 1
+else
+    log "OK" "VeloFlux recompilado com sucesso"
+fi
+
+# Reiniciar via Docker Compose
+log "INFO" "Reiniciando o serviço VeloFlux..."
+docker-compose down veloflux-lb
+docker-compose up -d veloflux-lb
+
+# Aguardar reinicialização
+sleep 5
+
+# Verificar status
+log "INFO" "Verificando status do serviço..."
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:80/; then
+    log "OK" "VeloFlux reiniciado com sucesso na porta 80"
+else
+    log "WARN" "VeloFlux pode não estar funcionando corretamente na porta 80"
+fi
+
+# Verificar métricas
+log "INFO" "Verificando endpoint de métricas..."
+if curl -s http://localhost:8080/metrics | grep -q "veloflux_"; then
+    log "OK" "As métricas do VeloFlux estão disponíveis"
+else
+    log "WARN" "As métricas personalizadas do VeloFlux podem não estar sendo expostas"
+fi
+
+# Testando conexão com os domínios wildcard
+log "INFO" "Testando conexão com domínios wildcard..."
+for domain in "test.private.dev.veloflux.io" "test.public.dev.veloflux.io"; do
+    status=$(curl -s -H "Host: $domain" -o /dev/null -w "%{http_code}" http://localhost:80/)
+    log "INFO" "Domínio $domain: status $status"
+done
+
+log "INFO" "Aplicação das correções concluída."
