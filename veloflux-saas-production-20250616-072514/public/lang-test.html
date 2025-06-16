@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeloFlux Language Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-container { max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; background: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #3730a3; }
+        .status { background: #374151; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #111; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>VeloFlux SaaS - Language Detection Test</h1>
+        
+        <div class="status">
+            <h3>Browser Language Info:</h3>
+            <pre id="browserInfo"></pre>
+        </div>
+        
+        <div class="status">
+            <h3>Current i18n Status:</h3>
+            <pre id="i18nStatus"></pre>
+        </div>
+        
+        <div>
+            <button onclick="testPtBR()">Test Portuguese (pt-BR)</button>
+            <button onclick="testEnglish()">Test English (en)</button>
+            <button onclick="clearStorage()">Clear Language Storage</button>
+            <button onclick="goToApp()">Go to VeloFlux App</button>
+        </div>
+        
+        <div class="status">
+            <h3>Test Results:</h3>
+            <pre id="testResults"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Display browser info
+        document.getElementById('browserInfo').textContent = JSON.stringify({
+            language: navigator.language,
+            languages: navigator.languages,
+            userAgent: navigator.userAgent.substring(0, 100) + '...'
+        }, null, 2);
+
+        function updateStatus() {
+            const stored = localStorage.getItem('i18nextLng');
+            document.getElementById('i18nStatus').textContent = JSON.stringify({
+                storedLanguage: stored,
+                detectedLanguage: navigator.language,
+                shouldUsePtBR: navigator.language?.startsWith('pt')
+            }, null, 2);
+        }
+
+        function testPtBR() {
+            localStorage.setItem('i18nextLng', 'pt-BR');
+            updateResults('Set language to pt-BR in localStorage');
+            updateStatus();
+        }
+
+        function testEnglish() {
+            localStorage.setItem('i18nextLng', 'en');
+            updateResults('Set language to en in localStorage');
+            updateStatus();
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('i18nextLng');
+            updateResults('Cleared language from localStorage');
+            updateStatus();
+        }
+
+        function updateResults(message) {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+        }
+
+        function goToApp() {
+            window.location.href = '/';
+        }
+
+        // Initial status update
+        updateStatus();
+    </script>
+</body>
+</html>
