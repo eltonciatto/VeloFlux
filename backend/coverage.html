@@ -55,11 +55,11 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/eltonciatto/veloflux/internal/ai/models.go (90.8%)</option>
+				<option value="file0">github.com/eltonciatto/veloflux/internal/ai/models.go (94.4%)</option>
 				
-				<option value="file1">github.com/eltonciatto/veloflux/internal/ai/predictor.go (56.0%)</option>
+				<option value="file1">github.com/eltonciatto/veloflux/internal/ai/predictor.go (68.4%)</option>
 				
-				<option value="file2">github.com/eltonciatto/veloflux/internal/ai/service.go (63.6%)</option>
+				<option value="file2">github.com/eltonciatto/veloflux/internal/ai/service.go (87.4%)</option>
 				
 				</select>
 			</div>
@@ -541,9 +541,9 @@ func (nn *NeuralNetworkModel) selectAlgorithm(output []float64) string <span cla
         <span class="cov8" title="1">algoScore := output[1]
         if algoScore &lt; 0.3 </span><span class="cov8" title="1">{
                 return "round_robin"
-        }</span> else<span class="cov0" title="0"> if algoScore &lt; 0.6 </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if algoScore &lt; 0.6 </span><span class="cov8" title="1">{
                 return "least_conn"
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 return "weighted_round_robin"
         }</span>
 }
@@ -551,15 +551,15 @@ func (nn *NeuralNetworkModel) selectAlgorithm(output []float64) string <span cla
 func (nn *NeuralNetworkModel) getScalingRecommendation(loadScore float64) string <span class="cov8" title="1">{
         if loadScore &lt; 0.3 </span><span class="cov8" title="1">{
                 return "scale_down"
-        }</span> else<span class="cov0" title="0"> if loadScore &gt; 0.8 </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if loadScore &gt; 0.8 </span><span class="cov0" title="0">{
                 return "scale_up"
         }</span>
-        <span class="cov0" title="0">return "maintain"</span>
+        <span class="cov8" title="1">return "maintain"</span>
 }
 
 func (nn *NeuralNetworkModel) getAlgorithmPreference(pattern TrafficPattern) float64 <span class="cov8" title="1">{
         // Lógica simplificada para preferência de algoritmo
-        if pattern.ErrorRate &gt; 0.05 </span><span class="cov0" title="0">{
+        if pattern.ErrorRate &gt; 0.05 </span><span class="cov8" title="1">{
                 return 0.8 // Prefer least_conn for high error rates
         }</span> else<span class="cov8" title="1"> if pattern.ResponseTime &gt; 1000 </span><span class="cov0" title="0">{
                 return 0.6 // Prefer weighted for high latency
@@ -628,7 +628,7 @@ func (rl *ReinforcementLearningModel) calculateReward(current, next TrafficPatte
         if next.ResponseTime &gt; 2000 </span><span class="cov0" title="0">{
                 reward -= 1.0
         }</span>
-        <span class="cov8" title="1">if next.ErrorRate &gt; 0.05 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if next.ErrorRate &gt; 0.05 </span><span class="cov8" title="1">{
                 reward -= 2.0
         }</span>
 
@@ -666,7 +666,7 @@ func (rl *ReinforcementLearningModel) getMaxQValue(state string) float64 <span c
 }
 
 func (rl *ReinforcementLearningModel) getActionConfidence(state, action string) float64 <span class="cov8" title="1">{
-        if _, exists := rl.qTable[state]; !exists </span><span class="cov0" title="0">{
+        if _, exists := rl.qTable[state]; !exists </span><span class="cov8" title="1">{
                 return 0.5
         }</span>
 
@@ -758,7 +758,7 @@ func (lr *LinearRegressionModel) calculateR2(X [][]float64, Y []float64) float64
 }
 
 func (lr *LinearRegressionModel) selectAlgorithmBasedOnLoad(predictedLoad float64) string <span class="cov8" title="1">{
-        if predictedLoad &lt; 100 </span><span class="cov0" title="0">{
+        if predictedLoad &lt; 100 </span><span class="cov8" title="1">{
                 return "round_robin"
         }</span> else<span class="cov8" title="1"> if predictedLoad &lt; 500 </span><span class="cov8" title="1">{
                 return "least_conn"
@@ -1110,7 +1110,7 @@ func (p *AIPredictor) Predict(pattern TrafficPattern) (*PredictionResult, error)
         // Adicionar ao histórico
         p.trafficHistory = append(p.trafficHistory, pattern)
 
-        if len(p.trafficHistory) &lt; p.config.MinDataPoints </span><span class="cov0" title="0">{
+        if len(p.trafficHistory) &lt; p.config.MinDataPoints </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("insufficient data points for prediction")
         }</span>
 
@@ -1157,7 +1157,7 @@ func (p *AIPredictor) GetLastPredictionTime() time.Time <span class="cov8" title
 }</span>
 
 // SetGeoManager configura o gerenciador de dados geográficos
-func (p *AIPredictor) SetGeoManager(gm *geo.Manager) <span class="cov0" title="0">{
+func (p *AIPredictor) SetGeoManager(gm *geo.Manager) <span class="cov8" title="1">{
         p.mu.Lock()
         defer p.mu.Unlock()
         p.geoManager = gm
@@ -1204,7 +1204,7 @@ func (p *AIPredictor) EnrichTrafficPatternWithGeo(pattern *TrafficPattern, clien
 }
 
 // calculateGeoDistance calcula a distância geográfica aproximada
-func (p *AIPredictor) calculateGeoDistance(pattern *TrafficPattern) float64 <span class="cov0" title="0">{
+func (p *AIPredictor) calculateGeoDistance(pattern *TrafficPattern) float64 <span class="cov8" title="1">{
         // Coordenadas aproximadas de regiões comuns (em produção, usar dados reais)
         regionCoords := map[string][2]float64{
                 "us-east-1":      {39.0458, -76.6413},  // Virginia
@@ -1215,19 +1215,19 @@ func (p *AIPredictor) calculateGeoDistance(pattern *TrafficPattern) float64 <spa
         }
 
         backendCoords, exists := regionCoords[pattern.BackendRegion]
-        if !exists </span><span class="cov0" title="0">{
+        if !exists </span><span class="cov8" title="1">{
                 return 0
         }</span>
 
         // Fórmula de Haversine simplificada para distância
-        <span class="cov0" title="0">lat1, lon1 := pattern.ClientLatitude, pattern.ClientLongitude
+        <span class="cov8" title="1">lat1, lon1 := pattern.ClientLatitude, pattern.ClientLongitude
         lat2, lon2 := backendCoords[0], backendCoords[1]
 
-        if lat1 == 0 &amp;&amp; lon1 == 0 </span><span class="cov0" title="0">{
+        if lat1 == 0 &amp;&amp; lon1 == 0 </span><span class="cov8" title="1">{
                 return 0
         }</span>
 
-        <span class="cov0" title="0">const R = 6371 // Raio da Terra em km
+        <span class="cov8" title="1">const R = 6371 // Raio da Terra em km
 
         dLat := (lat2 - lat1) * math.Pi / 180
         dLon := (lon2 - lon1) * math.Pi / 180
@@ -1281,8 +1281,8 @@ func (p *AIPredictor) PredictWithGeoContext(pattern TrafficPattern, clientIP net
 }
 
 // getGeoOptimizedBackends retorna backends otimizados geograficamente
-func (p *AIPredictor) getGeoOptimizedBackends(clientIP net.IP, backendOptions []string) []string <span class="cov0" title="0">{
-        if p.geoManager == nil || len(backendOptions) == 0 </span><span class="cov0" title="0">{
+func (p *AIPredictor) getGeoOptimizedBackends(clientIP net.IP, backendOptions []string) []string <span class="cov8" title="1">{
+        if p.geoManager == nil || len(backendOptions) == 0 </span><span class="cov8" title="1">{
                 return backendOptions
         }</span>
 
@@ -1325,7 +1325,7 @@ func (p *AIPredictor) getGeoOptimizedBackends(clientIP net.IP, backendOptions []
 }
 
 // estimateBackendDistance estima a distância para um backend baseado na região
-func (p *AIPredictor) estimateBackendDistance(clientRegion, backend string) float64 <span class="cov0" title="0">{
+func (p *AIPredictor) estimateBackendDistance(clientRegion, backend string) float64 <span class="cov8" title="1">{
         // Mapeamento simplificado (em produção, usar dados reais)
         regionDistances := map[string]map[string]float64{
                 "North America": {
@@ -1345,13 +1345,13 @@ func (p *AIPredictor) estimateBackendDistance(clientRegion, backend string) floa
                 },
         }
 
-        if distances, exists := regionDistances[clientRegion]; exists </span><span class="cov0" title="0">{
-                if distance, exists := distances[backend]; exists </span><span class="cov0" title="0">{
+        if distances, exists := regionDistances[clientRegion]; exists </span><span class="cov8" title="1">{
+                if distance, exists := distances[backend]; exists </span><span class="cov8" title="1">{
                         return distance
                 }</span>
         }
 
-        <span class="cov0" title="0">return 5000</span> // Distância padrão
+        <span class="cov8" title="1">return 5000</span> // Distância padrão
 }
 
 // calculateGeoAffinityScore calcula pontuação de afinidade geográfica
@@ -1605,7 +1605,7 @@ func (s *AIService) Start() error <span class="cov8" title="1">{
         go s.monitor.Start(s.ctx)
 
         // Iniciar auto-restart se habilitado
-        if s.config.AutoRestart </span><span class="cov0" title="0">{
+        if s.config.AutoRestart </span><span class="cov8" title="1">{
                 go s.autoRestartLoop(s.ctx)
         }</span>
 
@@ -1630,7 +1630,7 @@ func (s *AIService) Stop() error <span class="cov8" title="1">{
         s.cancel()
 
         // Salvar estado se persistência estiver habilitada
-        if s.config.PersistentStorage </span><span class="cov0" title="0">{
+        if s.config.PersistentStorage </span><span class="cov8" title="1">{
                 if err := s.saveState(); err != nil </span><span class="cov0" title="0">{
                         s.logger.Error("Failed to save AI state", zap.Error(err))
                 }</span>
@@ -1780,7 +1780,7 @@ func (s *AIService) PredictWithGeoContext(pattern TrafficPattern, clientIP net.I
 }
 
 // GetPredictor retorna o predictor do serviço de IA
-func (s *AIService) GetPredictor() *AIPredictor <span class="cov0" title="0">{
+func (s *AIService) GetPredictor() *AIPredictor <span class="cov8" title="1">{
         s.mu.RLock()
         defer s.mu.RUnlock()
         return s.predictor
@@ -1820,7 +1820,7 @@ func (h *AIHealthChecker) performHealthCheck() <span class="cov8" title="1">{
         message := "System healthy"
 
         // Verificar se o predictor está funcionando
-        if h.service.predictor == nil </span><span class="cov0" title="0">{
+        if h.service.predictor == nil </span><span class="cov8" title="1">{
                 healthy = false
                 message = "Predictor not initialized"
         }</span>
@@ -1836,7 +1836,7 @@ func (h *AIHealthChecker) performHealthCheck() <span class="cov8" title="1">{
 
         if healthy </span><span class="cov8" title="1">{
                 h.healthStatus.LastHealthyCheck = time.Now()
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 h.healthStatus.ErrorCount++
         }</span>
 
@@ -1856,7 +1856,7 @@ func (f *AIFailoverManager) Initialize() error <span class="cov8" title="1">{
 }</span>
 
 // TriggerFailover executa o failover para um modelo backup
-func (f *AIFailoverManager) TriggerFailover() error <span class="cov0" title="0">{
+func (f *AIFailoverManager) TriggerFailover() error <span class="cov8" title="1">{
         f.mu.Lock()
         defer f.mu.Unlock()
 
@@ -1928,7 +1928,7 @@ func (m *AIMonitor) GetCurrentPerformance() AIPerformancePoint <span class="cov8
                 return m.performanceHistory[len(m.performanceHistory)-1]
         }</span>
 
-        <span class="cov0" title="0">return AIPerformancePoint{
+        <span class="cov8" title="1">return AIPerformancePoint{
                 Timestamp: time.Now(),
         }</span>
 }
@@ -1956,7 +1956,7 @@ func (m *AIMonitor) RecordPrediction(success bool, responseTime time.Duration) <
 }
 
 // RecordGeoPrediction registra o resultado de uma predição geográfica
-func (m *AIMonitor) RecordGeoPrediction(success bool, responseTime time.Duration, geoAffinity float64, crossRegion bool) <span class="cov0" title="0">{
+func (m *AIMonitor) RecordGeoPrediction(success bool, responseTime time.Duration, geoAffinity float64, crossRegion bool) <span class="cov8" title="1">{
         m.mu.Lock()
         defer m.mu.Unlock()
 
@@ -1964,24 +1964,24 @@ func (m *AIMonitor) RecordGeoPrediction(success bool, responseTime time.Duration
         m.metrics.TotalPredictions++
         m.metrics.GeoPredictions++
 
-        if success </span><span class="cov0" title="0">{
+        if success </span><span class="cov8" title="1">{
                 m.metrics.SuccessfulPredictions++
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 m.metrics.FailedPredictions++
         }</span>
 
         // Atualizar métricas geográficas
-        <span class="cov0" title="0">if geoAffinity &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if geoAffinity &gt; 0 </span><span class="cov8" title="1">{
                 totalAffinity := m.metrics.AverageGeoAffinity * float64(m.metrics.GeoPredictions-1)
                 m.metrics.AverageGeoAffinity = (totalAffinity + geoAffinity) / float64(m.metrics.GeoPredictions)
         }</span>
 
-        <span class="cov0" title="0">if crossRegion </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if crossRegion </span><span class="cov8" title="1">{
                 m.metrics.CrossRegionRequests++
         }</span>
 
         // Atualizar tempo de resposta médio
-        <span class="cov0" title="0">totalTime := m.metrics.AverageResponseTime * float64(m.metrics.TotalPredictions-1)
+        <span class="cov8" title="1">totalTime := m.metrics.AverageResponseTime * float64(m.metrics.TotalPredictions-1)
         m.metrics.AverageResponseTime = (totalTime + float64(responseTime.Nanoseconds())/1000000) / float64(m.metrics.TotalPredictions)
 
         // Calcular taxa de erro
@@ -2031,16 +2031,16 @@ func (m *AIMonitor) checkForAlerts() <span class="cov8" title="1">{
 }
 
 // autoRestartLoop monitora e reinicia automaticamente componentes com falha
-func (s *AIService) autoRestartLoop(ctx context.Context) <span class="cov0" title="0">{
+func (s *AIService) autoRestartLoop(ctx context.Context) <span class="cov8" title="1">{
         ticker := time.NewTicker(s.config.HealthCheckInterval)
         defer ticker.Stop()
 
-        for </span><span class="cov0" title="0">{
+        for </span><span class="cov8" title="1">{
                 select </span>{
-                case &lt;-ctx.Done():<span class="cov0" title="0">
+                case &lt;-ctx.Done():<span class="cov8" title="1">
                         return</span>
-                case &lt;-ticker.C:<span class="cov0" title="0">
-                        if !s.IsHealthy() &amp;&amp; s.config.AutoRestart </span><span class="cov0" title="0">{
+                case &lt;-ticker.C:<span class="cov8" title="1">
+                        if !s.IsHealthy() &amp;&amp; s.config.AutoRestart </span><span class="cov8" title="1">{
                                 s.logger.Warn("AI Service unhealthy, attempting auto-restart")
                                 if err := s.attemptRestart(); err != nil </span><span class="cov0" title="0">{
                                         s.logger.Error("Auto-restart failed", zap.Error(err))
@@ -2051,7 +2051,7 @@ func (s *AIService) autoRestartLoop(ctx context.Context) <span class="cov0" titl
 }
 
 // attemptRestart tenta reiniciar o serviço de IA
-func (s *AIService) attemptRestart() error <span class="cov0" title="0">{
+func (s *AIService) attemptRestart() error <span class="cov8" title="1">{
         s.logger.Info("Attempting to restart AI Service...")
 
         // Parar componentes
@@ -2061,12 +2061,12 @@ func (s *AIService) attemptRestart() error <span class="cov0" title="0">{
         s.ctx, s.cancel = context.WithCancel(context.Background())
 
         // Reinicializar predictor
-        if s.predictor != nil &amp;&amp; s.predictor.config != nil </span><span class="cov0" title="0">{
+        if s.predictor != nil &amp;&amp; s.predictor.config != nil </span><span class="cov8" title="1">{
                 s.predictor = NewAIPredictor(s.predictor.config, s.logger)
         }</span>
 
         // Reiniciar componentes
-        <span class="cov0" title="0">go s.healthChecker.Start(s.ctx)
+        <span class="cov8" title="1">go s.healthChecker.Start(s.ctx)
         go s.monitor.Start(s.ctx)
 
         s.logger.Info("AI Service restarted successfully")
@@ -2074,7 +2074,7 @@ func (s *AIService) attemptRestart() error <span class="cov0" title="0">{
 }
 
 // saveState salva o estado atual do sistema de IA
-func (s *AIService) saveState() error <span class="cov0" title="0">{
+func (s *AIService) saveState() error <span class="cov8" title="1">{
         // Implementar persistência de estado
         s.logger.Info("Saving AI Service state...")
         // TODO: Implementar salvamento em Redis ou arquivo
