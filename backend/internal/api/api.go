@@ -154,6 +154,32 @@ func (a *API) setupRoutes() {
 		w.Write([]byte(`{"status": "healthy"}`))
 	}).Methods("GET")
 
+	// Register profile routes BEFORE apiRouter to avoid conflicts
+	a.logger.Debug("Checking tenant manager and authenticator initialization",
+		zap.Bool("tenantManager_nil", a.tenantManager == nil),
+		zap.Bool("authenticator_nil", a.authenticator == nil))
+		
+	if a.tenantManager != nil && a.authenticator != nil {
+		a.logger.Info("Registering profile routes")
+		
+		// Authentication routes (public - sem autenticação)
+		a.router.HandleFunc("/auth/login", a.handleTenantLogin).Methods("POST")
+		a.router.HandleFunc("/auth/register", a.handleTenantRegister).Methods("POST")
+		
+		// Token refresh (requer token válido)
+		a.router.HandleFunc("/auth/refresh", a.requireAuthToken(a.handleTenantRefresh)).Methods("POST")
+		
+		// User profile routes (with JWT authentication)
+		a.router.HandleFunc("/api/profile", a.requireAuthToken(a.handleGetProfile)).Methods("GET")
+		a.router.HandleFunc("/api/profile", a.requireAuthToken(a.handleUpdateProfile)).Methods("PUT")
+		
+		a.logger.Info("Profile routes registered successfully")
+	} else {
+		a.logger.Warn("Profile routes NOT registered - missing dependencies",
+			zap.Bool("tenantManager_nil", a.tenantManager == nil),
+			zap.Bool("authenticator_nil", a.authenticator == nil))
+	}
+
 	apiRouter := a.router.PathPrefix("/api").Subrouter()
 
 	// Basic authentication middleware
@@ -209,14 +235,7 @@ func (a *API) setupRoutes() {
 
 	// Tenant APIs - Com autenticação JWT correta
 	if a.tenantManager != nil && a.authenticator != nil {
-		a.logger.Info("Registering tenant API routes")
-		
-		// Authentication routes (public - sem autenticação)
-		a.router.HandleFunc("/auth/login", a.handleTenantLogin).Methods("POST")
-		a.router.HandleFunc("/auth/register", a.handleTenantRegister).Methods("POST")
-		
-		// Token refresh (requer token válido)
-		a.router.HandleFunc("/auth/refresh", a.requireAuthToken(a.handleTenantRefresh)).Methods("POST")
+		a.logger.Info("Registering tenant management routes")
 		
 		// Tenant management routes (com autenticação JWT)
 		tenantRouter := a.router.PathPrefix("/api/tenants").Subrouter()
@@ -1116,6 +1135,74 @@ func (a *API) handleTenantRefresh(w http.ResponseWriter, r *http.Request) {
 
 	a.logger.Info("Token refreshed successfully", zap.String("user_id", claims.UserID))
 	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+// handleGetProfile returns the current user's profile information
+func (a *API) handleGetProfile(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Get profile endpoint called")
+	
+	// Extract user from token
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get current user info
+	user, err := a.tenantManager.GetUserByID(r.Context(), claims.UserID)
+	if err != nil {
+		a.logger.Error("Failed to get user profile", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to retrieve profile")
+		return
+	}
+
+	a.logger.Info("Profile retrieved successfully", zap.String("user_id", claims.UserID))
+	a.writeJSONResponse(w, http.StatusOK, user)
+}
+
+// handleUpdateProfile updates the current user's profile information
+func (a *API) handleUpdateProfile(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Update profile endpoint called")
+	
+	// Extract user from token
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get current user info
+	user, err := a.tenantManager.GetUserByID(r.Context(), claims.UserID)
+	if err != nil {
+		a.logger.Error("Failed to get user for update", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to retrieve profile")
+		return
+	}
+
+	// Parse request body
+	var req struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request format")
+		return
+	}
+
+	// Update user info
+	user.FirstName = req.FirstName
+	user.LastName = req.LastName
+
+	// Save updates
+	if err := a.tenantManager.UpdateUser(r.Context(), user); err != nil {
+		a.logger.Error("Failed to update user profile", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to update profile")
+		return
+	}
+
+	a.logger.Info("Profile updated successfully", zap.String("user_id", claims.UserID))
+	a.writeJSONResponse(w, http.StatusOK, user)
 }
 
 func (a *API) handleListTenants(w http.ResponseWriter, r *http.Request) {
