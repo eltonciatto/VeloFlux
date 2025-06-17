@@ -22,7 +22,19 @@ global:
     log_violations: true
 
   ai:
-    enabled: false
+    enabled: true
+    model_type: "neural_network"
+    training_interval: "5m"
+    prediction_window: "30s"
+    history_retention: "24h"
+    min_data_points: 100
+    confidence_threshold: 0.8
+    adaptive_algorithms: true
+    application_aware: true
+    auto_scaling: true
+    health_monitoring: true
+    failover_enabled: true
+    backup_models: true
 
 # Authentication Configuration - PRODUÇÃO ATIVA
 auth:
