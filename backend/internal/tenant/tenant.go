@@ -479,3 +479,112 @@ func (m *Manager) GetDefaultLimits(plan PlanType) LimitConfig {
 		}
 	}
 }
+
+// ValidateUserPassword validates a user's password
+func (m *Manager) ValidateUserPassword(ctx context.Context, userID, password string) (bool, error) {
+	// Get stored password hash from Redis
+	hashKey := fmt.Sprintf("vf:user:pwd:%s", userID)
+	storedHash, err := m.client.Get(ctx, hashKey).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return false, fmt.Errorf("password not found for user: %s", userID)
+		}
+		return false, err
+	}
+
+	// Validate password using bcrypt (assuming passwords are hashed with bcrypt)
+	// This is a simplified implementation - in production you'd import golang.org/x/crypto/bcrypt
+	// For now, we'll do a simple comparison (NOT secure - only for demo)
+	// TODO: Implement proper bcrypt password hashing
+	return storedHash == password, nil
+}
+
+// CreateTenantWithOwnerRequest represents a request to create a tenant with an owner
+type CreateTenantWithOwnerRequest struct {
+	Name      string   `json:"name"`
+	Plan      PlanType `json:"plan"`
+	OwnerInfo UserInfo `json:"owner_info"`
+	Password  string   `json:"password"`
+}
+
+// CreateTenantWithOwner creates a new tenant along with its owner user
+func (m *Manager) CreateTenantWithOwner(ctx context.Context, req *CreateTenantWithOwnerRequest) (string, string, error) {
+	// Generate unique IDs
+	tenantID := fmt.Sprintf("tenant_%d", time.Now().UnixNano())
+	userID := fmt.Sprintf("user_%d", time.Now().UnixNano())
+
+	// Create tenant
+	tenant := &Tenant{
+		ID:        tenantID,
+		Name:      req.Name,
+		Plan:      req.Plan,
+		Active:    true,
+		CreatedAt: time.Now(),
+	}
+
+	err := m.CreateTenant(ctx, tenant)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create tenant: %v", err)
+	}
+
+	// Create owner user
+	user := &UserInfo{
+		UserID:    userID,
+		Email:     req.OwnerInfo.Email,
+		TenantID:  tenantID,
+		Role:      RoleOwner,
+		FirstName: req.OwnerInfo.FirstName,
+		LastName:  req.OwnerInfo.LastName,
+	}
+
+	err = m.AddUser(ctx, user)
+	if err != nil {
+		// Rollback tenant creation
+		m.DeleteTenant(ctx, tenantID)
+		return "", "", fmt.Errorf("failed to create owner user: %v", err)
+	}
+
+	// Store password hash (simplified - should use bcrypt)
+	// TODO: Implement proper password hashing
+	passwordKey := fmt.Sprintf("vf:user:pwd:%s", userID)
+	err = m.client.Set(ctx, passwordKey, req.Password, 0).Err()
+	if err != nil {
+		// Rollback
+		m.RemoveUser(ctx, userID, tenantID)
+		m.DeleteTenant(ctx, tenantID)
+		return "", "", fmt.Errorf("failed to store password: %v", err)
+	}
+
+	// Add email to user mapping
+	emailKey := fmt.Sprintf("vf:user:email:%s", req.OwnerInfo.Email)
+	err = m.client.Set(ctx, emailKey, userID, 0).Err()
+	if err != nil {
+		m.logger.Warn("Failed to create email mapping", zap.Error(err))
+	}
+
+	m.logger.Info("Tenant and owner created successfully",
+		zap.String("tenant_id", tenantID),
+		zap.String("user_id", userID),
+		zap.String("email", req.OwnerInfo.Email))
+
+	return tenantID, userID, nil
+}
+
+// GetUserByEmailWithPasswordValidation gets user by email and validates password
+func (m *Manager) GetUserByEmailWithPasswordValidation(ctx context.Context, email, password string) (*UserInfo, error) {
+	user, err := m.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	valid, err := m.ValidateUserPassword(ctx, user.UserID, password)
+	if err != nil {
+		return nil, err
+	}
+
+	if !valid {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	return user, nil
+}

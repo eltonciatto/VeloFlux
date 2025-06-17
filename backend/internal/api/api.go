@@ -20,6 +20,7 @@ import (
 	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/eltonciatto/veloflux/internal/orchestration"
 	"github.com/eltonciatto/veloflux/internal/tenant"
+	
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -102,6 +103,9 @@ func New(cfg *config.Config, bal *balancer.Balancer, adaptiveBal *balancer.Adapt
 
 // Start begins the API server
 func (a *API) Start() error {
+	// Register routes BEFORE creating the server
+	a.setupRoutes()
+
 	// Setup API server
 	a.server = &http.Server{
 		Addr:         a.config.API.BindAddress,
@@ -111,8 +115,9 @@ func (a *API) Start() error {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Register routes
-	a.setupRoutes()
+	a.logger.Info("API Server created", 
+		zap.String("address", a.config.API.BindAddress),
+		zap.String("handler_type", fmt.Sprintf("%T", a.router)))
 
 	// Start HTTP server
 	go func() {
@@ -129,6 +134,26 @@ func (a *API) Start() error {
 func (a *API) setupRoutes() {
 	// Create router
 	a.router = mux.NewRouter()
+
+	// Log setup start
+	a.logger.Info("Setting up API routes")
+
+	// Add a simple test endpoint at root level
+	a.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		a.logger.Info("ROOT ENDPOINT CALLED", zap.String("method", r.Method), zap.String("path", r.URL.Path))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status": "VeloFlux API is running", "version": "1.1.0"}`))
+	}).Methods("GET")
+
+	// Add a simple health endpoint
+	a.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		a.logger.Info("HEALTH ENDPOINT CALLED", zap.String("method", r.Method), zap.String("path", r.URL.Path))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status": "healthy"}`))
+	}).Methods("GET")
+
 	apiRouter := a.router.PathPrefix("/api").Subrouter()
 
 	// Basic authentication middleware
@@ -147,9 +172,11 @@ func (a *API) setupRoutes() {
 	// Apply basic authentication
 	if a.config.API.AuthEnabled {
 		apiRouter.Use(authMiddleware)
+		a.logger.Info("API authentication enabled")
 	}
 
 	// Core pool/backend/route management
+	a.logger.Info("Registering core API routes")
 	apiRouter.HandleFunc("/pools", a.handleListPools).Methods("GET")
 	apiRouter.HandleFunc("/pools/{name}", a.handleGetPool).Methods("GET")
 	apiRouter.HandleFunc("/pools", a.handleCreatePool).Methods("POST")
@@ -177,22 +204,52 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/cluster", a.handleClusterInfo).Methods("GET")
 	// Using handleGetConfig for status since handleGetStatus doesn't exist
 	apiRouter.HandleFunc("/status", a.handleGetConfig).Methods("GET")
+	
+	a.logger.Info("Core API routes registered successfully")
 
-	// Tenant APIs
+	// Tenant APIs - Com autenticação JWT correta
 	if a.tenantManager != nil && a.authenticator != nil {
-		tenantAPI := NewTenantAPI(a.config, a.balancer, a.tenantManager, a.authenticator, a.cluster, a.logger)
-		// Mount /auth and /api tenant endpoints
-		a.router.PathPrefix("/auth").Handler(tenantAPI.Handler())
-		a.router.PathPrefix("/api").Handler(tenantAPI.Handler())
-
-		// Register SMTP routes
-		a.RegisterSMTPRoutes(apiRouter.PathPrefix("/v1").Subrouter())
+		a.logger.Info("Registering tenant API routes")
+		
+		// Authentication routes (public - sem autenticação)
+		a.router.HandleFunc("/auth/login", a.handleTenantLogin).Methods("POST")
+		a.router.HandleFunc("/auth/register", a.handleTenantRegister).Methods("POST")
+		
+		// Token refresh (requer token válido)
+		a.router.HandleFunc("/auth/refresh", a.requireAuthToken(a.handleTenantRefresh)).Methods("POST")
+		
+		// Tenant management routes (com autenticação JWT)
+		tenantRouter := a.router.PathPrefix("/api/tenants").Subrouter()
+		
+		tenantRouter.HandleFunc("", a.requireAuthToken(a.handleListTenants)).Methods("GET")
+		tenantRouter.HandleFunc("", a.requireTenantRole(a.handleCreateTenant, "owner")).Methods("POST")
+		tenantRouter.HandleFunc("/{id}", a.requireAuthToken(a.handleGetTenant)).Methods("GET")
+		tenantRouter.HandleFunc("/{id}", a.requireTenantRole(a.handleUpdateTenant, "owner", "admin")).Methods("PUT")
+		tenantRouter.HandleFunc("/{id}", a.requireTenantRole(a.handleDeleteTenant, "owner")).Methods("DELETE")
+		
+		a.logger.Info("Tenant API routes registered successfully")
+	} else {
+		a.logger.Warn("Tenant API not initialized", zap.Bool("tenantManager_nil", a.tenantManager == nil), zap.Bool("authenticator_nil", a.authenticator == nil))
 	}
 
-	// Billing APIs
+	// Billing APIs - Com autenticação JWT correta
 	if a.billingManager != nil {
-		billingAPI := NewBillingAPI(a.billingManager, a.tenantManager, a.logger)
-		a.router.PathPrefix("/api").Handler(billingAPI.Handler())
+		a.logger.Info("Registering billing API routes")
+		
+		// Billing management routes (com autenticação JWT)
+		billingRouter := a.router.PathPrefix("/api/billing").Subrouter()
+		
+		billingRouter.HandleFunc("/subscriptions", a.requireAuthToken(a.handleListSubscriptions)).Methods("GET")
+		billingRouter.HandleFunc("/subscriptions", a.requireTenantRole(a.handleCreateSubscription, "owner", "admin")).Methods("POST")
+		billingRouter.HandleFunc("/subscriptions/{id}", a.requireAuthToken(a.handleGetSubscription)).Methods("GET")
+		billingRouter.HandleFunc("/subscriptions/{id}", a.requireTenantRole(a.handleUpdateSubscription, "owner", "admin")).Methods("PUT")
+		billingRouter.HandleFunc("/subscriptions/{id}", a.requireTenantRole(a.handleCancelSubscription, "owner")).Methods("DELETE")
+		billingRouter.HandleFunc("/invoices", a.requireAuthToken(a.handleListInvoices)).Methods("GET")
+		billingRouter.HandleFunc("/webhooks", a.handleBillingWebhook).Methods("POST") // Webhook público
+		
+		a.logger.Info("Billing API routes registered successfully")
+	} else {
+		a.logger.Info("Billing API not initialized - billingManager is nil")
 	}
 
 	// OIDC APIs
@@ -227,6 +284,71 @@ func (a *API) Stop(ctx context.Context) error {
 // Handler returns the HTTP handler for the API
 func (a *API) Handler() http.Handler {
 	return a.router
+}
+
+// Authentication middleware implementations
+
+// requireAuthToken validates JWT token and extracts user claims
+func (a *API) requireAuthToken(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract JWT token from Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			a.writeErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("missing authorization header"), "Authorization required")
+			return
+		}
+
+		// Check Bearer token format
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			a.writeErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("invalid authorization format"), "Invalid authorization format")
+			return
+		}
+
+		tokenString := tokenParts[1]
+
+		// Validate JWT token
+		claims, err := a.authenticator.VerifyToken(tokenString)
+		if err != nil {
+			a.writeErrorResponse(w, http.StatusUnauthorized, err, "Invalid or expired token")
+			return
+		}
+
+		// Add claims to request context
+		ctx := context.WithValue(r.Context(), "user_claims", claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// requireTenantRole validates JWT token and checks if user has required tenant role
+func (a *API) requireTenantRole(next http.HandlerFunc, requiredRoles ...string) http.HandlerFunc {
+	return a.requireAuthToken(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract user claims from context
+		claims, err := a.extractUserFromToken(r)
+		if err != nil {
+			a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+			return
+		}
+
+		// Check if user has one of the required roles
+		hasRole := false
+		userRole := string(claims.Role)
+		for _, requiredRole := range requiredRoles {
+			if userRole == requiredRole {
+				hasRole = true
+				break
+			}
+		}
+
+		if !hasRole {
+			a.writeErrorResponse(w, http.StatusForbidden, fmt.Errorf("insufficient permissions"), 
+				fmt.Sprintf("Role '%s' required, user has role '%s'", strings.Join(requiredRoles, " or "), userRole))
+			return
+		}
+
+		// User has required role, proceed
+		next.ServeHTTP(w, r)
+	}))
 }
 
 // Handler implementations
@@ -806,4 +928,708 @@ func writeError(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+
+// Tenant API handlers
+
+func (a *API) handleTenantLogin(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Tenant login endpoint called")
+	
+	var req LoginRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Email == "" || req.Password == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing required fields"), "Email and password are required")
+		return
+	}
+
+	// Get user by email
+	user, err := a.tenantManager.GetUserByEmail(r.Context(), req.Email)
+	if err != nil {
+		a.logger.Warn("Login attempt with invalid email", zap.String("email", req.Email))
+		a.writeErrorResponse(w, http.StatusUnauthorized, 
+			fmt.Errorf("invalid credentials"), "Invalid email or password")
+		return
+	}
+
+	// Validate password (this should be implemented in tenant manager)
+	valid, err := a.tenantManager.ValidateUserPassword(r.Context(), user.UserID, req.Password)
+	if err != nil || !valid {
+		a.logger.Warn("Login attempt with invalid password", zap.String("email", req.Email))
+		a.writeErrorResponse(w, http.StatusUnauthorized, 
+			fmt.Errorf("invalid credentials"), "Invalid email or password")
+		return
+	}
+
+	// Generate JWT token
+	token, err := a.authenticator.GenerateToken(user)
+	if err != nil {
+		a.logger.Error("Failed to generate token", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to generate authentication token")
+		return
+	}
+
+	// Return successful login response
+	response := LoginResponse{
+		Token:     token,
+		User:      user,
+		ExpiresAt: time.Now().Add(24 * time.Hour), // Should match token validity
+	}
+
+	a.logger.Info("User logged in successfully", 
+		zap.String("user_id", user.UserID), 
+		zap.String("email", user.Email),
+		zap.String("tenant_id", user.TenantID))
+	
+	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *API) handleTenantRegister(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Tenant register endpoint called")
+	
+	var req RegisterRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Email == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" || req.TenantName == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing required fields"), "All fields are required")
+		return
+	}
+
+	// Set default plan if not specified
+	if req.Plan == "" {
+		req.Plan = tenant.PlanFree
+	}
+
+	// Check if user already exists
+	existingUser, _ := a.tenantManager.GetUserByEmail(r.Context(), req.Email)
+	if existingUser != nil {
+		a.writeErrorResponse(w, http.StatusConflict, 
+			fmt.Errorf("user already exists"), "An account with this email already exists")
+		return
+	}
+
+	// Create tenant and user
+	tenantID, userID, err := a.tenantManager.CreateTenantWithOwner(r.Context(), &tenant.CreateTenantWithOwnerRequest{
+		Name:     req.TenantName,
+		Plan:     req.Plan,
+		Password: req.Password,
+		OwnerInfo: tenant.UserInfo{
+			Email:     req.Email,
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Role:      tenant.RoleOwner,
+		},
+	})
+
+	if err != nil {
+		a.logger.Error("Failed to create tenant and user", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to create account")
+		return
+	}
+
+	// Get the created user
+	user, err := a.tenantManager.GetUserByID(r.Context(), userID)
+	if err != nil {
+		a.logger.Error("Failed to get created user", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Account created but failed to retrieve user info")
+		return
+	}
+
+	// Generate JWT token
+	token, err := a.authenticator.GenerateToken(user)
+	if err != nil {
+		a.logger.Error("Failed to generate token for new user", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Account created but failed to generate authentication token")
+		return
+	}
+
+	// Return successful registration response
+	response := LoginResponse{
+		Token:     token,
+		User:      user,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	a.logger.Info("User registered successfully", 
+		zap.String("user_id", userID), 
+		zap.String("tenant_id", tenantID),
+		zap.String("email", req.Email))
+	
+	a.writeJSONResponse(w, http.StatusCreated, response)
+}
+
+func (a *API) handleTenantRefresh(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Tenant refresh endpoint called")
+	
+	// Extract user from current token
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Invalid or expired token")
+		return
+	}
+
+	// Get current user info (to ensure user still exists and is active)
+	user, err := a.tenantManager.GetUserByID(r.Context(), claims.UserID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, 
+			fmt.Errorf("user not found"), "User account no longer exists")
+		return
+	}
+
+	// Generate new token
+	newToken, err := a.authenticator.GenerateToken(user)
+	if err != nil {
+		a.logger.Error("Failed to generate refresh token", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to refresh token")
+		return
+	}
+
+	response := LoginResponse{
+		Token:     newToken,
+		User:      user,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	a.logger.Info("Token refreshed successfully", zap.String("user_id", claims.UserID))
+	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *API) handleListTenants(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("List tenants endpoint called")
+	
+	// Extract user from token to check permissions
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// For now, users can only see their own tenant
+	// In a multi-tenant admin scenario, you might allow admins to see all tenants
+	userTenant, err := a.tenantManager.GetTenant(r.Context(), claims.TenantID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Tenant not found")
+		return
+	}
+
+	// Return tenant list (currently just the user's tenant)
+	tenants := []*tenant.Tenant{userTenant}
+	
+	response := ListResponse{
+		Items:      tenants,
+		TotalCount: 1,
+		Page:       1,
+		PageSize:   10,
+		HasMore:    false,
+	}
+
+	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *API) handleCreateTenant(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Create tenant endpoint called")
+	
+	// This endpoint might be restricted to system admins
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Check if user has permission to create tenants (system admin)
+	if claims.Role != tenant.RoleOwner {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "Only system administrators can create tenants")
+		return
+	}
+
+	var req CreateTenantRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Name == "" || req.OwnerEmail == "" || req.OwnerName == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing required fields"), "Name, owner email, and owner name are required")
+		return
+	}
+
+	// Set default plan if not specified
+	if req.Plan == "" {
+		req.Plan = tenant.PlanFree
+	}
+
+	// Create the tenant
+	newTenant := &tenant.Tenant{
+		Name:      req.Name,
+		Plan:      req.Plan,
+		Active:    true,
+		CreatedAt: time.Now(),
+	}
+
+	err = a.tenantManager.CreateTenant(r.Context(), newTenant)
+	if err != nil {
+		a.logger.Error("Failed to create tenant", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to create tenant")
+		return
+	}
+
+	a.logger.Info("Tenant created successfully", zap.String("tenant_id", newTenant.ID), zap.String("name", newTenant.Name))
+	a.writeSuccessResponse(w, "Tenant created successfully", newTenant)
+}
+
+func (a *API) handleGetTenant(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Get tenant endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get tenant ID from URL path
+	tenantID := a.extractPathVariable(r, "id")
+	if tenantID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing tenant ID"), "Tenant ID is required")
+		return
+	}
+
+	// Check if user has access to this tenant
+	if claims.TenantID != tenantID && claims.Role != tenant.RoleOwner {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("access denied"), "You don't have access to this tenant")
+		return
+	}
+
+	// Get the tenant
+	tenantInfo, err := a.tenantManager.GetTenant(r.Context(), tenantID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Tenant not found")
+		return
+	}
+
+	a.writeJSONResponse(w, http.StatusOK, tenantInfo)
+}
+
+func (a *API) handleUpdateTenant(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Update tenant endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get tenant ID from URL path
+	tenantID := a.extractPathVariable(r, "id")
+	if tenantID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing tenant ID"), "Tenant ID is required")
+		return
+	}
+
+	// Check if user has permission to update this tenant
+	if claims.TenantID != tenantID || (claims.Role != tenant.RoleOwner && claims.Role != tenant.RoleAdmin) {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "You don't have permission to update this tenant")
+		return
+	}
+
+	var req UpdateTenantRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Get current tenant
+	currentTenant, err := a.tenantManager.GetTenant(r.Context(), tenantID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Tenant not found")
+		return
+	}
+
+	// Update fields that were provided
+	updated := false
+	if req.Name != "" && req.Name != currentTenant.Name {
+		currentTenant.Name = req.Name
+		updated = true
+	}
+	if req.Plan != "" && req.Plan != currentTenant.Plan {
+		currentTenant.Plan = req.Plan
+		updated = true
+	}
+	if req.Enabled != nil && *req.Enabled != currentTenant.Active {
+		currentTenant.Active = *req.Enabled
+		updated = true
+	}
+
+	if !updated {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("no updates provided"), "No valid fields to update")
+		return
+	}
+
+	// Save the updated tenant
+	err = a.tenantManager.UpdateTenant(r.Context(), currentTenant)
+	if err != nil {
+		a.logger.Error("Failed to update tenant", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to update tenant")
+		return
+	}
+
+	a.logger.Info("Tenant updated successfully", zap.String("tenant_id", tenantID))
+	a.writeSuccessResponse(w, "Tenant updated successfully", currentTenant)
+}
+
+func (a *API) handleDeleteTenant(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Delete tenant endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get tenant ID from URL path
+	tenantID := a.extractPathVariable(r, "id")
+	if tenantID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing tenant ID"), "Tenant ID is required")
+		return
+	}
+
+	// Only tenant owners can delete tenants
+	if claims.TenantID != tenantID || claims.Role != tenant.RoleOwner {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "Only tenant owners can delete tenants")
+		return
+	}
+
+	// Delete the tenant
+	err = a.tenantManager.DeleteTenant(r.Context(), tenantID)
+	if err != nil {
+		a.logger.Error("Failed to delete tenant", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to delete tenant")
+		return
+	}
+
+	a.logger.Info("Tenant deleted successfully", zap.String("tenant_id", tenantID))
+	a.writeSuccessResponse(w, "Tenant deleted successfully", nil)
+}
+
+// Billing API handlers
+
+func (a *API) handleListSubscriptions(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("List subscriptions endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get subscriptions for the user's tenant
+	subscriptions, err := a.billingManager.GetTenantSubscriptions(r.Context(), claims.TenantID)
+	if err != nil {
+		a.logger.Error("Failed to get subscriptions", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to retrieve subscriptions")
+		return
+	}
+
+	response := ListResponse{
+		Items:      subscriptions,
+		TotalCount: len(subscriptions),
+		Page:       1,
+		PageSize:   50,
+		HasMore:    false,
+	}
+
+	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *API) handleCreateSubscription(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Create subscription endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Only tenant owners and admins can create subscriptions
+	if claims.Role != tenant.RoleOwner && claims.Role != tenant.RoleAdmin {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "Only tenant owners and admins can manage subscriptions")
+		return
+	}
+
+	var req SubscriptionRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Plan == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing required fields"), "Plan is required")
+		return
+	}
+
+	// Set default billing cycle
+	if req.BillingCycle == "" {
+		req.BillingCycle = "monthly"
+	}
+
+	// Get tenant info
+	tenantInfo, err := a.tenantManager.GetTenant(r.Context(), claims.TenantID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Tenant not found")
+		return
+	}
+
+	// Create billing info for tenant
+	billingInfo := &billing.TenantBillingInfo{
+		TenantID:           claims.TenantID,
+		Plan:               req.Plan,
+		Status:             billing.SubscriptionActive,
+		CurrentPeriodStart: time.Now(),
+		CurrentPeriodEnd:   time.Now().AddDate(0, 1, 0), // One month from now
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
+	}
+
+	// Create subscription in billing system
+	err = a.billingManager.CreateSubscription(r.Context(), billingInfo)
+	if err != nil {
+		a.logger.Error("Failed to create subscription", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to create subscription")
+		return
+	}
+
+	// Update tenant plan
+	tenantInfo.Plan = req.Plan
+	err = a.tenantManager.UpdateTenant(r.Context(), tenantInfo)
+	if err != nil {
+		a.logger.Warn("Subscription created but failed to update tenant plan", zap.Error(err))
+	}
+
+	a.logger.Info("Subscription created successfully", 
+		zap.String("tenant_id", claims.TenantID), 
+		zap.String("plan", string(req.Plan)))
+	
+	a.writeSuccessResponse(w, "Subscription created successfully", billingInfo)
+}
+
+func (a *API) handleGetSubscription(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Get subscription endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get subscription ID from URL path
+	subscriptionID := a.extractPathVariable(r, "id")
+	if subscriptionID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing subscription ID"), "Subscription ID is required")
+		return
+	}
+
+	// Get subscription details
+	subscription, err := a.billingManager.GetSubscription(r.Context(), subscriptionID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Subscription not found")
+		return
+	}
+
+	// Verify user has access to this subscription
+	if subscription.TenantID != claims.TenantID {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("access denied"), "You don't have access to this subscription")
+		return
+	}
+
+	a.writeJSONResponse(w, http.StatusOK, subscription)
+}
+
+func (a *API) handleUpdateSubscription(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Update subscription endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Only tenant owners and admins can update subscriptions
+	if claims.Role != tenant.RoleOwner && claims.Role != tenant.RoleAdmin {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "Only tenant owners and admins can manage subscriptions")
+		return
+	}
+
+	// Get subscription ID from URL path
+	subscriptionID := a.extractPathVariable(r, "id")
+	if subscriptionID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing subscription ID"), "Subscription ID is required")
+		return
+	}
+
+	var req SubscriptionRequest
+	if err := a.parseJSONRequest(r, &req); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid request body")
+		return
+	}
+
+	// Get current subscription
+	subscription, err := a.billingManager.GetSubscription(r.Context(), subscriptionID)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusNotFound, err, "Subscription not found")
+		return
+	}
+
+	// Verify user has access to this subscription
+	if subscription.TenantID != claims.TenantID {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("access denied"), "You don't have access to this subscription")
+		return
+	}
+
+	// Update subscription plan if provided
+	if req.Plan != "" && req.Plan != subscription.Plan {
+		subscription.Plan = req.Plan
+		subscription.UpdatedAt = time.Now()
+		
+		err = a.billingManager.UpdateSubscription(r.Context(), subscription)
+		if err != nil {
+			a.logger.Error("Failed to update subscription", zap.Error(err))
+			a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to update subscription")
+			return
+		}
+
+		// Update tenant plan as well
+		tenantInfo, err := a.tenantManager.GetTenant(r.Context(), claims.TenantID)
+		if err == nil {
+			tenantInfo.Plan = req.Plan
+			a.tenantManager.UpdateTenant(r.Context(), tenantInfo)
+		}
+	}
+
+	a.logger.Info("Subscription updated successfully", zap.String("subscription_id", subscriptionID))
+	a.writeSuccessResponse(w, "Subscription updated successfully", subscription)
+}
+
+func (a *API) handleCancelSubscription(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Cancel subscription endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Only tenant owners can cancel subscriptions
+	if claims.Role != tenant.RoleOwner {
+		a.writeErrorResponse(w, http.StatusForbidden, 
+			fmt.Errorf("insufficient permissions"), "Only tenant owners can cancel subscriptions")
+		return
+	}
+
+	// Get subscription ID from URL path
+	subscriptionID := a.extractPathVariable(r, "id")
+	if subscriptionID == "" {
+		a.writeErrorResponse(w, http.StatusBadRequest, 
+			fmt.Errorf("missing subscription ID"), "Subscription ID is required")
+		return
+	}
+
+	// Cancel the subscription
+	err = a.billingManager.CancelSubscription(r.Context(), subscriptionID)
+	if err != nil {
+		a.logger.Error("Failed to cancel subscription", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to cancel subscription")
+		return
+	}
+
+	// Update tenant plan to free
+	tenantInfo, err := a.tenantManager.GetTenant(r.Context(), claims.TenantID)
+	if err == nil {
+		tenantInfo.Plan = tenant.PlanFree
+		a.tenantManager.UpdateTenant(r.Context(), tenantInfo)
+	}
+
+	a.logger.Info("Subscription canceled successfully", zap.String("subscription_id", subscriptionID))
+	a.writeSuccessResponse(w, "Subscription canceled successfully", nil)
+}
+
+func (a *API) handleListInvoices(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("List invoices endpoint called")
+	
+	claims, err := a.extractUserFromToken(r)
+	if err != nil {
+		a.writeErrorResponse(w, http.StatusUnauthorized, err, "Authentication required")
+		return
+	}
+
+	// Get pagination parameters
+	page := a.extractIntQueryParam(r, "page", 1)
+	pageSize := a.extractIntQueryParam(r, "page_size", 20)
+
+	// Get invoices for the user's tenant
+	invoices, totalCount, err := a.billingManager.GetTenantInvoices(r.Context(), claims.TenantID, page, pageSize)
+	if err != nil {
+		a.logger.Error("Failed to get invoices", zap.Error(err))
+		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to retrieve invoices")
+		return
+	}
+
+	response := ListResponse{
+		Items:      invoices,
+		TotalCount: totalCount,
+		Page:       page,
+		PageSize:   pageSize,
+		HasMore:    totalCount > page*pageSize,
+	}
+
+	a.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *API) handleBillingWebhook(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("Billing webhook endpoint called")
+	
+	// Read the request body
+	var payload map[string]interface{}
+	if err := a.parseJSONRequest(r, &payload); err != nil {
+		a.writeErrorResponse(w, http.StatusBadRequest, err, "Invalid webhook payload")
+		return
+	}
+
+	// Log the webhook for debugging
+	a.logger.Info("Received billing webhook", zap.Any("payload", payload))
+
+	// In a real implementation, you would:
+	// 1. Verify the webhook signature
+	// 2. Process the webhook event based on type
+	// 3. Update subscription/invoice status
+	// 4. Handle failed payments, subscription changes, etc.
+
+	// For now, just acknowledge receipt
+	a.writeSuccessResponse(w, "Webhook received successfully", nil)
 }

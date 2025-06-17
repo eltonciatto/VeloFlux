@@ -14,30 +14,37 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          - alertmanager:9093
+          - veloflux-alertmanager:9093
 
 scrape_configs:
-  # VeloFlux Load Balancer metrics
-  - job_name: 'veloflux-lb'
+  # VeloFlux Backend metrics
+  - job_name: 'veloflux-backend'
     static_configs:
-      - targets: ['veloflux-lb-prod:8080']
+      - targets: ['veloflux-backend:8080']
     metrics_path: /metrics
     scrape_interval: 10s
     scrape_timeout: 5s
 
-  # VeloFlux API metrics (admin API)
+  # VeloFlux API metrics
   - job_name: 'veloflux-api'
     static_configs:
-      - targets: ['veloflux-lb-prod:9090']
+      - targets: ['veloflux-backend:9090']
     metrics_path: /metrics
     scrape_interval: 15s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['veloflux-redis:6379']
+    metrics_path: /metrics
+    scrape_interval: 30s
 
   # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # Grafana metrics (if available)
+  # Grafana metrics
   - job_name: 'grafana'
     static_configs:
       - targets: ['veloflux-grafana:3000']
@@ -50,29 +57,6 @@ scrape_configs:
       - targets: ['veloflux-alertmanager:9093']
     metrics_path: /metrics
     scrape_interval: 30s
-    static_configs:
-      - targets: ['nginx-exporter:9113']
-
-  # Self monitoring
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-
-  # Grafana metrics
-  - job_name: 'grafana'
-    static_configs:
-      - targets: ['grafana:3000']
-    metrics_path: /metrics
-
-  # AlertManager metrics
-  - job_name: 'alertmanager'
-    static_configs:
-      - targets: ['alertmanager:9093']
-
-  # Jaeger metrics
-  - job_name: 'jaeger'
-    static_configs:
-      - targets: ['jaeger:14269']
 
 # Remote write configuration for long-term storage
 # remote_write:
@@ -80,10 +64,3 @@ scrape_configs:
 #     basic_auth:
 #       username: "your_username"
 #       password: "your_password"
-
-# Storage configuration
-storage:
-  tsdb:
-    retention.time: 30d
-    retention.size: 10GB
-    wal-compression: true

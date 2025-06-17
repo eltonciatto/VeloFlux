@@ -701,6 +701,11 @@ func (a *Authenticator) GetClaimsFromRequest(r *http.Request) (*Claims, error) {
 	return a.VerifyToken(tokenString)
 }
 
+// GetJWTSecret returns the JWT secret for token validation
+func (a *Authenticator) GetJWTSecret() string {
+	return a.config.JWTSecret
+}
+
 // authSMTPConfigToSMTPConfig converts AuthSMTPConfig to SMTPConfig
 func authSMTPConfigToSMTPConfig(config AuthSMTPConfig) SMTPConfig {
 	return SMTPConfig{

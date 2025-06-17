@@ -1,5 +1,5 @@
 # VeloFlux Backend Configuration
-# Configuração para arquitetura organizada: Frontend separado do Backend
+# Configuração otimizada para nova estrutura: Frontend separado + Backend API
 
 global:
   bind_address: "0.0.0.0:80"
@@ -12,8 +12,8 @@ global:
     retries: 3
 
   rate_limit:
-    requests_per_second: 1000
-    burst_size: 2000
+    requests_per_second: 100
+    burst_size: 200
     cleanup_interval: "5m"
 
   waf:
@@ -21,60 +21,72 @@ global:
     level: "standard"
     log_violations: true
 
+  geoip:
+    enabled: false
+
   ai:
     enabled: false
 
-# API Server Configuration
-api:
-  bind_address: "0.0.0.0:9090"
-  auth_enabled: false
-  username: "admin"
-  password: "veloflux123"
-
-# Auth Configuration
+# Authentication Configuration
 auth:
-  jwt_secret: "veloflux-secret-key-change-in-production"
-  jwt_issuer: "veloflux"
-  jwt_audience: "veloflux-api"
-  token_validity: "24h"
+  enabled: true
+  jwt_secret: "veloflux-secure-token-change-in-production"
+  jwt_issuer: "veloflux-lb"
+  jwt_audience: "veloflux-admin"
+  token_validity: "12h"
+  oidc_enabled: false
+  # OIDC Config for future use
+  oidc:
+    enabled: false
+    issuer_url: "https://accounts.google.com"
+    client_id: ""
+    redirect_uri: "http://localhost/auth/callback"
 
-# Cluster Configuration
+# Clustering Configuration
 cluster:
-  enabled: false
+  enabled: true
   redis_address: "redis:6379"
   redis_password: ""
   redis_db: 0
-  instance_id: "veloflux-backend"
-  heartbeat_interval: "30s"
-  leader_election_timeout: "60s"
+  node_id: ""
+  heartbeat_interval: "5s"
+  leader_timeout: "15s"
 
-# Backend Pools
+# API Server Configuration - IMPORTANTE!
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: true
+  username: "admin"
+  password: "veloflux-admin-password"
+
+# Multi-tenant Configuration
+tenant:
+  multi_tenant: true
+
+# Backend Pools - Para o Load Balancer (porta 80)
 pools:
-  - name: "api-pool"
+  - name: "frontend-pool"
     algorithm: "round_robin"
     sticky_sessions: false
     backends:
-      - address: "localhost:9090"
+      - address: "frontend:80"
         weight: 100
         health_check:
-          path: "/health"
-          interval: "30s"
-          timeout: "5s"
+          path: "/"
+          interval: "15s"
+          timeout: "3s"
           expected_status: 200
 
-# Routes (APIs e métricas)
+# Routing Rules - Para o Load Balancer (porta 80)
 routes:
   - host: "*"
-    pool: "api-pool"
-    path_prefix: "/api"
-    
-  - host: "*"
-    pool: "api-pool"
-    path_prefix: "/health"
+    pool: "frontend-pool"
+    path_prefix: "/"
 
-# Configurações de Tenant (exemplo)
+# Tenants Configuration - Para o sistema multi-tenant
 tenants:
   - id: "default"
     name: "Default Tenant"
-    domain: "localhost"
+    description: "Default tenant for basic usage"
     enabled: true
+    policies: ["read", "write"]

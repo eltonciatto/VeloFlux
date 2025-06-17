@@ -1,73 +1,102 @@
-# VeloFlux LB Configuração Profissional
-# Otimizada para multi-tenant e segurança
+# VeloFlux Backend Configuration
+# Configuração de produção com autenticação habilitada
 
 global:
   bind_address: "0.0.0.0:80"
   tls_bind_address: "0.0.0.0:443"
   metrics_address: "0.0.0.0:8080"
   
-  # TLS Configuration - LetsEncrypt Auto-cert
-  tls:
-    auto_cert: true
-    acme_email: "admin@veloflux.io"
-    cert_dir: "/etc/ssl/certs/veloflux"
-    domains:
-      - "public.dev.veloflux.io"
-      - "tenant1.public.dev.veloflux.io"
-      - "tenant2.public.dev.veloflux.io"
-      - "api.public.dev.veloflux.io"
-      - "admin.public.dev.veloflux.io"
-      - "*.public.dev.veloflux.io"
-
-  # Health Check Defaults
   health_check:
     interval: "30s"
     timeout: "5s"
     retries: 3
 
-  # Rate Limiting - Proteção contra DDoS
   rate_limit:
     requests_per_second: 100
     burst_size: 200
     cleanup_interval: "5m"
 
-  # Web Application Firewall
   waf:
     enabled: true
-    ruleset_path: "/etc/veloflux/waf/crs-rules.conf"
     level: "standard"
     log_violations: true
 
-  # GeoIP Configuration
-  geoip:
+  ai:
     enabled: false
-    database_path: "/etc/veloflux/geoip/GeoLite2-City.mmdb"
 
-# Authentication Configuration
+# Authentication Configuration - PRODUÇÃO ATIVA
 auth:
   enabled: true
-  jwt_secret: "veloflux-secure-token-change-in-production"
-  jwt_issuer: "veloflux-lb"
-  jwt_audience: "veloflux-admin"
-  token_validity: "12h"
-  oidc_enabled: false
+  jwt_secret: "VeloFlux2025-Production-Secret-Key-Super-Secure"
+  jwt_issuer: "veloflux-production"
+  jwt_audience: "veloflux-users"
+  token_validity: "8h"
+  refresh_token_validity: "24h"
+  password_policy:
+    min_length: 8
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+  oidc:
+    enabled: true
+    issuer_url: "https://accounts.google.com"
+    client_id: "your-google-client-id"
+    client_secret: "your-google-client-secret"
+    redirect_uri: "http://localhost/auth/callback"
 
-# Clustering Configuration
+# API Server Configuration - AUTENTICAÇÃO ATIVA
+api:
+  bind_address: "0.0.0.0:9090"
+  auth_enabled: true
+  username: "admin"
+  password: "VeloFlux2025!"
+  cors_enabled: true
+  allowed_origins: ["http://localhost", "http://localhost:3000", "http://localhost:80"]
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+
+# Cluster Configuration
 cluster:
   enabled: true
   redis_address: "redis:6379"
   redis_password: ""
   redis_db: 0
-  node_id: ""  # Auto-generated if empty
-  heartbeat_interval: "5s"
-  leader_timeout: "15s"
+  instance_id: "veloflux-backend"
+  heartbeat_interval: "30s"
+  leader_election_timeout: "60s"
 
-# API Server
-api:
-  bind_address: "0.0.0.0:9090"
-  auth_enabled: true
-  username: "admin"
-  password: "veloflux-admin-password"
+# Tenant Configuration
+tenant:
+  enabled: true
+  default_limits:
+    requests_per_second: 100
+    concurrent_connections: 1000
+    bandwidth_mbps: 100
+  auto_provisioning: true
+
+# Billing Configuration
+billing:
+  enabled: true
+  provider: "stripe"
+  webhook_endpoint: "/billing/webhook"
+
+# User accounts for testing
+users:
+  - username: "admin"
+    password: "VeloFlux2025!"
+    role: "admin"
+    email: "admin@veloflux.io"
+    
+  - username: "user1"
+    password: "User123!"
+    role: "user"
+    email: "user1@veloflux.io"
+    
+  - username: "tenant1"
+    password: "Tenant123!"
+    role: "tenant"
+    email: "tenant1@veloflux.io"
 
 # Backend Pools
 pools:
@@ -143,6 +172,19 @@ pools:
           timeout: "3s"
           expected_status: 200
 
+  # Pool para APIs internas
+  - name: "internal-api"
+    algorithm: "round_robin"
+    sticky_sessions: false
+    backends:
+      - address: "localhost:9090"
+        weight: 100
+        health_check:
+          path: "/health"
+          interval: "30s"
+          timeout: "5s"
+          expected_status: 200
+
 # Routing Rules
 routes:
   # Rotas de domínios públicos
@@ -170,3 +212,8 @@ routes:
   - host: "*.public.dev.veloflux.io"
     pool: "public-pool"
     path_prefix: "/public"
+
+  # Rotas para APIs internas
+  - host: "*"
+    pool: "internal-api"
+    path_prefix: "/api"

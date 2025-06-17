@@ -643,3 +643,218 @@ func getOverage(plan tenant.PlanType, resource string, usage int64) int64 {
 	}
 	return usage - limit
 }
+
+// Additional methods for API integration
+
+// GetTenantSubscriptions retrieves all subscriptions for a tenant
+func (m *BillingManager) GetTenantSubscriptions(ctx context.Context, tenantID string) ([]*TenantBillingInfo, error) {
+	// Get subscription data from Redis
+	key := fmt.Sprintf("vf:billing:tenant:%s", tenantID)
+	data, err := m.client.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			// No subscription found, return empty list
+			return []*TenantBillingInfo{}, nil
+		}
+		return nil, fmt.Errorf("failed to get tenant subscription: %v", err)
+	}
+
+	var billingInfo TenantBillingInfo
+	if err := json.Unmarshal([]byte(data), &billingInfo); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal billing info: %v", err)
+	}
+
+	return []*TenantBillingInfo{&billingInfo}, nil
+}
+
+// CreateSubscription creates a new subscription for a tenant
+func (m *BillingManager) CreateSubscription(ctx context.Context, billingInfo *TenantBillingInfo) error {
+	// Generate subscription ID if not provided
+	if billingInfo.SubscriptionID == "" {
+		billingInfo.SubscriptionID = fmt.Sprintf("sub_%d", time.Now().UnixNano())
+	}
+
+	// Store in Redis
+	key := fmt.Sprintf("vf:billing:tenant:%s", billingInfo.TenantID)
+	data, err := json.Marshal(billingInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal billing info: %v", err)
+	}
+
+	err = m.client.Set(ctx, key, data, 0).Err()
+	if err != nil {
+		return fmt.Errorf("failed to store billing info: %v", err)
+	}
+
+	// Also store by subscription ID for lookups
+	subKey := fmt.Sprintf("vf:billing:subscription:%s", billingInfo.SubscriptionID)
+	err = m.client.Set(ctx, subKey, billingInfo.TenantID, 0).Err()
+	if err != nil {
+		m.logger.Warn("Failed to create subscription lookup", zap.Error(err))
+	}
+
+	m.logger.Info("Subscription created",
+		zap.String("tenant_id", billingInfo.TenantID),
+		zap.String("subscription_id", billingInfo.SubscriptionID),
+		zap.String("plan", string(billingInfo.Plan)))
+
+	return nil
+}
+
+// GetSubscription retrieves a subscription by ID
+func (m *BillingManager) GetSubscription(ctx context.Context, subscriptionID string) (*TenantBillingInfo, error) {
+	// Get tenant ID from subscription lookup
+	subKey := fmt.Sprintf("vf:billing:subscription:%s", subscriptionID)
+	tenantID, err := m.client.Get(ctx, subKey).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, fmt.Errorf("subscription not found: %s", subscriptionID)
+		}
+		return nil, fmt.Errorf("failed to lookup subscription: %v", err)
+	}
+
+	// Get billing info
+	key := fmt.Sprintf("vf:billing:tenant:%s", tenantID)
+	data, err := m.client.Get(ctx, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get billing info: %v", err)
+	}
+
+	var billingInfo TenantBillingInfo
+	if err := json.Unmarshal([]byte(data), &billingInfo); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal billing info: %v", err)
+	}
+
+	return &billingInfo, nil
+}
+
+// UpdateSubscription updates an existing subscription
+func (m *BillingManager) UpdateSubscription(ctx context.Context, billingInfo *TenantBillingInfo) error {
+	// Store updated billing info
+	key := fmt.Sprintf("vf:billing:tenant:%s", billingInfo.TenantID)
+	data, err := json.Marshal(billingInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal billing info: %v", err)
+	}
+
+	err = m.client.Set(ctx, key, data, 0).Err()
+	if err != nil {
+		return fmt.Errorf("failed to update billing info: %v", err)
+	}
+
+	m.logger.Info("Subscription updated",
+		zap.String("tenant_id", billingInfo.TenantID),
+		zap.String("subscription_id", billingInfo.SubscriptionID))
+
+	return nil
+}
+
+// CancelSubscription cancels a subscription
+func (m *BillingManager) CancelSubscription(ctx context.Context, subscriptionID string) error {
+	// Get the subscription first
+	billingInfo, err := m.GetSubscription(ctx, subscriptionID)
+	if err != nil {
+		return err
+	}
+
+	// Update status to canceled
+	billingInfo.Status = SubscriptionCanceled
+	billingInfo.CancelAtPeriodEnd = true
+	billingInfo.UpdatedAt = time.Now()
+
+	// Save the updated subscription
+	err = m.UpdateSubscription(ctx, billingInfo)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("Subscription canceled",
+		zap.String("tenant_id", billingInfo.TenantID),
+		zap.String("subscription_id", subscriptionID))
+
+	return nil
+}
+
+// Invoice represents a billing invoice
+type Invoice struct {
+	ID            string    `json:"id"`
+	TenantID      string    `json:"tenant_id"`
+	SubscriptionID string   `json:"subscription_id"`
+	AmountDue     int64     `json:"amount_due"` // in cents
+	Currency      string    `json:"currency"`
+	Status        string    `json:"status"` // paid, pending, failed
+	PeriodStart   time.Time `json:"period_start"`
+	PeriodEnd     time.Time `json:"period_end"`
+	CreatedAt     time.Time `json:"created_at"`
+	PaidAt        *time.Time `json:"paid_at,omitempty"`
+}
+
+// GetTenantInvoices retrieves invoices for a tenant with pagination
+func (m *BillingManager) GetTenantInvoices(ctx context.Context, tenantID string, page, pageSize int) ([]*Invoice, int, error) {
+	// For this implementation, we'll generate sample invoices
+	// In a real system, you'd query from your billing provider or database
+
+	// Get subscription info
+	subscriptions, err := m.GetTenantSubscriptions(ctx, tenantID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var invoices []*Invoice
+
+	// Generate sample invoices if there's an active subscription
+	if len(subscriptions) > 0 {
+		subscription := subscriptions[0]
+
+		// Generate last 3 months of invoices
+		for i := 0; i < 3; i++ {
+			invoiceDate := time.Now().AddDate(0, -i, 0)
+			invoice := &Invoice{
+				ID:             fmt.Sprintf("inv_%s_%d", tenantID, invoiceDate.Unix()),
+				TenantID:       tenantID,
+				SubscriptionID: subscription.SubscriptionID,
+				AmountDue:      getPlanPrice(subscription.Plan),
+				Currency:       "USD",
+				Status:         "paid",
+				PeriodStart:    invoiceDate.AddDate(0, -1, 0),
+				PeriodEnd:      invoiceDate,
+				CreatedAt:      invoiceDate,
+				PaidAt:         &invoiceDate,
+			}
+			invoices = append(invoices, invoice)
+		}
+	}
+
+	// Simple pagination
+	totalCount := len(invoices)
+	start := (page - 1) * pageSize
+	end := start + pageSize
+
+	if start >= totalCount {
+		return []*Invoice{}, totalCount, nil
+	}
+
+	if end > totalCount {
+		end = totalCount
+	}
+
+	return invoices[start:end], totalCount, nil
+}
+
+// getPlanPrice returns the monthly price for a plan (in cents)
+func getPlanPrice(plan tenant.PlanType) int64 {
+	switch plan {
+	case tenant.PlanFree:
+		return 0
+	case tenant.PlanBasic:
+		return 999 // $9.99
+	case tenant.PlanPro:
+		return 2999 // $29.99
+	case tenant.PlanBusiness:
+		return 9999 // $99.99
+	case tenant.PlanCustom:
+		return 19999 // $199.99
+	default:
+		return 0
+	}
+}
