@@ -1,0 +1,25 @@
+# Diagnóstico do problema de métricas do VeloFlux
+
+## Problema Identificado
+O código do VeloFlux define corretamente as métricas do Prometheus no pacote "internal/metrics", 
+mas essas métricas não estão sendo atualizadas durante o processamento das requisições no router.
+
+## Solução Proposta
+Modificar o arquivo "internal/router/router.go" para adicionar instrumentação das métricas do Prometheus.
+
+### Modificações necessárias
+
+1. Importar o pacote de métricas no router.go:
+
+
+2. Modificar o método createProxyHandler para atualizar métricas:
+
+
+3. Adicionar função para atualizar métricas de saúde no health.go:
+
+
+4. Chamar essa função no método check do health.go.
+
+## Implementação
+Para implementar essas mudanças, você pode aplicar o patch manualmente nos arquivos indicados,
+ou executar os comandos a seguir para modificar os arquivos diretamente.

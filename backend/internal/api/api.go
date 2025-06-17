@@ -252,22 +252,36 @@ func (a *API) setupRoutes() {
 		a.logger.Info("Billing API not initialized - billingManager is nil")
 	}
 
-	// OIDC APIs
-	if a.oidcManager != nil && a.authenticator != nil {
-		oidcAPI := NewOIDCHandlers(a.oidcManager, a.authenticator, a.tenantManager, a.logger)
-		oidcAPI.SetupRoutes(a.router)
-	}
-
-	// Orchestration APIs
-	if a.orchestrator != nil {
-		orchestrationAPI := NewOrchestrationAPI(a.orchestrator, a.tenantManager, a.logger)
-		orchestrationAPI.SetupRoutes(a.router)
-	}
-
-	// AI/ML APIs
-	if a.config.Global.AI.Enabled && a.adaptiveBalancer != nil {
-		a.setupAIRoutes()
-		a.logger.Info("AI/ML API routes enabled")
+	// Tenant-specific APIs (rotas específicas por tenant)
+	if a.tenantManager != nil && a.authenticator != nil {
+		a.logger.Info("Registering tenant-specific API routes")
+		
+		// Criar um sub-router para as rotas tenant-específicas
+		tenantSpecificRouter := a.router.PathPrefix("/api/tenants/{tenant_id}").Subrouter()
+		
+		// User Management APIs
+		tenantSpecificRouter.HandleFunc("/users", a.requireTenantAccess(a.handleListTenantUsers)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/users", a.requireTenantAccess(a.handleAddTenantUser)).Methods("POST")
+		tenantSpecificRouter.HandleFunc("/users/{user_id}", a.requireTenantAccess(a.handleUpdateTenantUser)).Methods("PUT")
+		tenantSpecificRouter.HandleFunc("/users/{user_id}", a.requireTenantAccess(a.handleDeleteTenantUser)).Methods("DELETE")
+		
+		// Tenant Monitoring APIs
+		tenantSpecificRouter.HandleFunc("/metrics", a.requireTenantAccess(a.handleTenantMetrics)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/logs", a.requireTenantAccess(a.handleTenantLogs)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/usage", a.requireTenantAccess(a.handleTenantUsage)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/alerts", a.requireTenantAccess(a.handleTenantAlerts)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/status", a.requireTenantAccess(a.handleTenantStatus)).Methods("GET")
+		
+		// OIDC Configuration APIs
+		tenantSpecificRouter.HandleFunc("/oidc/config", a.requireTenantAccess(a.handleGetTenantOIDCConfig)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/oidc/config", a.requireTenantAccess(a.handleUpdateTenantOIDCConfig)).Methods("PUT")
+		tenantSpecificRouter.HandleFunc("/oidc/test", a.requireTenantAccess(a.handleTestTenantOIDCConfig)).Methods("POST")
+		
+		// Tenant Configuration APIs
+		tenantSpecificRouter.HandleFunc("/config", a.requireTenantAccess(a.handleGetTenantConfig)).Methods("GET")
+		tenantSpecificRouter.HandleFunc("/billing", a.requireTenantAccess(a.handleGetTenantBilling)).Methods("GET")
+		
+		a.logger.Info("Tenant-specific API routes registered successfully")
 	}
 }
 
@@ -1632,4 +1646,559 @@ func (a *API) handleBillingWebhook(w http.ResponseWriter, r *http.Request) {
 
 	// For now, just acknowledge receipt
 	a.writeSuccessResponse(w, "Webhook received successfully", nil)
+}
+
+// requireTenantAccess is a middleware that checks if the user has access to the tenant
+func (a *API) requireTenantAccess(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Extract JWT token
+		token := r.Header.Get("Authorization")
+		if token == "" {
+			http.Error(w, "Authorization header required", http.StatusUnauthorized)
+			return
+		}
+
+		// Remove "Bearer " prefix if present
+		if strings.HasPrefix(token, "Bearer ") {
+			token = strings.TrimPrefix(token, "Bearer ")
+		}
+
+		// Validate token
+		claims, err := a.authenticator.VerifyToken(token)
+		if err != nil {
+			a.logger.Warn("Invalid JWT token", zap.Error(err))
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// Extract tenant_id from URL
+		vars := mux.Vars(r)
+		tenantID := vars["tenant_id"]
+
+		// Check if user has access to this tenant
+		if claims.TenantID != tenantID {
+			a.logger.Warn("User trying to access different tenant", 
+				zap.String("user_tenant", claims.TenantID),
+				zap.String("requested_tenant", tenantID))
+			http.Error(w, "Access denied to tenant", http.StatusForbidden)
+			return
+		}
+
+		// Call the actual handler
+		handler(w, r)
+	}
+}
+
+// User Management Handlers
+func (a *API) handleListTenantUsers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Listing users for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock data for now - in production, fetch from database
+	users := []map[string]interface{}{
+		{
+			"id":         "user1",
+			"email":      "admin@tenant.com",
+			"name":       "Admin User",
+			"role":       "admin",
+			"status":     "active",
+			"created_at": "2024-01-01T00:00:00Z",
+			"last_login": "2024-06-17T10:00:00Z",
+		},
+		{
+			"id":         "user2",
+			"email":      "user@tenant.com",
+			"name":       "Regular User",
+			"role":       "user",
+			"status":     "active",
+			"created_at": "2024-02-01T00:00:00Z",
+			"last_login": "2024-06-16T15:30:00Z",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+func (a *API) handleAddTenantUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	var req struct {
+		Email     string `json:"email"`
+		Name      string `json:"name"`
+		Role      string `json:"role"`
+		SendInvite bool  `json:"send_invite,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	a.logger.Info("Adding user to tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.String("email", req.Email),
+		zap.String("role", req.Role))
+
+	// Mock response
+	newUser := map[string]interface{}{
+		"id":         fmt.Sprintf("user_%d", time.Now().Unix()),
+		"email":      req.Email,
+		"name":       req.Name,
+		"role":       req.Role,
+		"status":     "pending",
+		"created_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(newUser)
+}
+
+func (a *API) handleUpdateTenantUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+	userID := vars["user_id"]
+
+	var req struct {
+		Name   string `json:"name"`
+		Role   string `json:"role"`
+		Status string `json:"status"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	a.logger.Info("Updating user in tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.String("user_id", userID))
+
+	// Mock response
+	updatedUser := map[string]interface{}{
+		"id":         userID,
+		"name":       req.Name,
+		"role":       req.Role,
+		"status":     req.Status,
+		"updated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedUser)
+}
+
+func (a *API) handleDeleteTenantUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+	userID := vars["user_id"]
+
+	a.logger.Info("Deleting user from tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.String("user_id", userID))
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Tenant Monitoring Handlers
+func (a *API) handleTenantMetrics(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	// Parse query parameters
+	timeRange := r.URL.Query().Get("timeRange")
+	if timeRange == "" {
+		timeRange = "1h"
+	}
+
+	a.logger.Info("Getting metrics for tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.String("time_range", timeRange))
+
+	// Mock metrics data
+	metrics := map[string]interface{}{
+		"tenant_id":  tenantID,
+		"time_range": timeRange,
+		"metrics": map[string]interface{}{
+			"requests_per_second": 125.5,
+			"average_response_time": 45.2,
+			"error_rate": 0.15,
+			"active_connections": 23,
+			"bandwidth_usage": map[string]interface{}{
+				"inbound_mbps":  12.4,
+				"outbound_mbps": 18.7,
+			},
+		},
+		"time_series": []map[string]interface{}{
+			{
+				"timestamp": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
+				"requests": 120,
+				"response_time": 43,
+				"errors": 2,
+			},
+			{
+				"timestamp": time.Now().Format(time.RFC3339),
+				"requests": 131,
+				"response_time": 47,
+				"errors": 1,
+			},
+		},
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(metrics)
+}
+
+func (a *API) handleTenantLogs(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	// Parse query parameters
+	level := r.URL.Query().Get("level")
+	limit := r.URL.Query().Get("limit")
+	if limit == "" {
+		limit = "100"
+	}
+
+	a.logger.Info("Getting logs for tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.String("level", level),
+		zap.String("limit", limit))
+
+	// Mock logs data
+	logs := map[string]interface{}{
+		"tenant_id": tenantID,
+		"filters": map[string]string{
+			"level": level,
+			"limit": limit,
+		},
+		"logs": []map[string]interface{}{
+			{
+				"timestamp": time.Now().Add(-2*time.Minute).Format(time.RFC3339),
+				"level": "INFO",
+				"message": "Request processed successfully",
+				"source": "load_balancer",
+				"request_id": "req_123456",
+			},
+			{
+				"timestamp": time.Now().Add(-1*time.Minute).Format(time.RFC3339),
+				"level": "WARN",
+				"message": "High response time detected",
+				"source": "health_checker",
+				"backend": "backend-1",
+			},
+			{
+				"timestamp": time.Now().Format(time.RFC3339),
+				"level": "ERROR",
+				"message": "Backend connection failed",
+				"source": "load_balancer",
+				"backend": "backend-2",
+			},
+		},
+		"total_count": 156,
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(logs)
+}
+
+func (a *API) handleTenantUsage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting usage stats for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock usage data
+	usage := map[string]interface{}{
+		"tenant_id": tenantID,
+		"current_period": map[string]interface{}{
+			"start_date": time.Now().AddDate(0, 0, -30).Format("2006-01-02"),
+			"end_date":   time.Now().Format("2006-01-02"),
+			"requests_count": 1250000,
+			"bandwidth_gb": 45.7,
+			"storage_gb": 12.3,
+		},
+		"resource_usage": map[string]interface{}{
+			"cpu_percent": 65.2,
+			"memory_percent": 78.5,
+			"disk_percent": 42.1,
+		},
+		"quotas": map[string]interface{}{
+			"max_requests_per_month": 2000000,
+			"max_bandwidth_gb": 100,
+			"max_storage_gb": 50,
+		},
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(usage)
+}
+
+func (a *API) handleTenantAlerts(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting alerts for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock alerts data
+	alerts := map[string]interface{}{
+		"tenant_id": tenantID,
+		"active_alerts": []map[string]interface{}{
+			{
+				"id": "alert_001",
+				"type": "high_response_time",
+				"severity": "warning",
+				"message": "Average response time above 50ms",
+				"threshold": "50ms",
+				"current_value": "67ms",
+				"created_at": time.Now().Add(-15*time.Minute).Format(time.RFC3339),
+			},
+			{
+				"id": "alert_002",
+				"type": "backend_down",
+				"severity": "critical",
+				"message": "Backend server is not responding",
+				"backend": "backend-3",
+				"created_at": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
+			},
+		},
+		"alert_history": []map[string]interface{}{
+			{
+				"id": "alert_003",
+				"type": "high_cpu",
+				"severity": "warning",
+				"message": "CPU usage above 80%",
+				"created_at": time.Now().Add(-2*time.Hour).Format(time.RFC3339),
+				"resolved_at": time.Now().Add(-1*time.Hour).Format(time.RFC3339),
+			},
+		},
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(alerts)
+}
+
+func (a *API) handleTenantStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting status for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock status data
+	status := map[string]interface{}{
+		"tenant_id": tenantID,
+		"status": "healthy",
+		"uptime": "99.9%",
+		"services": map[string]interface{}{
+			"load_balancer": "healthy",
+			"health_checker": "healthy",
+			"metrics_collector": "healthy",
+			"log_aggregator": "warning",
+		},
+		"backends": []map[string]interface{}{
+			{
+				"name": "backend-1",
+				"status": "healthy",
+				"response_time": "42ms",
+				"last_check": time.Now().Add(-30*time.Second).Format(time.RFC3339),
+			},
+			{
+				"name": "backend-2",
+				"status": "healthy",
+				"response_time": "38ms",
+				"last_check": time.Now().Add(-25*time.Second).Format(time.RFC3339),
+			},
+			{
+				"name": "backend-3",
+				"status": "down",
+				"last_check": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
+				"error": "Connection timeout",
+			},
+		},
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
+}
+
+// OIDC Configuration Handlers
+func (a *API) handleGetTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting OIDC config for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock OIDC configuration
+	config := map[string]interface{}{
+		"enabled": false,
+		"provider_name": "",
+		"provider_url": "",
+		"client_id": "",
+		"client_secret": "", // In production, never return the actual secret
+		"redirect_uri": "",
+		"scopes": "openid profile email",
+		"groups_claim": "groups",
+		"tenant_id_claim": "tenant_id",
+		"updated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
+}
+
+func (a *API) handleUpdateTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	var req struct {
+		Enabled        bool   `json:"enabled"`
+		ProviderName   string `json:"provider_name"`
+		ProviderURL    string `json:"provider_url"`
+		ClientID       string `json:"client_id"`
+		ClientSecret   string `json:"client_secret"`
+		RedirectURI    string `json:"redirect_uri"`
+		Scopes         string `json:"scopes"`
+		GroupsClaim    string `json:"groups_claim"`
+		TenantIDClaim  string `json:"tenant_id_claim"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	a.logger.Info("Updating OIDC config for tenant", 
+		zap.String("tenant_id", tenantID),
+		zap.Bool("enabled", req.Enabled),
+		zap.String("provider", req.ProviderName))
+
+	// Mock response - in production, save to database
+	config := map[string]interface{}{
+		"enabled": req.Enabled,
+		"provider_name": req.ProviderName,
+		"provider_url": req.ProviderURL,
+		"client_id": req.ClientID,
+		"redirect_uri": req.RedirectURI,
+		"scopes": req.Scopes,
+		"groups_claim": req.GroupsClaim,
+		"tenant_id_claim": req.TenantIDClaim,
+		"updated_at": time.Now().Format(time.RFC3339),
+		"status": "saved",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
+}
+
+func (a *API) handleTestTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Testing OIDC config for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock test result
+	result := map[string]interface{}{
+		"tenant_id": tenantID,
+		"test_status": "success",
+		"test_results": map[string]interface{}{
+			"provider_reachable": true,
+			"configuration_valid": true,
+			"client_credentials_valid": true,
+			"redirect_uri_valid": true,
+		},
+		"test_details": map[string]interface{}{
+			"provider_response_time": "250ms",
+			"discovery_document": "found",
+			"jwks_endpoint": "accessible",
+		},
+		"tested_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// Additional Configuration Handlers
+func (a *API) handleGetTenantConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting config for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock tenant configuration
+	config := map[string]interface{}{
+		"tenant_id": tenantID,
+		"name": "Example Tenant",
+		"plan": "pro",
+		"features": []string{"load_balancing", "health_checks", "ssl_termination", "metrics", "logging"},
+		"limits": map[string]interface{}{
+			"max_backends": 10,
+			"max_routes": 50,
+			"max_requests_per_second": 1000,
+		},
+		"settings": map[string]interface{}{
+			"ssl_enabled": true,
+			"compression_enabled": true,
+			"cache_enabled": false,
+		},
+		"created_at": "2024-01-01T00:00:00Z",
+		"updated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
+}
+
+func (a *API) handleGetTenantBilling(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tenantID := vars["tenant_id"]
+
+	a.logger.Info("Getting billing info for tenant", zap.String("tenant_id", tenantID))
+
+	// Mock billing information
+	billing := map[string]interface{}{
+		"tenant_id": tenantID,
+		"subscription": map[string]interface{}{
+			"plan": "pro",
+			"status": "active",
+			"next_billing_date": time.Now().AddDate(0, 1, 0).Format("2006-01-02"),
+			"monthly_cost": 99.99,
+		},
+		"current_usage": map[string]interface{}{
+			"requests_this_month": 1250000,
+			"bandwidth_gb": 45.7,
+			"overage_charges": 0,
+		},
+		"payment_method": map[string]interface{}{
+			"type": "credit_card",
+			"last_four": "4242",
+			"expires": "12/25",
+		},
+		"invoices": []map[string]interface{}{
+			{
+				"id": "inv_001",
+				"date": "2024-05-01",
+				"amount": 99.99,
+				"status": "paid",
+			},
+			{
+				"id": "inv_002",
+				"date": "2024-06-01",
+				"amount": 99.99,
+				"status": "paid",
+			},
+		},
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(billing)
 }

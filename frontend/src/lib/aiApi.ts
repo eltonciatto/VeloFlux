@@ -126,7 +126,7 @@ class AIApiClient {
   /**
    * Update AI configuration
    */
-  async updateAIConfig(config: Partial<any>): Promise<{ success: boolean; message: string }> {
+  async updateAIConfig(config: Partial<AIConfig>): Promise<{ success: boolean; message: string }> {
     const response = await apiFetch('/api/ai/config', {
       method: 'PUT',
       headers: {

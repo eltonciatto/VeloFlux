@@ -8,9 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { safeApiFetch } from '@/lib/csrfToken';
+import { useOIDCConfig } from '@/hooks/useOIDCConfig';
 
 const OIDCSettings = () => {
   const { tenantId } = useParams();
@@ -313,15 +315,16 @@ const OIDCSettings = () => {
                       <h4 className="font-medium mb-2">Test your configuration</h4>
                       <p className="text-sm mb-3">
                         After saving, you can test your OIDC configuration by clicking the button below:
-                      </p>
-                      <Button
-                        as="a"
+                      </p>                      <a 
                         href={testLoginURL}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="inline-block"
                       >
-                        Test OIDC Login
-                      </Button>
+                        <Button>
+                          Test OIDC Login
+                        </Button>
+                      </a>
                     </div>
                   )}
                 </div>

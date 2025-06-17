@@ -1,0 +1,71 @@
+# VeloFlux Backend Configuration - Test
+# Configuração para teste local
+
+global:
+  bind_address: "0.0.0.0:80"
+  tls_bind_address: "0.0.0.0:443"
+  metrics_address: "0.0.0.0:8081"
+  
+  health_check:
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+
+  rate_limit:
+    requests_per_second: 100
+    burst_size: 200
+    cleanup_interval: "5m"
+
+  waf:
+    enabled: false
+    level: "standard"
+    log_violations: true
+
+  geoip:
+    enabled: false
+
+  ai:
+    enabled: false
+
+# Authentication Configuration
+auth:
+  enabled: true
+  jwt_secret: "veloflux-secure-token-change-in-production"
+  jwt_issuer: "veloflux-lb"
+  jwt_audience: "veloflux-admin"
+  token_validity: "12h"
+  oidc_enabled: false
+
+# Clustering Configuration
+cluster:
+  enabled: true
+  redis_address: "172.18.0.2:6379"
+  redis_password: ""
+  redis_db: 0
+  node_id: "test-node"
+  heartbeat_interval: "5s"
+  leader_timeout: "15s"
+
+# API Server Configuration
+api:
+  bind_address: "0.0.0.0:9091"
+  auth_enabled: true
+  username: "admin"
+  password: "veloflux-admin-password"
+
+# Tenant configuration
+tenants:
+  - id: "tenant1"
+    name: "Demo Company A"
+    enabled: true
+
+# Backend pools configuration
+pools:
+  - id: "test-pool"
+    tenant_id: "tenant1"
+    load_balancer:
+      method: "round_robin"
+    backends:
+      - name: "test-backend"
+        address: "localhost:8001"
+        weight: 1
