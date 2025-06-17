@@ -150,20 +150,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const authEndpoint = isProduction() 
         ? CONFIG.PRODUCTION.ENDPOINTS.LOGIN 
         : '/auth/login';
-        
-      const res = await safeApiFetch(authEndpoint, {
+          const res = await safeApiFetch(authEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           email, 
-          password,
-          // Add additional production-specific fields if needed
-          ...(isProduction() && {
-            client_id: 'veloflux-web',
-            grant_type: 'password'
-          })
+          password
+          // Removed production-specific fields - backend expects only email/password
         }),
       });
       

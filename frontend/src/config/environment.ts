@@ -1,7 +1,8 @@
 // Environment configuration
 export const CONFIG = {
   // Determine if we're in development mode
-  isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development',
+  // Force development mode when serving via nginx on localhost
+  isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development' || window.location.hostname === 'localhost',
   
   // API endpoints - STANDARD PORT ALLOCATION (NEVER CHANGE)
   // Development: Backend direct ports (9090/9000)
