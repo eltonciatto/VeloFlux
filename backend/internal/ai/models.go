@@ -15,12 +15,12 @@ import (
 
 // NeuralNetworkModel implementa um modelo de rede neural simples
 type NeuralNetworkModel struct {
-	weights    [][]float64
-	biases     []float64
-	layers     []int
-	logger     *zap.Logger
-	trained    bool
-	accuracy   float64
+	weights     [][]float64
+	biases      []float64
+	layers      []int
+	logger      *zap.Logger
+	trained     bool
+	accuracy    float64
 	lastTrained time.Time
 }
 
@@ -28,13 +28,13 @@ type NeuralNetworkModel struct {
 func NewNeuralNetworkModel(logger *zap.Logger) *NeuralNetworkModel {
 	// Arquitetura: 4 inputs -> 8 hidden -> 4 hidden -> 3 outputs
 	layers := []int{4, 8, 4, 3}
-	
+
 	model := &NeuralNetworkModel{
 		layers:  layers,
 		logger:  logger,
 		trained: false,
 	}
-	
+
 	model.initializeWeights()
 	return model
 }
@@ -42,7 +42,7 @@ func NewNeuralNetworkModel(logger *zap.Logger) *NeuralNetworkModel {
 // initializeWeights inicializa pesos aleatoriamente
 func (nn *NeuralNetworkModel) initializeWeights() {
 	rand.Seed(time.Now().UnixNano())
-	
+
 	// Inicializar pesos entre camadas
 	nn.weights = make([][]float64, len(nn.layers)-1)
 	for i := 0; i < len(nn.layers)-1; i++ {
@@ -51,7 +51,7 @@ func (nn *NeuralNetworkModel) initializeWeights() {
 			nn.weights[i][j] = (rand.Float64() - 0.5) * 2.0 // [-1, 1]
 		}
 	}
-	
+
 	// Inicializar biases
 	nn.biases = make([]float64, nn.layers[len(nn.layers)-1])
 	for i := range nn.biases {
@@ -66,44 +66,44 @@ func (nn *NeuralNetworkModel) Train(patterns []TrafficPattern) error {
 	}
 
 	nn.logger.Info("Training neural network model", zap.Int("patterns", len(patterns)))
-	
+
 	// Preparar dados de treinamento
 	inputs, targets := nn.prepareTrainingData(patterns)
-	
+
 	// Treinamento simplificado usando backpropagation
 	epochs := 1000
 	learningRate := 0.01
-	
+
 	for epoch := 0; epoch < epochs; epoch++ {
 		totalError := 0.0
-		
+
 		for i := range inputs {
 			// Forward pass
 			output := nn.forwardPass(inputs[i])
-			
+
 			// Calcular erro
 			error := nn.calculateError(output, targets[i])
 			totalError += error
-			
+
 			// Backward pass (simplificado)
 			nn.backwardPass(inputs[i], targets[i], output, learningRate)
 		}
-		
+
 		if epoch%100 == 0 {
 			avgError := totalError / float64(len(inputs))
-			nn.logger.Debug("Training progress", 
-				zap.Int("epoch", epoch), 
+			nn.logger.Debug("Training progress",
+				zap.Int("epoch", epoch),
 				zap.Float64("avg_error", avgError))
 		}
 	}
-	
+
 	nn.trained = true
 	nn.lastTrained = time.Now()
 	nn.accuracy = nn.evaluateModel(inputs, targets)
-	
-	nn.logger.Info("Neural network training completed", 
+
+	nn.logger.Info("Neural network training completed",
 		zap.Float64("accuracy", nn.accuracy))
-	
+
 	return nil
 }
 
@@ -112,12 +112,14 @@ func (nn *NeuralNetworkModel) Predict(current TrafficPattern) (*PredictionResult
 	// Se não está treinado, retorna predição básica
 	if !nn.trained {
 		return &PredictionResult{
-			RecommendedAlgo: "round_robin",
-			Confidence:      0.5,
-			PredictedLoad:   current.RequestRate * 1.1,
+			Algorithm:         "round_robin",
+			Confidence:        0.5,
+			PredictedLoad:     current.RequestRate * 1.1,
+			Timestamp:         time.Now(),
+			RecommendedAction: "use_default_algorithm",
 		}, nil
 	}
-	
+
 	// Preparar input
 	input := []float64{
 		nn.normalizeValue(current.RequestRate, 0, 1000),
@@ -125,19 +127,20 @@ func (nn *NeuralNetworkModel) Predict(current TrafficPattern) (*PredictionResult
 		nn.normalizeValue(current.ErrorRate, 0, 1),
 		nn.calculateTimeFeature(current.Timestamp),
 	}
-	
+
 	// Forward pass
 	output := nn.forwardPass(input)
-	
+
 	// Interpretar output
 	result := &PredictionResult{
-		PredictedLoad:    output[0] * 1000, // Desnormalizar
-		Confidence:       nn.calculateConfidence(output),
-		PredictionTime:   time.Now(),
-		RecommendedAlgo:  nn.selectAlgorithm(output),
-		ScalingRecommend: nn.getScalingRecommendation(output[0]),
+		PredictedLoad:     output[0] * 1000, // Desnormalizar
+		Confidence:        nn.calculateConfidence(output),
+		Timestamp:         time.Now(),
+		Algorithm:         nn.selectAlgorithm(output),
+		ScalingRecommend:  nn.getScalingRecommendation(output[0]),
+		RecommendedAction: "use_neural_network_prediction",
 	}
-	
+
 	return result, nil
 }
 
@@ -166,9 +169,9 @@ type ReinforcementLearningModel struct {
 func NewReinforcementLearningModel(logger *zap.Logger) *ReinforcementLearningModel {
 	return &ReinforcementLearningModel{
 		qTable:  make(map[string]map[string]float64),
-		epsilon: 0.1,  // 10% exploration
-		alpha:   0.1,  // learning rate
-		gamma:   0.9,  // discount factor
+		epsilon: 0.1, // 10% exploration
+		alpha:   0.1, // learning rate
+		gamma:   0.9, // discount factor
 		logger:  logger,
 		trained: false,
 	}
@@ -177,28 +180,28 @@ func NewReinforcementLearningModel(logger *zap.Logger) *ReinforcementLearningMod
 // Train implementa o treinamento por reforço
 func (rl *ReinforcementLearningModel) Train(patterns []TrafficPattern) error {
 	rl.logger.Info("Training reinforcement learning model", zap.Int("patterns", len(patterns)))
-	
+
 	// Simular episodes de treinamento
 	for i := 0; i < len(patterns)-1; i++ {
 		state := rl.encodeState(patterns[i])
 		nextState := rl.encodeState(patterns[i+1])
-		
+
 		// Escolher ação (algoritmo de balanceamento)
 		action := rl.chooseAction(state)
-		
+
 		// Calcular reward baseado na melhoria de performance
 		reward := rl.calculateReward(patterns[i], patterns[i+1])
-		
+
 		// Atualizar Q-table
 		rl.updateQValue(state, action, reward, nextState)
 	}
-	
+
 	rl.trained = true
 	rl.lastTrained = time.Now()
-	
+
 	rl.logger.Info("Reinforcement learning training completed",
 		zap.Int("states", len(rl.qTable)))
-	
+
 	return nil
 }
 
@@ -207,18 +210,19 @@ func (rl *ReinforcementLearningModel) Predict(current TrafficPattern) (*Predicti
 	if !rl.trained {
 		return nil, fmt.Errorf("model not trained")
 	}
-	
+
 	state := rl.encodeState(current)
 	action := rl.getBestAction(state)
 	confidence := rl.getActionConfidence(state, action)
-	
+
 	result := &PredictionResult{
-		RecommendedAlgo: action,
-		Confidence:      confidence,
-		PredictionTime:  time.Now(),
-		PredictedLoad:   current.RequestRate * 1.1, // Estimativa simples
+		Algorithm:         action,
+		Confidence:        confidence,
+		Timestamp:         time.Now(),
+		PredictedLoad:     current.RequestRate * 1.1, // Estimativa simples
+		RecommendedAction: "use_reinforcement_learning",
 	}
-	
+
 	return result, nil
 }
 
@@ -256,13 +260,13 @@ func (lr *LinearRegressionModel) Train(patterns []TrafficPattern) error {
 	if len(patterns) < 5 {
 		return fmt.Errorf("insufficient training data")
 	}
-	
+
 	lr.logger.Info("Training linear regression model", zap.Int("patterns", len(patterns)))
-	
+
 	// Preparar dados
 	X := make([][]float64, len(patterns))
 	Y := make([]float64, len(patterns))
-	
+
 	for i, pattern := range patterns {
 		X[i] = []float64{
 			pattern.RequestRate,
@@ -277,18 +281,18 @@ func (lr *LinearRegressionModel) Train(patterns []TrafficPattern) error {
 			Y[i] = pattern.RequestRate
 		}
 	}
-	
+
 	// Calcular coeficientes usando mínimos quadrados (simplificado)
 	lr.coefficients = lr.calculateCoefficients(X, Y)
 	lr.intercept = lr.calculateIntercept(X, Y, lr.coefficients)
-	
+
 	lr.trained = true
 	lr.lastTrained = time.Now()
 	lr.accuracy = lr.calculateR2(X, Y)
-	
-	lr.logger.Info("Linear regression training completed", 
+
+	lr.logger.Info("Linear regression training completed",
 		zap.Float64("r2_score", lr.accuracy))
-	
+
 	return nil
 }
 
@@ -297,31 +301,34 @@ func (lr *LinearRegressionModel) Predict(current TrafficPattern) (*PredictionRes
 	// Se não está treinado, retorna predição básica
 	if !lr.trained {
 		return &PredictionResult{
-			RecommendedAlgo: "round_robin",
-			Confidence:      0.5,
-			PredictedLoad:   current.RequestRate * 1.1,
+			Algorithm:         "round_robin",
+			Confidence:        0.5,
+			PredictedLoad:     current.RequestRate * 1.1,
+			Timestamp:         time.Now(),
+			RecommendedAction: "use_default_algorithm",
 		}, nil
 	}
-	
+
 	features := []float64{
 		current.RequestRate,
 		current.ResponseTime,
 		current.ErrorRate,
 		float64(current.Timestamp.Hour()),
 	}
-	
+
 	prediction := lr.intercept
 	for i, coef := range lr.coefficients {
 		prediction += coef * features[i]
 	}
-	
+
 	result := &PredictionResult{
-		PredictedLoad:   prediction,
-		Confidence:      lr.accuracy,
-		PredictionTime:  time.Now(),
-		RecommendedAlgo: lr.selectAlgorithmBasedOnLoad(prediction),
+		PredictedLoad:     prediction,
+		Confidence:        lr.accuracy,
+		Timestamp:         time.Now(),
+		Algorithm:         lr.selectAlgorithmBasedOnLoad(prediction),
+		RecommendedAction: "use_linear_regression",
 	}
-	
+
 	return result, nil
 }
 
@@ -340,7 +347,7 @@ func (lr *LinearRegressionModel) GetModelInfo() ModelInfo {
 func (nn *NeuralNetworkModel) prepareTrainingData(patterns []TrafficPattern) ([][]float64, [][]float64) {
 	inputs := make([][]float64, len(patterns))
 	targets := make([][]float64, len(patterns))
-	
+
 	for i, pattern := range patterns {
 		inputs[i] = []float64{
 			nn.normalizeValue(pattern.RequestRate, 0, 1000),
@@ -348,7 +355,7 @@ func (nn *NeuralNetworkModel) prepareTrainingData(patterns []TrafficPattern) ([]
 			nn.normalizeValue(pattern.ErrorRate, 0, 1),
 			nn.calculateTimeFeature(pattern.Timestamp),
 		}
-		
+
 		// Target simplificado: [load_level, algorithm_preference, scaling_need]
 		targets[i] = []float64{
 			nn.normalizeValue(pattern.RequestRate, 0, 1000),
@@ -356,7 +363,7 @@ func (nn *NeuralNetworkModel) prepareTrainingData(patterns []TrafficPattern) ([]
 			nn.getScalingNeed(pattern),
 		}
 	}
-	
+
 	return inputs, targets
 }
 
@@ -372,10 +379,10 @@ func (nn *NeuralNetworkModel) calculateTimeFeature(t time.Time) float64 {
 func (nn *NeuralNetworkModel) forwardPass(input []float64) []float64 {
 	// Implementação simplificada de forward pass
 	current := input
-	
+
 	for layer := 0; layer < len(nn.layers)-1; layer++ {
 		next := make([]float64, nn.layers[layer+1])
-		
+
 		for j := 0; j < nn.layers[layer+1]; j++ {
 			sum := 0.0
 			for i := 0; i < nn.layers[layer]; i++ {
@@ -384,17 +391,17 @@ func (nn *NeuralNetworkModel) forwardPass(input []float64) []float64 {
 					sum += current[i] * nn.weights[layer][weightIndex]
 				}
 			}
-			
+
 			if layer == len(nn.layers)-2 && j < len(nn.biases) {
 				sum += nn.biases[j]
 			}
-			
+
 			next[j] = nn.sigmoid(sum)
 		}
-		
+
 		current = next
 	}
-	
+
 	return current
 }
 
@@ -455,7 +462,7 @@ func (nn *NeuralNetworkModel) selectAlgorithm(output []float64) string {
 	if len(output) < 2 {
 		return "round_robin"
 	}
-	
+
 	algoScore := output[1]
 	if algoScore < 0.3 {
 		return "round_robin"
@@ -501,18 +508,18 @@ func (rl *ReinforcementLearningModel) encodeState(pattern TrafficPattern) string
 	loadBin := int(pattern.RequestRate/100) % 10
 	latencyBin := int(pattern.ResponseTime/500) % 10
 	errorBin := int(pattern.ErrorRate*100) % 10
-	
+
 	return fmt.Sprintf("%d_%d_%d", loadBin, latencyBin, errorBin)
 }
 
 func (rl *ReinforcementLearningModel) chooseAction(state string) string {
 	actions := []string{"round_robin", "least_conn", "weighted_round_robin", "geo_proximity"}
-	
+
 	if rand.Float64() < rl.epsilon {
 		// Exploration: choose random action
 		return actions[rand.Intn(len(actions))]
 	}
-	
+
 	// Exploitation: choose best action
 	return rl.getBestAction(state)
 }
@@ -521,17 +528,17 @@ func (rl *ReinforcementLearningModel) getBestAction(state string) string {
 	if _, exists := rl.qTable[state]; !exists {
 		return "round_robin" // Default action
 	}
-	
+
 	bestAction := "round_robin"
 	bestValue := -math.Inf(1)
-	
+
 	for action, value := range rl.qTable[state] {
 		if value > bestValue {
 			bestValue = value
 			bestAction = action
 		}
 	}
-	
+
 	return bestAction
 }
 
@@ -539,9 +546,9 @@ func (rl *ReinforcementLearningModel) calculateReward(current, next TrafficPatte
 	// Reward baseado na melhoria de performance
 	latencyImprovement := current.ResponseTime - next.ResponseTime
 	errorImprovement := current.ErrorRate - next.ErrorRate
-	
+
 	reward := latencyImprovement/1000 + errorImprovement*10
-	
+
 	// Penalty por alta latência ou erros
 	if next.ResponseTime > 2000 {
 		reward -= 1.0
@@ -549,7 +556,7 @@ func (rl *ReinforcementLearningModel) calculateReward(current, next TrafficPatte
 	if next.ErrorRate > 0.05 {
 		reward -= 2.0
 	}
-	
+
 	return reward
 }
 
@@ -557,10 +564,10 @@ func (rl *ReinforcementLearningModel) updateQValue(state, action string, reward 
 	if _, exists := rl.qTable[state]; !exists {
 		rl.qTable[state] = make(map[string]float64)
 	}
-	
+
 	currentQ := rl.qTable[state][action]
 	maxNextQ := rl.getMaxQValue(nextState)
-	
+
 	newQ := currentQ + rl.alpha*(reward+rl.gamma*maxNextQ-currentQ)
 	rl.qTable[state][action] = newQ
 }
@@ -569,14 +576,14 @@ func (rl *ReinforcementLearningModel) getMaxQValue(state string) float64 {
 	if _, exists := rl.qTable[state]; !exists {
 		return 0.0
 	}
-	
+
 	maxValue := -math.Inf(1)
 	for _, value := range rl.qTable[state] {
 		if value > maxValue {
 			maxValue = value
 		}
 	}
-	
+
 	if maxValue == -math.Inf(1) {
 		return 0.0
 	}
@@ -587,14 +594,14 @@ func (rl *ReinforcementLearningModel) getActionConfidence(state, action string) 
 	if _, exists := rl.qTable[state]; !exists {
 		return 0.5
 	}
-	
+
 	actionValue := rl.qTable[state][action]
 	maxValue := rl.getMaxQValue(state)
-	
+
 	if maxValue == 0 {
 		return 0.5
 	}
-	
+
 	return math.Min(actionValue/maxValue, 1.0)
 }
 
@@ -603,60 +610,60 @@ func (lr *LinearRegressionModel) calculateCoefficients(X [][]float64, Y []float6
 	// Implementação muito simplificada dos mínimos quadrados
 	// Em produção, usaria uma biblioteca como gonum
 	coeffs := make([]float64, len(X[0]))
-	
+
 	for j := range coeffs {
 		sumXY := 0.0
 		sumX := 0.0
 		sumX2 := 0.0
 		sumY := 0.0
 		n := float64(len(X))
-		
+
 		for i := range X {
 			sumXY += X[i][j] * Y[i]
 			sumX += X[i][j]
 			sumX2 += X[i][j] * X[i][j]
 			sumY += Y[i]
 		}
-		
+
 		// Fórmula simplificada para regressão linear simples
 		if sumX2*n-sumX*sumX != 0 {
 			coeffs[j] = (sumXY*n - sumX*sumY) / (sumX2*n - sumX*sumX)
 		}
 	}
-	
+
 	return coeffs
 }
 
 func (lr *LinearRegressionModel) calculateIntercept(X [][]float64, Y []float64, coeffs []float64) float64 {
 	sumY := 0.0
 	sumX := make([]float64, len(coeffs))
-	
+
 	for i := range X {
 		sumY += Y[i]
 		for j := range coeffs {
 			sumX[j] += X[i][j]
 		}
 	}
-	
+
 	avgY := sumY / float64(len(Y))
 	interceptAdjustment := 0.0
-	
+
 	for j, coeff := range coeffs {
 		avgX := sumX[j] / float64(len(X))
 		interceptAdjustment += coeff * avgX
 	}
-	
+
 	return avgY - interceptAdjustment
 }
 
 func (lr *LinearRegressionModel) calculateR2(X [][]float64, Y []float64) float64 {
 	// Para fins de teste, simular um R² válido
 	// Em uma implementação real, seria calculado corretamente
-	
+
 	if len(Y) < 2 {
 		return 0.5 // R² neutro para dados insuficientes
 	}
-	
+
 	// Simulação simplificada que retorna um valor entre 0.4 e 0.9
 	variance := 0.0
 	mean := 0.0
@@ -664,12 +671,12 @@ func (lr *LinearRegressionModel) calculateR2(X [][]float64, Y []float64) float64
 		mean += y
 	}
 	mean /= float64(len(Y))
-	
+
 	for _, y := range Y {
 		variance += (y - mean) * (y - mean)
 	}
 	variance /= float64(len(Y))
-	
+
 	// Normalizar para um valor entre 0.4 e 0.9
 	normalized := math.Min(variance/1000.0, 0.5) + 0.4
 	return math.Max(0.4, normalized)

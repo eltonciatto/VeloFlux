@@ -18,6 +18,7 @@ type Location struct {
 	Latitude  float64
 	Longitude float64
 	Region    string
+	Country   string
 }
 
 // Backend represents a backend server with location info
@@ -134,6 +135,47 @@ func (m *Manager) GetClientLocation(r *http.Request) (Location, error) {
 		Latitude:  record.Location.Latitude,
 		Longitude: record.Location.Longitude,
 		Region:    record.Continent.Code,
+	}
+
+	// Cache the result
+	m.mu.Lock()
+	m.locations[ip] = loc
+	m.mu.Unlock()
+
+	return loc, nil
+}
+
+// GetLocationByIP obtém localização diretamente pelo IP (para uso da IA)
+func (m *Manager) GetLocationByIP(clientIP net.IP) (Location, error) {
+	if !m.enabled || m.reader == nil {
+		return Location{}, fmt.Errorf("GeoIP not enabled")
+	}
+
+	if clientIP == nil {
+		return Location{}, fmt.Errorf("invalid IP address")
+	}
+
+	ip := clientIP.String()
+
+	// Check the cache first
+	m.mu.RLock()
+	if loc, found := m.locations[ip]; found {
+		m.mu.RUnlock()
+		return loc, nil
+	}
+	m.mu.RUnlock()
+
+	// Lookup the IP in the GeoIP database
+	record, err := m.reader.City(clientIP)
+	if err != nil {
+		return Location{}, err
+	}
+
+	loc := Location{
+		Latitude:  record.Location.Latitude,
+		Longitude: record.Location.Longitude,
+		Region:    record.Continent.Code,
+		Country:   record.Country.IsoCode,
 	}
 
 	// Cache the result

@@ -155,15 +155,15 @@ func (ab *AdaptiveBalancer) GetBackendIntelligent(poolName string, clientIP net.
 	}
 	
 	// Usar estratégia recomendada pela IA
-	ab.updateCurrentStrategy(prediction.RecommendedAlgo)
+	ab.updateCurrentStrategy(prediction.Algorithm)
 	
 	ab.logger.Debug("Using AI-recommended strategy", 
-		zap.String("algorithm", prediction.RecommendedAlgo),
+		zap.String("algorithm", prediction.Algorithm),
 		zap.Float64("confidence", prediction.Confidence),
 		zap.Float64("predicted_load", prediction.PredictedLoad))
 	
 	return ab.getBackendWithAlgorithm(poolName, clientIP, sessionID, r, 
-		prediction.RecommendedAlgo)
+		prediction.Algorithm)
 }
 
 // getBackendWithAlgorithm seleciona backend usando algoritmo específico
@@ -451,10 +451,10 @@ func (ab *AdaptiveBalancer) performAdaptation() {
 	
 	// Adaptar estratégia se necessário
 	if prediction.Confidence >= ab.adaptiveConfig.MinConfidenceLevel {
-		ab.updateCurrentStrategy(prediction.RecommendedAlgo)
+		ab.updateCurrentStrategy(prediction.Algorithm)
 		
 		ab.logger.Info("Strategy adapted", 
-			zap.String("new_strategy", prediction.RecommendedAlgo),
+			zap.String("new_strategy", prediction.Algorithm),
 			zap.Float64("confidence", prediction.Confidence),
 			zap.Float64("predicted_load", prediction.PredictedLoad))
 	}

@@ -133,10 +133,10 @@ func (api *API) getAIMetrics(w http.ResponseWriter, r *http.Request) {
 		// Obter predição atual
 		if prediction, err := api.adaptiveBalancer.GetAIPrediction(); err == nil {
 			metrics.PredictionData = &PredictionResponse{
-				RecommendedAlgo:  prediction.RecommendedAlgo,
+				RecommendedAlgo:  prediction.Algorithm,
 				Confidence:       prediction.Confidence,
 				PredictedLoad:    prediction.PredictedLoad,
-				PredictionTime:   prediction.PredictionTime,
+				PredictionTime:   prediction.Timestamp,
 				OptimalBackends:  prediction.OptimalBackends,
 				ScalingRecommend: prediction.ScalingRecommend,
 			}
@@ -180,10 +180,10 @@ func (api *API) getAIPredictions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := PredictionResponse{
-		RecommendedAlgo:  prediction.RecommendedAlgo,
+		RecommendedAlgo:  prediction.Algorithm,
 		Confidence:       prediction.Confidence,
 		PredictedLoad:    prediction.PredictedLoad,
-		PredictionTime:   prediction.PredictionTime,
+		PredictionTime:   prediction.Timestamp,
 		OptimalBackends:  prediction.OptimalBackends,
 		ScalingRecommend: prediction.ScalingRecommend,
 	}
