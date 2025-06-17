@@ -1,0 +1,66 @@
+# VeloFlux Production Prometheus Configuration
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'veloflux-production'
+    replica: 'prometheus-1'
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - veloflux-alertmanager:9093
+
+scrape_configs:
+  # VeloFlux Backend metrics
+  - job_name: 'veloflux-backend'
+    static_configs:
+      - targets: ['veloflux-backend:8080']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # VeloFlux API metrics
+  - job_name: 'veloflux-api'
+    static_configs:
+      - targets: ['veloflux-backend:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['veloflux-redis:6379']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['veloflux-grafana:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # AlertManager metrics
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['veloflux-alertmanager:9093']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+# Remote write configuration for long-term storage
+# remote_write:
+#   - url: "https://your-remote-storage/api/v1/write"
+#     basic_auth:
+#       username: "your_username"
+#       password: "your_password"

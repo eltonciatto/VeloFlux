@@ -3,9 +3,11 @@ export const CONFIG = {
   // Determine if we're in development mode
   isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development',
   
-  // API endpoints
-  API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9000' : ''),
-  ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || (import.meta.env.DEV ? 'http://localhost:9000' : ''),
+  // API endpoints - STANDARD PORT ALLOCATION (NEVER CHANGE)
+  // Development: Backend direct ports (9090/9000)
+  // Production: Nginx proxy routes (/api, /admin/api)
+  API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9090' : '/api'),
+  ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || (import.meta.env.DEV ? 'http://localhost:9000' : '/admin/api'),
   
   // Demo mode - only enabled in development or when explicitly set
   DEMO_MODE: import.meta.env.VITE_DEMO_MODE === 'true' || import.meta.env.DEV,

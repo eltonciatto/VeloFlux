@@ -1,0 +1,162 @@
+# VeloFlux Production Environment
+# Estrutura Organizada: Frontend + Backend + Infraestrutura
+
+version: '3.8'
+
+services:
+  # ===== BACKEND SERVICES =====
+  
+  # VeloFlux Load Balancer (Backend em Go)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: veloflux-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Metrics
+      - "9000:9000"  # Admin API internal
+      - "9090:9090"  # API server
+    environment:
+      - VFX_CONFIG=/etc/veloflux/backend-config.yaml
+      - VFX_LOG_LEVEL=debug
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=veloflux123
+    volumes:
+      - ./infra/config:/etc/veloflux:ro
+      - ./infra/certs:/etc/ssl/certs/veloflux:ro
+    depends_on:
+      - redis
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== FRONTEND SERVICES =====
+  
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: veloflux-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"  # Frontend web interface
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 80 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== LOAD BALANCER =====
+  
+  # Main Load Balancer (routes traffic to frontend/backend)
+  loadbalancer:
+    image: nginx:alpine
+    container_name: veloflux-lb
+    restart: unless-stopped
+    ports:
+      - "80:80"    # Main HTTP entry point
+      - "443:443"  # HTTPS (future)
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/certs:/etc/ssl/certs:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 80 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== SUPPORTING SERVICES =====
+  
+  # Redis for clustering and caching
+  redis:
+    image: redis:alpine
+    container_name: veloflux-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== MONITORING STACK =====
+  
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veloflux-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./infra/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - veloflux-net
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veloflux-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=veloflux123
+      - GF_SECURITY_ADMIN_USER=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/config/grafana:/etc/grafana/provisioning:ro
+    networks:
+      - veloflux-net
+
+  # AlertManager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: veloflux-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infra/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - veloflux-net
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+
+networks:
+  veloflux-net:
+    driver: bridge

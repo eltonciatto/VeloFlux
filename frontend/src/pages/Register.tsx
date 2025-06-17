@@ -77,9 +77,7 @@ export const Register = () => {
         variant: 'destructive',
       });
       return;
-    }
-
-    setIsLoading(true);
+    }    setIsLoading(true);
     try {
       // Register user
       const response = await apiFetch('/auth/register', {
@@ -89,7 +87,8 @@ export const Register = () => {
           password: formData.password,
           first_name: formData.firstName,
           last_name: formData.lastName,
-          company: formData.company,
+          tenant_name: formData.company,
+          plan: 'free', // Default plan
         }),
       });
 

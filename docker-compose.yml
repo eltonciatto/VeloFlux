@@ -1,162 +1,270 @@
-# VeloFlux Production Environment
-# Estrutura Organizada: Frontend + Backend + Infraestrutura
-
-version: '3.8'
+# ================================================================================================
+# VeloFlux - Production-Ready Load Balancer & SaaS Platform
+# ================================================================================================
+# 
+# PORT ALLOCATION STANDARD (SEMPRE USAR ESTAS PORTAS):
+# =====================================================
+# 80    - Load Balancer HTTP (nginx)
+# 443   - Load Balancer HTTPS (nginx) 
+# 3000  - Frontend Web Application
+# 3001  - Grafana Monitoring Dashboard
+# 6379  - Redis Cache (internal only)
+# 8080  - Backend Health/Metrics Endpoint
+# 9000  - Backend Admin API
+# 9090  - Backend Main API
+# 9091  - Prometheus Metrics Collection
+# 9092  - AlertManager Notifications
+#
+# DEVELOPMENT ACCESS:
+# ==================
+# - Main App: http://localhost (via nginx)
+# - Frontend Direct: http://localhost:3000
+# - Backend API: http://localhost:9090
+# - Backend Admin: http://localhost:9000
+# - Backend Health: http://localhost:8080/health
+# - Grafana: http://localhost:3001
+# - Prometheus: http://localhost:9091
+# - AlertManager: http://localhost:9092
+#
+# ================================================================================================
 
 services:
-  # ===== BACKEND SERVICES =====
+  # ===== CORE INFRASTRUCTURE =====
   
-  # VeloFlux Load Balancer (Backend em Go)
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: veloflux-backend
-    restart: unless-stopped
-    ports:
-      - "8080:8080"  # Metrics
-      - "9000:9000"  # Admin API internal
-      - "9090:9090"  # API server
-    environment:
-      - VFX_CONFIG=/etc/veloflux/backend-config.yaml
-      - VFX_LOG_LEVEL=debug
-      - VF_ADMIN_USER=admin
-      - VF_ADMIN_PASS=veloflux123
-    volumes:
-      - ./infra/config:/etc/veloflux:ro
-      - ./infra/certs:/etc/ssl/certs/veloflux:ro
-    depends_on:
-      - redis
-    networks:
-      - veloflux-net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/metrics || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  # ===== FRONTEND SERVICES =====
-  
-  # Frontend React App
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: veloflux-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:80"  # Frontend web interface
-    networks:
-      - veloflux-net
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 80 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  # ===== LOAD BALANCER =====
-  
-  # Main Load Balancer (routes traffic to frontend/backend)
-  loadbalancer:
-    image: nginx:alpine
-    container_name: veloflux-lb
-    restart: unless-stopped
-    ports:
-      - "80:80"    # Main HTTP entry point
-      - "443:443"  # HTTPS (future)
-    volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./infra/certs:/etc/ssl/certs:ro
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - veloflux-net
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 80 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  # ===== SUPPORTING SERVICES =====
-  
-  # Redis for clustering and caching
+  # Redis Cache & Session Store
   redis:
     image: redis:alpine
     container_name: veloflux-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --save 60 1
     volumes:
       - redis_data:/data
     networks:
       - veloflux-net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    # Redis is internal only - no external ports
+
+  # ===== BACKEND SERVICES =====
+  
+  # VeloFlux Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: veloflux-backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      # Redis Configuration
+      - REDIS_URL=redis://redis:6379
+      # Server Configuration
+      - ENV=production
+      - PORT=9090              # Main API Port
+      - ADMIN_PORT=9000        # Admin API Port
+      - METRICS_PORT=8080      # Health/Metrics Port
+      # Authentication
+      - VF_ADMIN_USER=admin
+      - VF_ADMIN_PASS=veloflux123
+      # Logging
+      - VFX_LOG_LEVEL=info
+    ports:
+      - "8080:8080"  # Health/Metrics Endpoint
+      - "9000:9000"  # Admin API (backend management)
+      - "9090:9090"  # Main API (auth, tenants, etc.)
+    volumes:
+      - ./infra/config:/etc/veloflux:ro
+      - ./infra/certs:/etc/ssl/certs/veloflux:ro
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== FRONTEND SERVICES =====
+  
+  # VeloFlux Frontend Web Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: veloflux-frontend
+    restart: unless-stopped
+    environment:
+      # API Configuration (production uses nginx proxy)
+      - VITE_API_URL=/api
+      - VITE_ADMIN_URL=/admin/api
+      # Feature Flags
+      - VITE_DEMO_MODE=false
+    ports:
+      - "3000:80"  # Frontend Web Interface
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || wget --no-verbose --tries=1 --spider http://localhost/health"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-  # ===== MONITORING STACK =====
+  # ===== LOAD BALANCER =====
   
-  # Prometheus
+  # Main Load Balancer & Reverse Proxy
+  loadbalancer:
+    image: nginx:alpine
+    container_name: veloflux-lb
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"    # Main HTTP Entry Point
+      - "443:443"  # Main HTTPS Entry Point
+    volumes:
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/certs:/etc/ssl/certs:ro
+    networks:
+      - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===== MONITORING & OBSERVABILITY =====
+  
+  # Prometheus Metrics Collection
   prometheus:
     image: prom/prometheus:latest
     container_name: veloflux-prometheus
     restart: unless-stopped
-    ports:
-      - "9091:9090"
-    volumes:
-      - ./infra/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
+      - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
+    ports:
+      - "9091:9090"  # Prometheus Web UI (using 9091 to avoid conflict)
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     networks:
       - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Grafana
+  # Grafana Monitoring Dashboard
   grafana:
     image: grafana/grafana:latest
     container_name: veloflux-grafana
     restart: unless-stopped
-    ports:
-      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=veloflux123
-      - GF_SECURITY_ADMIN_USER=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3001:3000"  # Grafana Dashboard (using 3001 to avoid conflict)
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./infra/config/grafana:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
     networks:
       - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # AlertManager
+  # AlertManager Notifications
   alertmanager:
     image: prom/alertmanager:latest
     container_name: veloflux-alertmanager
     restart: unless-stopped
-    ports:
-      - "9093:9093"
-    volumes:
-      - ./infra/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager_data:/alertmanager
     command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
+    ports:
+      - "9092:9093"  # AlertManager Web UI
+    volumes:
+      - ./infra/monitoring/alertmanager.yml:/etc/alertmanager/config.yml:ro
+      - alertmanager_data:/alertmanager
     networks:
       - veloflux-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9093/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-volumes:
-  redis_data:
-  prometheus_data:
-  grafana_data:
-  alertmanager_data:
-
+# ===== NETWORK CONFIGURATION =====
 networks:
   veloflux-net:
     driver: bridge
+    name: veloflux-network
+
+# ===== PERSISTENT STORAGE =====
+volumes:
+  # Core Data
+  redis_data:
+    driver: local
+    name: veloflux_redis_data
+  
+  # Monitoring Data
+  prometheus_data:
+    driver: local
+    name: veloflux_prometheus_data
+  
+  grafana_data:
+    driver: local
+    name: veloflux_grafana_data
+  
+  alertmanager_data:
+    driver: local
+    name: veloflux_alertmanager_data
+
+# ===== DEVELOPMENT COMMANDS =====
+# 
+# Start all services:
+#   docker-compose up -d
+# 
+# View logs:
+#   docker-compose logs -f [service_name]
+# 
+# Restart specific service:
+#   docker-compose restart [service_name]
+# 
+# Stop all services:
+#   docker-compose down
+# 
+# Stop and remove all data:
+#   docker-compose down -v
+# 
+# Build and start:
+#   docker-compose up -d --build
+#
+# ===== PORT QUICK REFERENCE =====
+#
+# Service Endpoints:
+# - Main Application: http://localhost
+# - Frontend (Direct): http://localhost:3000
+# - Backend API: http://localhost:9090/health
+# - Backend Admin: http://localhost:9000
+# - Backend Metrics: http://localhost:8080/health
+# - Grafana: http://localhost:3001 (admin/veloflux123)
+# - Prometheus: http://localhost:9091
+# - AlertManager: http://localhost:9092
+#
