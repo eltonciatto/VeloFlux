@@ -22,10 +22,10 @@ global:
     log_violations: true
 
   geoip:
-    enabled: false
+    enabled: true
 
   ai:
-    enabled: false
+    enabled: true
 
 # Authentication Configuration
 auth:
