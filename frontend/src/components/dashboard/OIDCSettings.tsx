@@ -36,7 +36,7 @@ const OIDCSettings = () => {
   const fetchOIDCConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/config`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -63,7 +63,7 @@ const OIDCSettings = () => {
   const saveOIDCConfig = async () => {
     setLoading(true);
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
+      await safeApiFetch(`/tenants/${tenantId}/oidc/config`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`

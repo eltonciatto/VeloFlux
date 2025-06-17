@@ -28,9 +28,9 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
   const fetchRateLimitConfig = useCallback(async () => {
     try {
       setLoading(true);
-      let endpoint = '/api/rate-limit';
+      let endpoint = '/rate-limit';
       if (tenantId) {
-        endpoint = `/api/tenants/${tenantId}/rate-limit`;
+        endpoint = `/tenants/${tenantId}/rate-limit`;
       }
       
       const data = await apiFetch(endpoint);
@@ -49,10 +49,10 @@ export const RateLimitConfig: React.FC<RateLimitConfigProps> = ({ tenantId }) =>
   const updateConfig = useCallback(async () => {
     try {
       setSaving(true);
-      let endpoint = '/api/rate-limit';
+      let endpoint = '/rate-limit';
       
       if (tenantId) {
-        endpoint = `/api/tenants/${tenantId}/rate-limit`;
+        endpoint = `/tenants/${tenantId}/rate-limit`;
       }
       
       await apiFetch(endpoint, {

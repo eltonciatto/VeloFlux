@@ -57,13 +57,13 @@ export default function AISystemDemo() {
   ];
 
   const apiEndpoints = [
-    { endpoint: '/api/ai/metrics', status: 'ready', description: 'Real-time AI metrics' },
-    { endpoint: '/api/ai/predictions', status: 'ready', description: 'AI predictions' },
-    { endpoint: '/api/ai/models', status: 'ready', description: 'Model status' },
-    { endpoint: '/api/ai/config', status: 'ready', description: 'AI configuration' },
-    { endpoint: '/api/ai/health', status: 'ready', description: 'System health' },
-    { endpoint: '/api/ai/history', status: 'ready', description: 'Historical data' },
-    { endpoint: '/api/ai/retrain', status: 'ready', description: 'Model retraining' },
+    { endpoint: '/ai/metrics', status: 'ready', description: 'Real-time AI metrics' },
+    { endpoint: '/ai/predictions', status: 'ready', description: 'AI predictions' },
+    { endpoint: '/ai/models', status: 'ready', description: 'Model status' },
+    { endpoint: '/ai/config', status: 'ready', description: 'AI configuration' },
+    { endpoint: '/ai/health', status: 'ready', description: 'System health' },
+    { endpoint: '/ai/history', status: 'ready', description: 'Historical data' },
+    { endpoint: '/ai/retrain', status: 'ready', description: 'Model retraining' },
   ];
 
   const getStatusColor = (status: string) => {

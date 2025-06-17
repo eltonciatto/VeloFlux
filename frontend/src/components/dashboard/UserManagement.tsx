@@ -51,7 +51,7 @@ const UserManagement = () => {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -84,7 +84,7 @@ const UserManagement = () => {
     }
 
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/users`, {
+      await safeApiFetch(`/tenants/${tenantId}/users`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -115,7 +115,7 @@ const UserManagement = () => {
     if (!selectedUser) return;
 
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/users/${selectedUser.id}`, {
+      await safeApiFetch(`/tenants/${tenantId}/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`
@@ -150,7 +150,7 @@ const UserManagement = () => {
     if (!confirm('Tem certeza que deseja remover este usuário?')) return;
 
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/users/${userId}`, {
+      await safeApiFetch(`/tenants/${tenantId}/users/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

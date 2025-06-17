@@ -34,7 +34,7 @@ export function useUserManagement(tenantId: string, token: string) {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -56,7 +56,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const addUser = useCallback(async (userData: NewUser) => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -86,7 +86,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const updateUser = useCallback(async (userId: string, userData: UpdateUser) => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users/${userId}`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users/${userId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`
@@ -116,7 +116,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/users/${userId}`, {
+      await safeApiFetch(`/tenants/${tenantId}/users/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -144,7 +144,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const inviteUser = useCallback(async (email: string, role: 'admin' | 'user' | 'viewer' = 'user') => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users/invite`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users/invite`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -172,7 +172,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const getUserPermissions = useCallback(async (userId: string) => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users/${userId}/permissions`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users/${userId}/permissions`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -186,7 +186,7 @@ export function useUserManagement(tenantId: string, token: string) {
 
   const updateUserPermissions = useCallback(async (userId: string, permissions: string[]) => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/users/${userId}/permissions`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/users/${userId}/permissions`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`

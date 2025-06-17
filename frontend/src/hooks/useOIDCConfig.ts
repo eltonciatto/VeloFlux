@@ -51,7 +51,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/config`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -74,7 +74,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
   const saveConfig = useCallback(async (configData: Partial<OIDCConfig>) => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/config`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`
@@ -107,7 +107,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
   const testConnection = useCallback(async (): Promise<OIDCTestResult> => {
     setTestLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/test`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/test`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -161,7 +161,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
 
   const revokeConfig = useCallback(async () => {
     try {
-      await safeApiFetch(`/api/tenants/${tenantId}/oidc/config`, {
+      await safeApiFetch(`/tenants/${tenantId}/oidc/config`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -202,7 +202,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
 
   const getProviderMetadata = useCallback(async (providerUrl: string) => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/metadata`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/metadata`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -224,7 +224,7 @@ export function useOIDCConfig(tenantId: string, token: string) {
 
   const refreshTokens = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/oidc/refresh`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/oidc/refresh`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

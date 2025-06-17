@@ -74,7 +74,7 @@ const TenantMonitoring = () => {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/metrics`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/metrics`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -93,7 +93,7 @@ const TenantMonitoring = () => {
   const fetchLogs = useCallback(async () => {
     setLogsLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/logs?limit=100`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/logs?limit=100`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

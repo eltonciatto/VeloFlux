@@ -85,7 +85,7 @@ class AIApiClient {
    * Get comprehensive AI metrics
    */
   async getAIMetrics(): Promise<AIMetrics> {
-    const response = await apiFetch('/api/ai/metrics');
+    const response = await apiFetch('/ai/metrics');
     return response;
   }
 
@@ -103,7 +103,7 @@ class AIApiClient {
       confidence: number;
     }>;
   }> {
-    const response = await apiFetch('/api/ai/predictions');
+    const response = await apiFetch('/ai/predictions');
     return response;
   }
 
@@ -111,7 +111,7 @@ class AIApiClient {
    * Get ML model status and performance
    */
   async getModelStatus(): Promise<ModelStatus> {
-    const response = await apiFetch('/api/ai/models');
+    const response = await apiFetch('/ai/models');
     return response;
   }
 
@@ -119,7 +119,7 @@ class AIApiClient {
    * Get AI configuration
    */
   async getAIConfig(): Promise<AIConfig> {
-    const response = await apiFetch('/api/ai/config');
+    const response = await apiFetch('/ai/config');
     return response;
   }
 
@@ -127,7 +127,7 @@ class AIApiClient {
    * Update AI configuration
    */
   async updateAIConfig(config: Partial<AIConfig>): Promise<{ success: boolean; message: string }> {
-    const response = await apiFetch('/api/ai/config', {
+    const response = await apiFetch('/ai/config', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ class AIApiClient {
    * Get AI system health
    */
   async getAIHealth(): Promise<{ status: string; models: string[]; last_prediction: string }> {
-    const response = await apiFetch('/api/ai/health');
+    const response = await apiFetch('/ai/health');
     return response;
   }
 
@@ -150,7 +150,7 @@ class AIApiClient {
    */
   async triggerModelRetraining(modelType?: string): Promise<{ success: boolean; message: string }> {
     const body = modelType ? { model_type: modelType } : {};
-    const response = await apiFetch('/api/ai/retrain', {
+    const response = await apiFetch('/ai/retrain', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ class AIApiClient {
     confidence_history: Array<{ timestamp: string; confidence: number }>;
     algorithm_usage: Array<{ timestamp: string; algorithm: string; count: number }>;
   }> {
-    const response = await apiFetch(`/api/ai/history?range=${timeRange}`);
+    const response = await apiFetch(`/ai/history?range=${timeRange}`);
     return response;
   }
 }

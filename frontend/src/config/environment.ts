@@ -32,7 +32,7 @@ export const CONFIG = {
     ENDPOINTS: {
       LOGIN: '/auth/login',
       REFRESH: '/auth/refresh',
-      PROFILE: '/api/profile',
+      PROFILE: '/profile',
       LOGOUT: '/auth/logout'
     }
   }

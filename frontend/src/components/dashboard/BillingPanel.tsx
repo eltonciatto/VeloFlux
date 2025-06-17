@@ -27,7 +27,7 @@ const BillingPanel = () => {
     const fetchBillingInfo = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/billing`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/billing`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -46,7 +46,7 @@ const BillingPanel = () => {
   }, [tenantId, token, toast]);
     const fetchPlans = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/billing/plans`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/billing/plans`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -58,7 +58,7 @@ const BillingPanel = () => {
   }, [tenantId, token]);
     const fetchUsageData = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/billing/usage`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/billing/usage`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -72,7 +72,7 @@ const BillingPanel = () => {
   const createCheckoutSession = async (planType) => {
     setLoading(true);
     try {
-      const response = await safeApiFetch(`/api/tenants/${tenantId}/billing/checkout`, {
+      const response = await safeApiFetch(`/tenants/${tenantId}/billing/checkout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
