@@ -17,9 +17,9 @@ export interface AIMetrics {
 export interface PredictionData {
   recommended_algorithm: string;
   confidence: number;
-  predicted_load?: number; // Optional for backward compatibility
-  prediction_time?: string; // Optional for backward compatibility
-  optimal_backends?: string[]; // Optional for backward compatibility
+  predicted_load?: number;
+  prediction_time?: string;
+  optimal_backends?: string[];
   scaling_recommendation: string;
   expected_load_factor: number;
   predictions: Array<{

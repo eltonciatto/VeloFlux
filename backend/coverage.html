@@ -55,11 +55,11 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/eltonciatto/veloflux/internal/ai/models.go (92.8%)</option>
+				<option value="file0">github.com/eltonciatto/veloflux/internal/ai/models.go (92.4%)</option>
 				
-				<option value="file1">github.com/eltonciatto/veloflux/internal/ai/predictor.go (59.8%)</option>
+				<option value="file1">github.com/eltonciatto/veloflux/internal/ai/predictor.go (74.2%)</option>
 				
-				<option value="file2">github.com/eltonciatto/veloflux/internal/ai/service.go (91.3%)</option>
+				<option value="file2">github.com/eltonciatto/veloflux/internal/ai/service.go (88.8%)</option>
 				
 				</select>
 			</div>
@@ -282,7 +282,7 @@ func (rl *ReinforcementLearningModel) Train(patterns []TrafficPattern) error <sp
 
 // Predict usando política do Q-learning
 func (rl *ReinforcementLearningModel) Predict(current TrafficPattern) (*PredictionResult, error) <span class="cov8" title="1">{
-        if !rl.trained </span><span class="cov0" title="0">{
+        if !rl.trained </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("model not trained")
         }</span>
 
@@ -541,9 +541,9 @@ func (nn *NeuralNetworkModel) selectAlgorithm(output []float64) string <span cla
         <span class="cov8" title="1">algoScore := output[1]
         if algoScore &lt; 0.3 </span><span class="cov8" title="1">{
                 return "round_robin"
-        }</span> else<span class="cov8" title="1"> if algoScore &lt; 0.6 </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if algoScore &lt; 0.6 </span><span class="cov8" title="1">{
                 return "least_conn"
-        }</span> else<span class="cov8" title="1"> {
+        }</span> else<span class="cov0" title="0"> {
                 return "weighted_round_robin"
         }</span>
 }
@@ -628,7 +628,7 @@ func (rl *ReinforcementLearningModel) calculateReward(current, next TrafficPatte
         if next.ResponseTime &gt; 2000 </span><span class="cov0" title="0">{
                 reward -= 1.0
         }</span>
-        <span class="cov8" title="1">if next.ErrorRate &gt; 0.05 </span><span class="cov8" title="1">{
+        <span class="cov8" title="1">if next.ErrorRate &gt; 0.05 </span><span class="cov0" title="0">{
                 reward -= 2.0
         }</span>
 
@@ -666,7 +666,7 @@ func (rl *ReinforcementLearningModel) getMaxQValue(state string) float64 <span c
 }
 
 func (rl *ReinforcementLearningModel) getActionConfidence(state, action string) float64 <span class="cov8" title="1">{
-        if _, exists := rl.qTable[state]; !exists </span><span class="cov8" title="1">{
+        if _, exists := rl.qTable[state]; !exists </span><span class="cov0" title="0">{
                 return 0.5
         }</span>
 
@@ -893,7 +893,7 @@ func (p *AIPredictor) initializeModels() <span class="cov8" title="1">{
         case "neural_network":<span class="cov8" title="1">
                 p.models["traffic_predictor"] = NewNeuralNetworkModel(p.logger)
                 p.models["algorithm_selector"] = NewLinearRegressionModel(p.logger)</span> // Placeholder for now
-        case "reinforcement_learning":<span class="cov0" title="0">
+        case "reinforcement_learning":<span class="cov8" title="1">
                 p.models["adaptive_balancer"] = NewReinforcementLearningModel(p.logger)</span>
         default:<span class="cov8" title="1">
                 p.models["simple_predictor"] = NewLinearRegressionModel(p.logger)</span>
@@ -924,7 +924,7 @@ func (p *AIPredictor) RecordMetrics(requestRate, responseTime, errorRate float64
         p.cleanupHistory()
 
         // Treinar modelos periodicamente
-        if p.shouldRetrain() </span><span class="cov0" title="0">{
+        if p.shouldRetrain() </span><span class="cov8" title="1">{
                 go p.trainModels()
         }</span>
 }
@@ -948,13 +948,13 @@ func (p *AIPredictor) PredictOptimalStrategy() (*PredictionResult, error) <span 
 
         if model, exists := p.models["traffic_predictor"]; exists </span><span class="cov8" title="1">{
                 result, err = model.Predict(p.currentMetrics)
-        }</span> else<span class="cov8" title="1"> if model, exists := p.models["adaptive_balancer"]; exists </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if model, exists := p.models["adaptive_balancer"]; exists </span><span class="cov8" title="1">{
                 result, err = model.Predict(p.currentMetrics)
         }</span> else<span class="cov8" title="1"> {
                 result, err = p.models["simple_predictor"].Predict(p.currentMetrics)
         }</span>
 
-        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("prediction failed: %w", err)
         }</span>
 
@@ -970,7 +970,7 @@ func (p *AIPredictor) PredictOptimalStrategy() (*PredictionResult, error) <span 
 func (p *AIPredictor) AnalyzeApplicationContext(requestType, contentType, userAgent string,
         requestSize int64) map[string]interface{} <span class="cov8" title="1">{
 
-        if !p.config.ApplicationAware </span><span class="cov0" title="0">{
+        if !p.config.ApplicationAware </span><span class="cov8" title="1">{
                 return nil
         }</span>
 
@@ -1002,18 +1002,18 @@ func (p *AIPredictor) GetModelPerformance() map[string]ModelInfo <span class="co
 }
 
 // trainModels treina os modelos com os dados históricos
-func (p *AIPredictor) trainModels() <span class="cov0" title="0">{
+func (p *AIPredictor) trainModels() <span class="cov8" title="1">{
         p.mu.Lock()
         trainingData := make([]TrafficPattern, len(p.trafficHistory))
         copy(trainingData, p.trafficHistory)
         p.mu.Unlock()
 
-        for name, model := range p.models </span><span class="cov0" title="0">{
+        for name, model := range p.models </span><span class="cov8" title="1">{
                 if err := model.Train(trainingData); err != nil </span><span class="cov0" title="0">{
                         p.logger.Error("Failed to train model",
                                 zap.String("model", name),
                                 zap.Error(err))
-                }</span> else<span class="cov0" title="0"> {
+                }</span> else<span class="cov8" title="1"> {
                         p.logger.Info("Model trained successfully",
                                 zap.String("model", name),
                                 zap.Int("data_points", len(trainingData)))
@@ -1065,7 +1065,7 @@ func isHeavyRequest(size int64) bool <span class="cov8" title="1">{
 }</span>
 
 func categorizeClient(userAgent string) string <span class="cov8" title="1">{
-        if len(userAgent) == 0 </span><span class="cov0" title="0">{
+        if len(userAgent) == 0 </span><span class="cov8" title="1">{
                 return "unknown"
         }</span>
 
@@ -1094,7 +1094,7 @@ func calculateComplexity(requestType, contentType string, size int64) float64 <s
 
 // Predict executa uma predição usando o padrão de tráfego fornecido
 func (p *AIPredictor) Predict(pattern TrafficPattern) (*PredictionResult, error) <span class="cov8" title="1">{
-        if !p.learningEnabled </span><span class="cov0" title="0">{
+        if !p.learningEnabled </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("AI predictor is disabled")
         }</span>
 
@@ -1120,11 +1120,11 @@ func (p *AIPredictor) Predict(pattern TrafficPattern) (*PredictionResult, error)
 
         if model, exists := p.models["traffic_predictor"]; exists </span><span class="cov8" title="1">{
                 result, err = model.Predict(p.currentMetrics)
-        }</span> else<span class="cov0" title="0"> if model, exists := p.models["adaptive_balancer"]; exists </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if model, exists := p.models["adaptive_balancer"]; exists </span><span class="cov8" title="1">{
                 result, err = model.Predict(p.currentMetrics)
-        }</span> else<span class="cov0" title="0"> if model, exists := p.models["simple_predictor"]; exists </span><span class="cov0" title="0">{
+        }</span> else<span class="cov8" title="1"> if model, exists := p.models["simple_predictor"]; exists </span><span class="cov0" title="0">{
                 result, err = model.Predict(p.currentMetrics)
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 // Fallback para predição simples
                 result = &amp;PredictionResult{
                         Algorithm:         "round_robin",
@@ -1135,7 +1135,7 @@ func (p *AIPredictor) Predict(pattern TrafficPattern) (*PredictionResult, error)
                 }
         }</span>
 
-        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                 p.logger.Error("Prediction failed", zap.Error(err))
                 return nil, err
         }</span>
@@ -1177,8 +1177,8 @@ func (p *AIPredictor) EnrichTrafficPatternWithGeo(pattern *TrafficPattern, clien
         }</span>
 
         // Obter informações geográficas do cliente
-        <span class="cov0" title="0">clientInfo, err := p.geoManager.GetLocationByIP(clientIP)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">clientInfo, err := p.geoManager.GetLocationByIP(clientIP)
+        if err != nil </span><span class="cov8" title="1">{
                 p.logger.Debug("Failed to get client geo info", zap.Error(err))
                 return
         }</span>
@@ -1260,7 +1260,7 @@ func (p *AIPredictor) PredictWithGeoContext(pattern TrafficPattern, clientIP net
         }</span>
 
         // Enriquecer resultado com recomendações geográficas
-        <span class="cov8" title="1">if p.geoManager != nil &amp;&amp; clientIP != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if p.geoManager != nil &amp;&amp; clientIP != nil </span><span class="cov8" title="1">{
                 result.GeoOptimizedBackends = p.getGeoOptimizedBackends(clientIP, backendOptions)
                 result.GeoAffinityScore = p.calculateGeoAffinityScore(enrichedPattern)
                 result.RegionRecommendation = p.getRegionRecommendation(enrichedPattern)
@@ -1282,12 +1282,12 @@ func (p *AIPredictor) PredictWithGeoContext(pattern TrafficPattern, clientIP net
 
 // getGeoOptimizedBackends retorna backends otimizados geograficamente
 func (p *AIPredictor) getGeoOptimizedBackends(clientIP net.IP, backendOptions []string) []string <span class="cov8" title="1">{
-        if p.geoManager == nil || len(backendOptions) == 0 </span><span class="cov8" title="1">{
+        if p.geoManager == nil || len(backendOptions) == 0 </span><span class="cov0" title="0">{
                 return backendOptions
         }</span>
 
-        <span class="cov0" title="0">clientInfo, err := p.geoManager.GetLocationByIP(clientIP)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">clientInfo, err := p.geoManager.GetLocationByIP(clientIP)
+        if err != nil </span><span class="cov8" title="1">{
                 return backendOptions
         }</span>
 
@@ -1722,11 +1722,11 @@ func (s *AIService) Predict(pattern TrafficPattern) (*PredictionResult, error) <
 }
 
 // SetGeoManager configura o gerenciador geográfico no serviço de IA
-func (s *AIService) SetGeoManager(gm *geo.Manager) <span class="cov8" title="1">{
+func (s *AIService) SetGeoManager(gm *geo.Manager) <span class="cov0" title="0">{
         s.mu.Lock()
         defer s.mu.Unlock()
 
-        if s.predictor != nil </span><span class="cov8" title="1">{
+        if s.predictor != nil </span><span class="cov0" title="0">{
                 s.predictor.SetGeoManager(gm)
                 s.logger.Info("GeoManager configured for AI Service")
         }</span>
