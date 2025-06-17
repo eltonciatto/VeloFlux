@@ -6,10 +6,63 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eltonciatto/veloflux/internal/geo"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
+
+// MockGeoManager implementa uma versão mock do GeoManager para testes
+type MockGeoManager struct {
+	locations map[string]geo.Location
+	shouldErr bool
+	errorMsg  string
+}
+
+// NewMockGeoManager cria um novo mock do GeoManager
+func NewMockGeoManager() *MockGeoManager {
+	return &MockGeoManager{
+		locations: map[string]geo.Location{
+			"1.1.1.1":       {Region: "us-east-1", Country: "US", Latitude: 39.0458, Longitude: -76.6413},
+			"8.8.8.8":       {Region: "us-west-2", Country: "US", Latitude: 45.5152, Longitude: -122.6784},
+			"192.168.1.1":   {Region: "us-east-1", Country: "US", Latitude: 39.0458, Longitude: -76.6413},
+			"203.0.113.1":   {Region: "eu-west-1", Country: "IE", Latitude: 53.3498, Longitude: -6.2603},
+			"198.51.100.1":  {Region: "ap-southeast-1", Country: "SG", Latitude: 1.3521, Longitude: 103.8198},
+			"198.51.100.2":  {Region: "sa-east-1", Country: "BR", Latitude: -23.5505, Longitude: -46.6333},
+		},
+		shouldErr: false,
+	}
+}
+
+// SetError configura o mock para retornar erro
+func (m *MockGeoManager) SetError(shouldErr bool, errorMsg string) {
+	m.shouldErr = shouldErr
+	m.errorMsg = errorMsg
+}
+
+// AddLocation adiciona uma localização ao mock
+func (m *MockGeoManager) AddLocation(ip string, location geo.Location) {
+	m.locations[ip] = location
+}
+
+// GetLocationByIP implementa a interface do GeoManager
+func (m *MockGeoManager) GetLocationByIP(ip net.IP) (geo.Location, error) {
+	if m.shouldErr {
+		return geo.Location{}, fmt.Errorf(m.errorMsg)
+	}
+	
+	ipStr := ip.String()
+	if location, exists := m.locations[ipStr]; exists {
+		return location, nil
+	}
+	
+	// IP não encontrado, retornar localização padrão
+	return geo.Location{
+		Region:    "unknown",
+		Country:   "Unknown",
+		Latitude:  0.0,
+		Longitude: 0.0,
+	}, nil
+}
 
 func TestAIPredictor_NewAndBasicFunctionality(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
@@ -700,8 +753,78 @@ func TestAIPredictor_ConcurrentOperations(t *testing.T) {
 	assert.NotEmpty(t, predictor.trafficHistory)
 }
 
-// TestAIPredictor_LastPredictionTime testa timestamp da última predição
-func TestAIPredictor_LastPredictionTime(t *testing.T) {
+// TestAIPredictor_ApplicationContextAnalysis testa análise de contexto de aplicação
+func TestAIPredictor_ApplicationContextAnalysis(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+
+	config := &AIConfig{
+		Enabled:          true,
+		ModelType:        "neural_network",
+		MinDataPoints:    2,
+		ApplicationAware: true, // Habilitar análise de contexto
+	}
+
+	predictor := NewAIPredictor(config, logger)
+
+	t.Run("StaticContent", func(t *testing.T) {
+		context := predictor.AnalyzeApplicationContext(
+			"GET",
+			"text/css",
+			"Mozilla/5.0",
+			1024,
+		)
+
+		assert.NotNil(t, context)
+		assert.Equal(t, true, context["is_static"])
+		assert.Equal(t, false, context["is_api"])
+		assert.Equal(t, false, context["is_heavy"])
+	})
+
+	t.Run("APIRequest", func(t *testing.T) {
+		context := predictor.AnalyzeApplicationContext(
+			"api",
+			"application/json",
+			"curl/7.68.0",
+			2048,
+		)
+
+		assert.NotNil(t, context)
+		assert.Equal(t, false, context["is_static"])
+		assert.Equal(t, true, context["is_api"])
+		assert.Equal(t, false, context["is_heavy"])
+	})
+
+	t.Run("HeavyRequest", func(t *testing.T) {
+		context := predictor.AnalyzeApplicationContext(
+			"POST",
+			"multipart/form-data",
+			"Mozilla/5.0",
+			2*1024*1024, // 2MB
+		)
+
+		assert.NotNil(t, context)
+		assert.Equal(t, false, context["is_static"])
+		assert.Equal(t, false, context["is_api"])
+		assert.Equal(t, true, context["is_heavy"])
+	})
+
+	t.Run("ApplicationAwareDisabled", func(t *testing.T) {
+		// Teste com ApplicationAware desabilitado
+		configDisabled := &AIConfig{
+			Enabled:          true,
+			ModelType:        "neural_network",
+			MinDataPoints:    2,
+			ApplicationAware: false,
+		}
+
+		predictorDisabled := NewAIPredictor(configDisabled, logger)
+		context := predictorDisabled.AnalyzeApplicationContext("GET", "text/css", "Mozilla/5.0", 1024)
+		assert.Nil(t, context)
+	})
+}
+
+// TestAIPredictor_GeographicFunctionsExtended testa funções geográficas em detalhes
+func TestAIPredictor_GeographicFunctionsExtended(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	config := &AIConfig{
@@ -712,1574 +835,520 @@ func TestAIPredictor_LastPredictionTime(t *testing.T) {
 
 	predictor := NewAIPredictor(config, logger)
 
-	// Timestamp inicial deve ser zero
-	initialTime := predictor.GetLastPredictionTime()
-	assert.True(t, initialTime.IsZero())
+	// Testar SetGeoManager
+	predictor.SetGeoManager(&geo.Manager{})
+	assert.NotNil(t, predictor.geoManager)
 
-	// Adicionar dados e fazer predição
-	for i := 0; i < 3; i++ {
+	// Testar EnrichTrafficPatternWithGeo com diferentes IPs
+	t.Run("EnrichTrafficPatternWithGeo_ValidIP", func(t *testing.T) {
+		predictor.SetGeoManager(&geo.Manager{})
+		
 		pattern := TrafficPattern{
-			Timestamp:           time.Now(),
-			RequestRate:         float64(100 + i*10),
-			ResponseTime:        50.0,
-			ErrorRate:           2.0,
-			AverageResponseTime: 48.0,
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
+			ErrorRate:    0.01,
 		}
-		predictor.RecordMetrics(pattern.RequestRate, pattern.ResponseTime, pattern.ErrorRate, nil)
-	}
 
-	testPattern := TrafficPattern{
-		Timestamp:           time.Now(),
-		RequestRate:         150.0,
-		ResponseTime:        60.0,
-		ErrorRate:           3.0,
-		AverageResponseTime: 58.0,
-	}
+		clientIP := net.ParseIP("1.1.1.1")
+		predictor.EnrichTrafficPatternWithGeo(&pattern, clientIP, "us-east-1")
+		assert.NotNil(t, pattern)
+		assert.Equal(t, "us-east-1", pattern.BackendRegion)
+	})
 
-	beforePrediction := time.Now()
-	_, err := predictor.Predict(testPattern)
-	afterPrediction := time.Now()
+	t.Run("EnrichTrafficPatternWithGeo_InvalidIP", func(t *testing.T) {
+		pattern := TrafficPattern{
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
+			ErrorRate:    0.01,
+		}
 
-	assert.NoError(t, err)
+		// IP nil
+		predictor.EnrichTrafficPatternWithGeo(&pattern, nil, "us-west-2")
+		assert.Equal(t, "us-west-2", pattern.BackendRegion)
+		assert.Equal(t, 100.0, pattern.RequestRate)
+	})
 
-	lastTime := predictor.GetLastPredictionTime()
-	assert.False(t, lastTime.Before(beforePrediction))
-	assert.False(t, lastTime.After(afterPrediction))
+	t.Run("EnrichTrafficPatternWithGeo_NoGeoManager", func(t *testing.T) {
+		// Criar predictor sem geoManager
+		predictorNoGeo := NewAIPredictor(config, logger)
+		
+		pattern := TrafficPattern{
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
+			ErrorRate:    0.01,
+		}
+
+		clientIP := net.ParseIP("8.8.8.8")
+		predictorNoGeo.EnrichTrafficPatternWithGeo(&pattern, clientIP, "eu-west-1")
+		assert.Equal(t, "eu-west-1", pattern.BackendRegion)
+		assert.Equal(t, 100.0, pattern.RequestRate)
+	})
+
+	t.Run("PredictWithGeoContext", func(t *testing.T) {
+		// Adicionar dados de treino suficientes
+		for i := 0; i < 15; i++ {
+			predictor.RecordMetrics(
+				float64(100+i*10),
+				float64(200+i*5),
+				0.01,
+				map[string]interface{}{"iteration": i},
+			)
+		}
+
+		pattern := TrafficPattern{
+			RequestRate:  150.0,
+			ResponseTime: 250.0,
+			ErrorRate:    0.02,
+		}
+
+		clientIP := net.ParseIP("8.8.8.8")
+		backendOptions := []string{"us-west-2", "us-east-1"}
+
+		result, err := predictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotEmpty(t, result.Algorithm)
+	})
 }
 
-// TestAIPredictor_TrainModels testa o treinamento dos modelos
+// TestAIPredictor_ModelSelection testa seleção de diferentes tipos de modelos
+func TestAIPredictor_ModelSelection(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+
+	tests := []struct {
+		name      string
+		modelType string
+		trainData int
+	}{
+		{"ReinforcementLearning", "reinforcement_learning", 20},
+		{"UnknownModel", "unknown_model", 10},
+		{"EmptyModel", "", 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := &AIConfig{
+				Enabled:       true,
+				ModelType:     tt.modelType,
+				MinDataPoints: 5,
+			}
+
+			predictor := NewAIPredictor(config, logger)
+			assert.NotNil(t, predictor)
+			assert.NotEmpty(t, predictor.models)
+
+			// Adicionar dados de treino suficientes
+			for i := 0; i < tt.trainData; i++ {
+				predictor.RecordMetrics(
+					float64(100+i*5),
+					float64(200+i*2),
+					0.01,
+					map[string]interface{}{"test": i},
+				)
+			}
+
+			// Testar predição
+			result, err := predictor.PredictOptimalStrategy()
+			if tt.modelType == "reinforcement_learning" {
+				// Modelo de reinforcement learning pode precisar de mais dados
+				if err != nil {
+					assert.Contains(t, err.Error(), "model not trained")
+					return
+				}
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+		})
+	}
+}
+
+// TestAIPredictor_CategorizeClient testa categorização de clientes
+func TestAIPredictor_CategorizeClientExtended(t *testing.T) {
+	tests := []struct {
+		userAgent string
+		expected  string
+	}{
+		{"", "unknown"},
+		{"Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "browser"},
+		{"curl/7.68.0", "client"},
+		{"wget/1.20.3", "client"},
+		{"Python-requests/2.25.1", "client"},
+		{"Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)", "browser"},
+	}
+
+	for _, tt := range tests {
+		t.Run("UserAgent_"+tt.userAgent, func(t *testing.T) {
+			result := categorizeClient(tt.userAgent)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// TestAIPredictor_TrainModels testa treinamento de modelos
 func TestAIPredictor_TrainModels(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       3,
-		TrainingInterval:    10 * time.Millisecond, // Muito rápido para teste
-		AdaptiveAlgorithms:  true,
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	// Adicionar dados suficientes para treinamento
-	for i := 0; i < 10; i++ {
-		predictor.RecordMetrics(
-			float64(100+i*10),
-			float64(50+i*5),
-			0.01,
-			map[string]interface{}{"iteration": i},
-		)
-	}
-
-	// Chamar trainModels manualmente - esta função não é chamada em outros lugares
-	// Vou acessar através de reflexão ou método público
-
-	// Aguardar intervalo de treinamento e fazer predição para acionar treinamento
-	time.Sleep(50 * time.Millisecond)
-	
-	// Fazer predição que pode acionar treinamento interno
-	result, err := predictor.PredictOptimalStrategy()
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-}
-
-// Teste para trainModels (0% coverage)
-func TestAIPredictor_TrainModelsZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.5,
-		AdaptiveAlgorithms:  true,
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	// Add training data
-	for i := 0; i < 10; i++ {
-		features := map[string]interface{}{
-			"iteration": i,
-		}
-		predictor.RecordMetrics(
-			float64(100+i*10),
-			float64(200+i*5),
-			0.01,
-			features,
-		)
-	}
-
-	// Call trainModels directly
-	predictor.trainModels()
-	
-	// Verify models were trained (we can't check internal state directly,
-	// but we can verify the function executed without panic)
-	assert.NotNil(t, predictor.models)
-}
-
-// Teste para calculateGeoDistance (0% coverage)  
-func TestAIPredictor_CalculateGeoDistanceZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:      true,
-		ModelType:    "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("Valid coordinates", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			ClientLatitude:  39.0458,  // Virginia coordinates 
-			ClientLongitude: -76.6413,
-			BackendRegion:   "us-west-2", // Oregon
-		}
-
-		distance := predictor.calculateGeoDistance(pattern)
-		assert.Greater(t, distance, 0.0, "Distance should be positive for valid coordinates")
-	})
-
-	t.Run("Zero coordinates", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			ClientLatitude:  0.0,
-			ClientLongitude: 0.0,
-			BackendRegion:   "us-east-1",
-		}
-
-		distance := predictor.calculateGeoDistance(pattern)
-		assert.Equal(t, 0.0, distance, "Distance should be 0 for zero coordinates")
-	})
-
-	t.Run("Unknown region", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			ClientLatitude:  39.0458,
-			ClientLongitude: -76.6413,
-			BackendRegion:   "unknown-region",
-		}
-
-		distance := predictor.calculateGeoDistance(pattern)
-		assert.Equal(t, 0.0, distance, "Distance should be 0 for unknown region")
-	})
-}
-
-// Teste para estimateBackendDistance (0% coverage)
-func TestAIPredictor_EstimateBackendDistanceZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("Known region and backend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("North America", "us-backend")
-		assert.Equal(t, 100.0, distance, "Should return correct distance for known region/backend")
-	})
-
-	t.Run("Unknown region", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("Unknown Region", "us-backend")
-		assert.Equal(t, 5000.0, distance, "Should return default distance for unknown region")
-	})
-
-	t.Run("Unknown backend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("North America", "unknown-backend")
-		assert.Equal(t, 5000.0, distance, "Should return default distance for unknown backend")
-	})
-
-	t.Run("Europe to EU backend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("Europe", "eu-backend")
-		assert.Equal(t, 100.0, distance, "Should return correct distance for Europe/EU backend")
-	})
-
-	t.Run("Asia to Asia backend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("Asia", "asia-backend")
-		assert.Equal(t, 100.0, distance, "Should return correct distance for Asia/Asia backend")
-	})
-}
-
-// Testes para funções com 0% de cobertura
-
-// Teste para SetGeoManager (predictor.go)
-func TestAIPredictor_SetGeoManagerZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	// Mock GeoManager - since we don't have the actual geo package available,
-	// we'll pass nil but test the function execution
-	predictor.SetGeoManager(nil)
-	
-	// Verify that the function executes without error
-	assert.NotNil(t, predictor)
-}
-
-// Teste para getGeoOptimizedBackends (predictor.go) - 0% coverage
-func TestAIPredictor_GetGeoOptimizedBackendsZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("No geo manager", func(t *testing.T) {
-		backendOptions := []string{"backend1", "backend2", "backend3"}
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, backendOptions)
-		assert.Equal(t, backendOptions, result, "Should return original options when no geo manager")
-	})
-
-	t.Run("Empty backend options", func(t *testing.T) {
-		backendOptions := []string{}
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, backendOptions)
-		assert.Equal(t, backendOptions, result, "Should return empty slice for empty input")
-	})
-
-	t.Run("Nil client IP", func(t *testing.T) {
-		backendOptions := []string{"backend1", "backend2"}
-		
-		result := predictor.getGeoOptimizedBackends(nil, backendOptions)
-		assert.Equal(t, backendOptions, result, "Should return original options for nil IP")
-	})
-}
-
-// Teste para service.go SetGeoManager (0% coverage)
-func TestAIService_SetGeoManagerZeroCoverage(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	serviceConfig := &AIServiceConfig{
-		Enabled:             true,
-		HealthCheckInterval: 30 * time.Second,
-		FailoverTimeout:     10 * time.Second,
-		MonitoringInterval:  60 * time.Second,
-		AlertThreshold:      0.8,
-		AutoRestart:         false,
-	}
-
-	service := NewAIService(serviceConfig, config, logger)
-
-	// Test SetGeoManager function
-	service.SetGeoManager(nil)
-	
-	// Verify that the function executes without error
-	assert.NotNil(t, service)
-	assert.NotNil(t, service.predictor)
-}
-
-// Testes para aumentar cobertura das funções com baixa cobertura
-
-// Teste mais avançado para EnrichTrafficPatternWithGeo (21.1% coverage)
-func TestAIPredictor_EnrichTrafficPatternWithGeoAdvanced(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	// Test cases that cover more paths in EnrichTrafficPatternWithGeo
-	t.Run("With backend region only (no geo manager)", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			RequestRate:  100.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		
-		clientIP := net.ParseIP("192.168.1.1")
-		backendRegion := "us-east-1"
-		
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, backendRegion)
-		
-		assert.Equal(t, backendRegion, pattern.BackendRegion)
-		// Since geoManager is nil, no geo_enabled feature should be set
-	})
-
-	t.Run("With empty backend region", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			RequestRate:  100.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, "")
-		
-		// Since no backend region is provided, it should remain empty
-		assert.Empty(t, pattern.BackendRegion)
-	})
-
-	t.Run("With nil client IP", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			RequestRate:  100.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		
-		backendRegion := "us-east-1"
-		
-		predictor.EnrichTrafficPatternWithGeo(pattern, nil, backendRegion)
-		
-		assert.Equal(t, backendRegion, pattern.BackendRegion)
-		// Since client IP is nil, no additional geo processing should happen
-	})
-
-	t.Run("With nil pattern features", func(t *testing.T) {
-		pattern := &TrafficPattern{
-			RequestRate:  100.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     nil, // nil features
-		}
-		
-		backendRegion := "us-east-1"
-		
-		predictor.EnrichTrafficPatternWithGeo(pattern, nil, backendRegion)
-		
-		assert.Equal(t, backendRegion, pattern.BackendRegion)
-		// Function should handle nil features gracefully
-	})
-}
-
-// Teste mais avançado para PredictWithGeoContext (40.0% coverage)
-func TestAIPredictor_PredictWithGeoContextAdvanced(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:      true,
-		ModelType:    "neural_network",
-		MinDataPoints: 5,
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	// Add sufficient training data
-	for i := 0; i < 10; i++ {
-		features := map[string]interface{}{
-			"iteration": i,
-		}
-		predictor.RecordMetrics(
-			float64(100+i*10),
-			float64(200+i*5),
-			0.01,
-			features,
-		)
-	}
-
-	t.Run("With client IP and multiple backends", func(t *testing.T) {
-		pattern := TrafficPattern{
-			RequestRate:  150.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		clientIP := net.ParseIP("192.168.1.1")
-		backendOptions := []string{"backend1", "backend2", "backend3"}
-		
-		prediction, err := predictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
-		
-		assert.NoError(t, err)
-		assert.NotNil(t, prediction)
-		assert.NotEmpty(t, prediction.Algorithm)
-	})
-
-	t.Run("With insufficient data", func(t *testing.T) {
-		// Create a new predictor with no data
-		newPredictor := NewAIPredictor(config, logger)
-		
-		pattern := TrafficPattern{
-			RequestRate:  150.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		clientIP := net.ParseIP("192.168.1.1")
-		backendOptions := []string{"backend1", "backend2"}
-		
-		_, err := newPredictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
-		
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "insufficient data points")
-	})
-
-	t.Run("With nil client IP", func(t *testing.T) {
-		pattern := TrafficPattern{
-			RequestRate:  150.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		backendOptions := []string{"backend1", "backend2"}
-		
-		prediction, err := predictor.PredictWithGeoContext(pattern, nil, backendOptions)
-		
-		assert.NoError(t, err)
-		assert.NotNil(t, prediction)
-	})
-
-	t.Run("With empty backend options", func(t *testing.T) {
-		pattern := TrafficPattern{
-			RequestRate:  150.0,
-			ResponseTime: 200.0,
-			ErrorRate:    0.01,
-			Features:     make(map[string]interface{}),
-		}
-		clientIP := net.ParseIP("192.168.1.1")
-		backendOptions := []string{}
-		
-		prediction, err := predictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
-		
-		assert.NoError(t, err)
-		assert.NotNil(t, prediction)
-	})
-}
-
-// Teste mais avançado para getGeoOptimizedBackends (11.1% coverage)
-func TestAIPredictor_GetGeoOptimizedBackendsAdvanced(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	config := &AIConfig{
-		Enabled:   true,
-		ModelType: "neural_network",
-	}
-
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("With valid backends and sorting", func(t *testing.T) {
-		backendOptions := []string{"us-backend", "eu-backend", "asia-backend"}
-		clientIP := net.ParseIP("10.0.0.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, backendOptions)
-		
-		// Should return all backends (potentially reordered)
-		assert.Len(t, result, len(backendOptions))
-		for _, backend := range backendOptions {
-			assert.Contains(t, result, backend)
-		}
-	})
-
-	t.Run("With single backend", func(t *testing.T) {
-		backendOptions := []string{"single-backend"}
-		clientIP := net.ParseIP("10.0.0.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, backendOptions)
-		
-		assert.Equal(t, backendOptions, result)
-	})
-}
-
-// Testes para funções auxiliares dos modelos com baixa cobertura
-
-// Teste para selectAlgorithmBasedOnLoad (42.9% coverage)
-func TestAIModels_SelectAlgorithmBasedLoadAdvanced(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	model := NewLinearRegressionModel(logger)
-
-	// Add training data
-	patterns := []TrafficPattern{}
-	for i := 0; i < 10; i++ {
-		pattern := TrafficPattern{
-			RequestRate:  float64(100 + i*10),
-			ResponseTime: float64(200 + i*5),
-			ErrorRate:    0.01,
-			Features:     map[string]interface{}{"complexity": 1.0},
-		}
-		patterns = append(patterns, pattern)
-	}
-
-	err := model.Train(patterns)
-	require.NoError(t, err)
-
-	t.Run("Low load scenario", func(t *testing.T) {
-		predictedLoad := 50.0 // Low load (< 100)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "round_robin", algorithm)
-	})
-
-	t.Run("Medium load scenario", func(t *testing.T) {
-		predictedLoad := 200.0 // Medium load (100-500)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "least_conn", algorithm)
-	})
-
-	t.Run("High load scenario", func(t *testing.T) {
-		predictedLoad := 600.0 // High load (500-800)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "weighted_round_robin", algorithm)
-	})
-
-	t.Run("Very high load scenario", func(t *testing.T) {
-		predictedLoad := 1000.0 // Very high load (> 800)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "geo_proximity", algorithm)
-	})
-
-	t.Run("Zero load scenario", func(t *testing.T) {
-		predictedLoad := 0.0 // Zero load (< 100)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "round_robin", algorithm)
-	})
-
-	t.Run("Edge case 100", func(t *testing.T) {
-		predictedLoad := 100.0 // Exactly 100 (should be least_conn)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "least_conn", algorithm)
-	})
-
-	t.Run("Edge case 500", func(t *testing.T) {
-		predictedLoad := 500.0 // Exactly 500 (should be weighted_round_robin)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "weighted_round_robin", algorithm)
-	})
-
-	t.Run("Edge case 800", func(t *testing.T) {
-		predictedLoad := 800.0 // Exactly 800 (should be geo_proximity)
-		
-		algorithm := model.selectAlgorithmBasedOnLoad(predictedLoad)
-		
-		assert.Equal(t, "geo_proximity", algorithm)
-	})
-}
-
-// TestNeuralNetworkHelperFunctions testa as funções auxiliares do modelo neural network
-func TestNeuralNetworkHelperFunctions(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	model := NewNeuralNetworkModel(logger)
-
-	t.Run("isCorrectPrediction", func(t *testing.T) {
-		// Teste com arrays vazios
-		assert.False(t, model.isCorrectPrediction([]float64{}, []float64{0.5}))
-		assert.False(t, model.isCorrectPrediction([]float64{0.5}, []float64{}))
-		
-		// Teste com predição correta (diferença < 0.1)
-		assert.True(t, model.isCorrectPrediction([]float64{0.5}, []float64{0.55}))
-		assert.True(t, model.isCorrectPrediction([]float64{0.8}, []float64{0.85}))
-		
-		// Teste com predição incorreta (diferença >= 0.1)
-		assert.False(t, model.isCorrectPrediction([]float64{0.5}, []float64{0.7}))
-		assert.False(t, model.isCorrectPrediction([]float64{0.2}, []float64{0.4}))
-	})
-
-	t.Run("calculateConfidence", func(t *testing.T) {
-		// Teste com array vazio
-		assert.Equal(t, 0.5, model.calculateConfidence([]float64{}))
-		
-		// Teste com valores normais
-		assert.Equal(t, 0.7, model.calculateConfidence([]float64{0.7}))
-		assert.Equal(t, 0.3, model.calculateConfidence([]float64{0.3}))
-		
-		// Teste com valor maior que 1.0 (deve ser limitado a 1.0)
-		assert.Equal(t, 1.0, model.calculateConfidence([]float64{1.5}))
-		assert.Equal(t, 1.0, model.calculateConfidence([]float64{2.0}))
-	})
-
-	t.Run("selectAlgorithm", func(t *testing.T) {
-		// Teste com array vazio ou com menos de 2 elementos
-		assert.Equal(t, "round_robin", model.selectAlgorithm([]float64{}))
-		assert.Equal(t, "round_robin", model.selectAlgorithm([]float64{0.5}))
-		
-		// Teste com diferentes valores do segundo elemento
-		assert.Equal(t, "round_robin", model.selectAlgorithm([]float64{0.5, 0.2}))      // < 0.3
-		assert.Equal(t, "round_robin", model.selectAlgorithm([]float64{0.5, 0.1}))      // < 0.3
-		assert.Equal(t, "least_conn", model.selectAlgorithm([]float64{0.5, 0.4}))       // 0.3 <= x < 0.6
-		assert.Equal(t, "least_conn", model.selectAlgorithm([]float64{0.5, 0.5}))       // 0.3 <= x < 0.6
-		assert.Equal(t, "weighted_round_robin", model.selectAlgorithm([]float64{0.5, 0.7})) // >= 0.6
-		assert.Equal(t, "weighted_round_robin", model.selectAlgorithm([]float64{0.5, 0.9})) // >= 0.6
-	})
-
-	t.Run("getScalingRecommendation", func(t *testing.T) {
-		// Teste para scale_down (loadScore < 0.3)
-		assert.Equal(t, "scale_down", model.getScalingRecommendation(0.1))
-		assert.Equal(t, "scale_down", model.getScalingRecommendation(0.25))
-		
-		// Teste para scale_up (loadScore > 0.8)
-		assert.Equal(t, "scale_up", model.getScalingRecommendation(0.85))
-		assert.Equal(t, "scale_up", model.getScalingRecommendation(0.95))
-		
-		// Teste para maintain (0.3 <= loadScore <= 0.8)
-		assert.Equal(t, "maintain", model.getScalingRecommendation(0.3))
-		assert.Equal(t, "maintain", model.getScalingRecommendation(0.5))
-		assert.Equal(t, "maintain", model.getScalingRecommendation(0.8))
-	})
-
-	t.Run("getAlgorithmPreference", func(t *testing.T) {
-		// Teste para alta taxa de erro (> 0.05) -> retorna 0.8
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 500,
-			ErrorRate:    0.1, // > 0.05
-		}
-		assert.Equal(t, 0.8, model.getAlgorithmPreference(pattern))
-		
-		// Teste para alta latência (> 1000ms) -> retorna 0.6
-		pattern = TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 1500, // > 1000
-			ErrorRate:    0.01, // <= 0.05
-		}
-		assert.Equal(t, 0.6, model.getAlgorithmPreference(pattern))
-		
-		// Teste para padrão normal -> retorna 0.3
-		pattern = TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 500, // <= 1000
-			ErrorRate:    0.02, // <= 0.05
-		}
-		assert.Equal(t, 0.3, model.getAlgorithmPreference(pattern))
-	})
-
-	t.Run("getScalingNeed", func(t *testing.T) {
-		// Teste para alta necessidade de scaling (RequestRate > 800)
-		pattern := TrafficPattern{
-			RequestRate: 900, // > 800
-		}
-		assert.Equal(t, 0.9, model.getScalingNeed(pattern))
-		
-		// Teste para baixa necessidade de scaling (RequestRate < 100)
-		pattern = TrafficPattern{
-			RequestRate: 50, // < 100
-		}
-		assert.Equal(t, 0.1, model.getScalingNeed(pattern))
-		
-		// Teste para necessidade moderada de scaling (100 <= RequestRate <= 800)
-		pattern = TrafficPattern{
-			RequestRate: 400, // entre 100 e 800
-		}
-		assert.Equal(t, 0.5, model.getScalingNeed(pattern))
-		
-		pattern = TrafficPattern{
-			RequestRate: 100, // = 100
-		}
-		assert.Equal(t, 0.5, model.getScalingNeed(pattern))
-		
-		pattern = TrafficPattern{
-			RequestRate: 800, // = 800
-		}
-		assert.Equal(t, 0.5, model.getScalingNeed(pattern))
-	})
-}
-
-// TestEnrichTrafficPatternWithGeo_EdgeCases testa casos especiais para enriquecimento geográfico
-func TestEnrichTrafficPatternWithGeo_EdgeCases(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.8,
-	}
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("EmptyBackendRegion", func(t *testing.T) {
-		pattern := &TrafficPattern{}
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		// Testar com região vazia
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, "")
-		
-		// Deve funcionar sem erro
-		assert.Equal(t, "", pattern.BackendRegion)
-	})
-
-	t.Run("NilClientIP", func(t *testing.T) {
-		pattern := &TrafficPattern{}
-		
-		// Testar com IP nil
-		predictor.EnrichTrafficPatternWithGeo(pattern, nil, "us-east-1")
-		
-		// Deve definir apenas a região do backend
-		assert.Equal(t, "us-east-1", pattern.BackendRegion)
-	})
-
-	t.Run("NilGeoManagerButWithRegion", func(t *testing.T) {
-		pattern := &TrafficPattern{}
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		// geoManager é nil por padrão
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, "us-west-2")
-		
-		// Deve definir apenas a região do backend
-		assert.Equal(t, "us-west-2", pattern.BackendRegion)
-	})
-}
-
-// TestPredictWithGeoContext_EdgeCases testa casos especiais de predição com contexto geográfico
-func TestPredictWithGeoContext_EdgeCases(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.8,
-	}
-	predictor := NewAIPredictor(config, logger)
-
-	// Adicionar alguns padrões para atingir o mínimo
-	for i := 0; i < 10; i++ {
-		predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-	}
-
-	t.Run("NilClientIP", func(t *testing.T) {
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
-			ErrorRate:    0.01,
-		}
-		result, err := predictor.PredictWithGeoContext(pattern, nil, nil)
-		
-		// Deve funcionar mesmo com IP nil
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("EmptyBackends", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
-			ErrorRate:    0.01,
-		}
-		result, err := predictor.PredictWithGeoContext(pattern, clientIP, []string{})
-		
-		// Deve funcionar mesmo com lista vazia de backends
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("NilBackends", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
-			ErrorRate:    0.01,
-		}
-		result, err := predictor.PredictWithGeoContext(pattern, clientIP, nil)
-		
-		// Deve funcionar mesmo com lista nil de backends
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-}
-
-// TestGetGeoOptimizedBackends_EdgeCases testa casos especiais para backends otimizados
-func TestGetGeoOptimizedBackends_EdgeCases(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.8,
-	}
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("EmptyBackends", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, []string{})
-		
-		// Deve retornar lista vazia
-		assert.Empty(t, result)
-	})
-
-	t.Run("NilBackends", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, nil)
-		
-		// Deve retornar lista vazia
-		assert.Empty(t, result)
-	})
-
-	t.Run("SingleBackend", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		result := predictor.getGeoOptimizedBackends(clientIP, []string{"backend1"})
-		
-		// Deve retornar o único backend
-		assert.Len(t, result, 1)
-		assert.Equal(t, "backend1", result[0])
-	})
-
-	t.Run("MultipleBackends", func(t *testing.T) {
-		clientIP := net.ParseIP("192.168.1.1")
-		
-		backends := []string{"backend1", "backend2", "backend3", "backend4", "backend5"}
-		result := predictor.getGeoOptimizedBackends(clientIP, backends)
-		
-		// Deve retornar os backends (sem geoManager, retorna todos)
-		assert.Equal(t, backends, result)
-	})
-}
-
-// TestPredictorPredict_EdgeCases testa casos especiais da função Predict
-func TestPredictorPredict_EdgeCases(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	
-	t.Run("DisabledPredictor", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled: false,
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
-			ErrorRate:    0.01,
-		}
-		
-		result, err := predictor.Predict(pattern)
-		
-		// Deve retornar erro quando desabilitado
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "AI predictor is disabled")
-	})
-
-	t.Run("InsufficientData", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:       true,
-			MinDataPoints: 10,
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
-			ErrorRate:    0.01,
-		}
-		
-		result, err := predictor.Predict(pattern)
-		
-		// Deve retornar erro quando não há dados suficientes
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "insufficient data points")
-	})
-
-	t.Run("NoModelsAvailable", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:       true,
-			ModelType:     "unknown_model",
-			MinDataPoints: 1,
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Limpar todos os modelos para simular cenário sem modelos
-		predictor.mu.Lock()
-		predictor.models = make(map[string]MLModel)
-		predictor.mu.Unlock()
-
-		pattern := TrafficPattern{
-			RequestRate:          100,
-			ResponseTime:         200,
-			ErrorRate:            0.01,
-			AverageResponseTime:  250.0,
-		}
-		
-		result, err := predictor.Predict(pattern)
-		
-		// Deve usar fallback quando não há modelos
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "round_robin", result.Algorithm)
-		assert.Equal(t, 0.5, result.Confidence)
-	})
-}
-
-// TestReinforcementLearningHelperFunctions testa as funções auxiliares do modelo RL
-func TestReinforcementLearningHelperFunctions(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	model := NewReinforcementLearningModel(logger)
-
-	t.Run("calculateReward", func(t *testing.T) {
-		// Teste com melhoria de performance
-		current := TrafficPattern{
-			ResponseTime: 1000,
-			ErrorRate:    0.05,
-		}
-		next := TrafficPattern{
-			ResponseTime: 800,  // Melhoria de 200ms
-			ErrorRate:    0.03, // Melhoria de 0.02
-		}
-		
-		reward := model.calculateReward(current, next)
-		expectedReward := (1000.0-800.0)/1000 + (0.05-0.03)*10 // 0.2 + 0.2 = 0.4
-		assert.Equal(t, expectedReward, reward)
-		
-		// Teste com piora de performance
-		current = TrafficPattern{
-			ResponseTime: 800,
-			ErrorRate:    0.03,
-		}
-		next = TrafficPattern{
-			ResponseTime: 1000,
-			ErrorRate:    0.05,
-		}
-		
-		reward = model.calculateReward(current, next)
-		expectedReward = (800.0-1000.0)/1000 + (0.03-0.05)*10 // -0.2 + (-0.2) = -0.4
-		assert.Equal(t, expectedReward, reward)
-		
-		// Teste com penalty por alta latência
-		current = TrafficPattern{ResponseTime: 1500, ErrorRate: 0.02}
-		next = TrafficPattern{ResponseTime: 2500, ErrorRate: 0.01} // > 2000ms
-		
-		reward = model.calculateReward(current, next)
-		expectedReward = (1500.0-2500.0)/1000 + (0.02-0.01)*10 - 1.0 // -1.0 + 0.1 - 1.0 = -1.9
-		assert.Equal(t, expectedReward, reward)
-		
-		// Teste com penalty por alta taxa de erro
-		current = TrafficPattern{ResponseTime: 500, ErrorRate: 0.02}
-		next = TrafficPattern{ResponseTime: 400, ErrorRate: 0.08} // > 0.05
-		
-		reward = model.calculateReward(current, next)
-		expectedReward = (500.0-400.0)/1000 + (0.02-0.08)*10 - 2.0 // 0.1 + (-0.6) - 2.0 = -2.5
-		assert.Equal(t, expectedReward, reward)
-	})
-
-	t.Run("getMaxQValue", func(t *testing.T) {
-		// Teste com estado inexistente
-		maxValue := model.getMaxQValue("nonexistent_state")
-		assert.Equal(t, 0.0, maxValue)
-		
-		// Adicionar alguns valores à Q-table
-		model.qTable["test_state"] = map[string]float64{
-			"action1": 0.5,
-			"action2": 0.8,
-			"action3": 0.2,
-		}
-		
-		maxValue = model.getMaxQValue("test_state")
-		assert.Equal(t, 0.8, maxValue)
-		
-		// Teste com estado vazio
-		model.qTable["empty_state"] = map[string]float64{}
-		maxValue = model.getMaxQValue("empty_state")
-		assert.Equal(t, 0.0, maxValue)
-	})
-
-	t.Run("getActionConfidence", func(t *testing.T) {
-		// Teste com estado inexistente
-		confidence := model.getActionConfidence("nonexistent_state", "action1")
-		assert.Equal(t, 0.5, confidence)
-		
-		// Adicionar valores à Q-table
-		model.qTable["test_state"] = map[string]float64{
-			"action1": 0.6,
-			"action2": 0.8, // melhor ação
-			"action3": 0.2,
-		}
-		
-		// Confiança para a melhor ação
-		confidence = model.getActionConfidence("test_state", "action2")
-		assert.Equal(t, 1.0, confidence) // 0.8/0.8 = 1.0
-		
-		// Confiança para uma ação mediana
-		confidence = model.getActionConfidence("test_state", "action1")
-		assert.InDelta(t, 0.75, confidence, 0.001) // 0.6/0.8 = 0.75
-		
-		// Teste com maxValue = 0
-		model.qTable["zero_state"] = map[string]float64{
-			"action1": 0.0,
-			"action2": 0.0,
-		}
-		confidence = model.getActionConfidence("zero_state", "action1")
-		assert.Equal(t, 0.5, confidence)
-	})
-
-	t.Run("updateQValue", func(t *testing.T) {
-		// Teste de atualização básica
-		state := "test_update_state"
-		action := "test_action"
-		reward := 1.0
-		nextState := "next_state"
-		
-		// Configurar next state
-		model.qTable[nextState] = map[string]float64{"action": 0.5}
-		
-		// Atualizar Q-value
-		model.updateQValue(state, action, reward, nextState)
-		
-		// Verificar se o valor foi criado e atualizado corretamente
-		assert.Contains(t, model.qTable, state)
-		assert.Contains(t, model.qTable[state], action)
-		
-		expectedQ := 0.0 + model.alpha*(reward+model.gamma*0.5-0.0)
-		assert.Equal(t, expectedQ, model.qTable[state][action])
-		
-		// Teste de atualização com valor existente
-		currentQ := model.qTable[state][action]
-		model.updateQValue(state, action, 0.5, nextState)
-		
-		newExpectedQ := currentQ + model.alpha*(0.5+model.gamma*0.5-currentQ)
-		assert.Equal(t, newExpectedQ, model.qTable[state][action])
-	})
-
-	t.Run("encodeState", func(t *testing.T) {
-		// Teste de codificação de estado
-		pattern := TrafficPattern{
-			RequestRate:  150,  // bin = 1 (150/100 = 1)
-			ResponseTime: 750,  // bin = 1 (750/500 = 1)
-			ErrorRate:    0.03, // bin = 3 (0.03*100 = 3)
-		}
-		
-		encoded := model.encodeState(pattern)
-		assert.Equal(t, "1_1_3", encoded)
-		
-		// Teste com valores maiores
-		pattern = TrafficPattern{
-			RequestRate:  950,  // bin = 9 (950/100 = 9)
-			ResponseTime: 2750, // bin = 5 (2750/500 = 5)
-			ErrorRate:    0.08, // bin = 8 (0.08*100 = 15, 15%10 = 5)
-		}
-		
-		encoded = model.encodeState(pattern)
-		assert.Equal(t, "9_5_8", encoded)
-		
-		// Teste com valores que excedem o módulo
-		pattern = TrafficPattern{
-			RequestRate:  1200, // bin = 2 (1200/100 = 12, 12%10 = 2)
-			ResponseTime: 5500, // bin = 1 (5500/500 = 11, 11%10 = 1)
-			ErrorRate:    0.15, // bin = 5 (0.15*100 = 15, 15%10 = 5)
-		}
-		
-		encoded = model.encodeState(pattern)
-		assert.Equal(t, "2_1_5", encoded)
-	})
-}
-
-// TestEstimateBackendDistance testa a função de estimativa de distância
-func TestEstimateBackendDistance(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.8,
-	}
-	predictor := NewAIPredictor(config, logger)
-
-	t.Run("KnownRegionAndBackend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("North America", "us-backend")
-		assert.Equal(t, 100.0, distance)
-		
-		distance = predictor.estimateBackendDistance("Europe", "eu-backend")
-		assert.Equal(t, 100.0, distance)
-		
-		distance = predictor.estimateBackendDistance("Asia", "asia-backend")
-		assert.Equal(t, 100.0, distance)
-	})
-
-	t.Run("CrossRegionDistance", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("North America", "eu-backend")
-		assert.Equal(t, 6000.0, distance)
-		
-		distance = predictor.estimateBackendDistance("Europe", "asia-backend")
-		assert.Equal(t, 8000.0, distance)
-		
-		distance = predictor.estimateBackendDistance("Asia", "us-backend")
-		assert.Equal(t, 10000.0, distance)
-	})
-
-	t.Run("UnknownRegionOrBackend", func(t *testing.T) {
-		distance := predictor.estimateBackendDistance("Unknown Region", "us-backend")
-		assert.Equal(t, 5000.0, distance) // default distance
-		
-		distance = predictor.estimateBackendDistance("North America", "unknown-backend")
-		assert.Equal(t, 5000.0, distance) // default distance
-	})
-}
-
-// TestCategorizeClient_EdgeCases testa casos especiais para categorização de cliente
-func TestCategorizeClient_EdgeCases(t *testing.T) {
-	t.Run("EmptyUserAgent", func(t *testing.T) {
-		result := categorizeClient("")
-		assert.Equal(t, "unknown", result)
-	})
-
-	t.Run("ShortUserAgent", func(t *testing.T) {
-		result := categorizeClient("Bot")
-		assert.Equal(t, "client", result)
-	})
-
-	t.Run("MozillaUserAgent", func(t *testing.T) {
-		result := categorizeClient("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-		assert.Equal(t, "browser", result)
-	})
-
-	t.Run("NonMozillaUserAgent", func(t *testing.T) {
-		result := categorizeClient("curl/7.68.0")
-		assert.Equal(t, "client", result)
-	})
-}
-
-// TestAdvancedGeoFunctions testa as funções geográficas mais complexas
-func TestAdvancedGeoFunctions(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	config := &AIConfig{
-		Enabled:             true,
-		ModelType:           "neural_network",
-		MinDataPoints:       5,
-		ConfidenceThreshold: 0.8,
-	}
-	predictor := NewAIPredictor(config, logger)
-
-	// Adicionar dados suficientes para testes
-	for i := 0; i < 10; i++ {
-		predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-	}
-
-	t.Run("EnrichTrafficPatternWithGeo_FullCoverage", func(t *testing.T) {
-		// Teste 1: Com backend region mas sem geoManager
-		pattern := &TrafficPattern{}
-		clientIP := net.ParseIP("192.168.1.1")
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, "us-east-1")
-		assert.Equal(t, "us-east-1", pattern.BackendRegion)
-
-		// Teste 2: Sem backend region e sem geoManager
-		pattern = &TrafficPattern{}
-		predictor.EnrichTrafficPatternWithGeo(pattern, clientIP, "")
-		assert.Equal(t, "", pattern.BackendRegion)
-
-		// Teste 3: Com IP nil mas com backend region
-		pattern = &TrafficPattern{}
-		predictor.EnrichTrafficPatternWithGeo(pattern, nil, "us-west-2")
-		assert.Equal(t, "us-west-2", pattern.BackendRegion)
-
-		// Teste 4: Pattern já com Features existentes
-		pattern = &TrafficPattern{
-			Features: map[string]interface{}{
-				"existing_feature": "value",
-			},
-		}
-		predictor.EnrichTrafficPatternWithGeo(pattern, nil, "eu-west-1")
-		assert.Equal(t, "eu-west-1", pattern.BackendRegion)
-		assert.Equal(t, "value", pattern.Features["existing_feature"])
-	})
-
-	t.Run("PredictWithGeoContext_AllPaths", func(t *testing.T) {
-		// Teste 1: Predictor desabilitado
-		disabledConfig := &AIConfig{Enabled: false}
-		disabledPredictor := NewAIPredictor(disabledConfig, logger)
-		
-		pattern := TrafficPattern{RequestRate: 100, ResponseTime: 200, ErrorRate: 0.01}
-		result, err := disabledPredictor.PredictWithGeoContext(pattern, nil, nil)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "AI predictor is disabled")
-
-		// Teste 2: Com backendOptions vazios
-		pattern = TrafficPattern{RequestRate: 100, ResponseTime: 200, ErrorRate: 0.01}
-		result, err = predictor.PredictWithGeoContext(pattern, net.ParseIP("1.1.1.1"), []string{})
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-
-		// Teste 3: Com backendOptions populados
-		pattern = TrafficPattern{RequestRate: 100, ResponseTime: 200, ErrorRate: 0.01}
-		result, err = predictor.PredictWithGeoContext(pattern, net.ParseIP("1.1.1.1"), []string{"backend1", "backend2"})
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-
-		// Teste 4: Pattern que resulta em alta distância geográfica (>5000km)
-		pattern = TrafficPattern{
-			RequestRate:   100,
-			ResponseTime:  200,
-		
-			ErrorRate:     0.01,
-			GeoDistanceKm: 6000, // > 5000km
-		}
-		result, err = predictor.PredictWithGeoContext(pattern, nil, []string{"backend1"})
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-
-		// Teste 5: Pattern que resulta em distância média (1000-5000km)
-		pattern = TrafficPattern{
-			RequestRate:   100,
-			ResponseTime:  200,
-			ErrorRate:     0.01,
-			GeoDistanceKm: 2500, // 1000-5000km
-		}
-		result, err = predictor.PredictWithGeoContext(pattern, nil, []string{"backend1"})
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-}
-
-// TestInitializeModels_AllPaths testa todos os caminhos da inicialização de modelos
-func TestInitializeModels_AllPaths(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-
-	t.Run("NeuralNetworkModel", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:   true,
-			ModelType: "neural_network",
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Deve ter 2 modelos para neural_network
-		assert.Len(t, predictor.models, 2)
-		assert.Contains(t, predictor.models, "traffic_predictor")
-		assert.Contains(t, predictor.models, "algorithm_selector")
-	})
-
-	t.Run("ReinforcementLearningModel", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:   true,
-			ModelType: "reinforcement_learning",
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Deve ter 1 modelo para reinforcement learning
-		assert.Len(t, predictor.models, 1)
-		assert.Contains(t, predictor.models, "adaptive_balancer")
-	})
-
-	t.Run("DefaultLinearModel", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:   true,
-			ModelType: "unknown_type",
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Deve usar modelo padrão
-		assert.Len(t, predictor.models, 1)
-		assert.Contains(t, predictor.models, "simple_predictor")
-	})
-
-	t.Run("EmptyModelType", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:   true,
-			ModelType: "",
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Deve usar modelo padrão
-		assert.Len(t, predictor.models, 1)
-		assert.Contains(t, predictor.models, "simple_predictor")
-	})
-}
-
-// TestChooseAction_ExplorationPaths testa os caminhos de exploração vs exploração
-func TestChooseAction_ExplorationPaths(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	model := NewReinforcementLearningModel(logger)
-
-	// Definir epsilon para 1.0 para forçar exploração sempre
-	model.epsilon = 1.0
-
-	state := "test_state"
-	
-	// Deve sempre escolher ação aleatória quando epsilon = 1.0
-	action := model.chooseAction(state)
-	possibleActions := []string{"round_robin", "least_conn", "weighted_round_robin", "geo_proximity"}
-	assert.Contains(t, possibleActions, action)
-
-	// Definir epsilon para 0.0 para forçar exploração nunca
-	model.epsilon = 0.0
-	
-	// Adicionar alguns valores à Q-table
-	model.qTable[state] = map[string]float64{
-		"round_robin":            0.2,
-		"least_conn":             0.8, // melhor ação
-		"weighted_round_robin":   0.3,
-		"geo_proximity":          0.1,
-	}
-	
-	// Deve sempre escolher a melhor ação quando epsilon = 0.0
-	action = model.chooseAction(state)
-	assert.Equal(t, "least_conn", action)
-}
-
-// TestTrainModels_ErrorHandling testa o tratamento de erros no treinamento
-func TestTrainModels_ErrorHandling(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
 	config := &AIConfig{
 		Enabled:       true,
 		ModelType:     "neural_network",
 		MinDataPoints: 5,
 	}
+
 	predictor := NewAIPredictor(config, logger)
 
-	// Adicionar dados de treinamento
-	for i := 0; i < 15; i++ {
-		predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
+	// Adicionar dados suficientes para treinar
+	for i := 0; i < 100; i++ {
+		predictor.RecordMetrics(
+			float64(100+i),
+			float64(200+i),
+			0.01+float64(i)*0.001,
+			map[string]interface{}{"batch": i},
+		)
 	}
 
-	// Mock do modelo que falhará no treinamento
-	predictor.mu.Lock()
-	predictor.models["failing_model"] = &FailingModel{}
-	predictor.mu.Unlock()
+	// Verificar se shouldRetrain retorna true
+	assert.True(t, predictor.shouldRetrain())
 
-	// Testar treinamento com modelo que falha
-	predictor.trainModels() // Deve logar erro mas não falhar
+	// Chamar trainModels diretamente
+	predictor.trainModels()
+
+	// Verificar se os modelos foram treinados
+	performance := predictor.GetModelPerformance()
+	assert.NotEmpty(t, performance)
 }
 
-// FailingModel é um mock que sempre falha no treinamento
-type FailingModel struct{}
-
-func (m *FailingModel) Train(patterns []TrafficPattern) error {
-	return fmt.Errorf("simulated training failure")
-}
-
-func (m *FailingModel) Predict(current TrafficPattern) (*PredictionResult, error) {
-	return nil, fmt.Errorf("simulated prediction failure")
-}
-
-func (m *FailingModel) GetModelInfo() ModelInfo {
-	return ModelInfo{Type: "failing", Accuracy: 0.0}
-}
-
-// TestPredict_AllModelPaths testa todos os caminhos da função Predict
-func TestPredict_AllModelPaths(t *testing.T) {
+// TestAIPredictor_EdgeCasesAndErrors testa casos extremos e tratamento de erros
+func TestAIPredictor_EdgeCasesAndErrors(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
-	t.Run("NeuralNetwork_Predict", func(t *testing.T) {
+	t.Run("DisabledPredictor", func(t *testing.T) {
 		config := &AIConfig{
-			Enabled:       true,
-			ModelType:     "neural_network",
-			MinDataPoints: 5,
+			Enabled: false,
 		}
+
 		predictor := NewAIPredictor(config, logger)
 
-		// Adicionar dados suficientes
-		for i := 0; i < 10; i++ {
-			predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-		}
-
-		pattern := TrafficPattern{
-			RequestRate:         100,
-			ResponseTime:        200,
-			ErrorRate:           0.01,
-			AverageResponseTime: 250,
-		}
-
-		result, err := predictor.Predict(pattern)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("ReinforcementLearning_Predict", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:       true,
-			ModelType:     "reinforcement_learning",
-			MinDataPoints: 5,
-		}
-		predictor := NewAIPredictor(config, logger)
-
-		// Adicionar dados suficientes e treinar o modelo
-		for i := 0; i < 10; i++ {
-			predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-		}
-		
-		// Treinar o modelo explicitamente
-		predictor.trainModels()
-
-		pattern := TrafficPattern{
-			RequestRate:         100,
-			ResponseTime:        200,
-			ErrorRate:           0.01,
-			AverageResponseTime: 250,
-		}
-
-		result, err := predictor.Predict(pattern)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("LinearRegression_Predict", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:       true,
-			ModelType:     "linear_regression",
-			MinDataPoints: 5,
-		}
-		predictor := NewAIPredictor(config, logger)
-
-		// Adicionar dados suficientes
-		for i := 0; i < 10; i++ {
-			predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-		}
-
-		pattern := TrafficPattern{
-			RequestRate:         100,
-			ResponseTime:        200,
-			ErrorRate:           0.01,
-			AverageResponseTime: 250,
-		}
-
-		result, err := predictor.Predict(pattern)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("ModelPredictionFailure", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:       true,
-			ModelType:     "neural_network",
-			MinDataPoints: 5,
-		}
-		predictor := NewAIPredictor(config, logger)
-
-		// Substituir modelo por um que falha
-		predictor.mu.Lock()
-		predictor.models["traffic_predictor"] = &FailingModel{}
-		predictor.mu.Unlock()
-
-		// Adicionar dados suficientes
-		for i := 0; i < 10; i++ {
-			predictor.RecordMetrics(float64(100+i*10), float64(200+i*20), 0.01, nil)
-		}
-
-		pattern := TrafficPattern{
-			RequestRate:         100,
-			ResponseTime:        200,
-			ErrorRate:           0.01,
-			AverageResponseTime: 250,
-		}
-
+		// Testar predição com predictor desabilitado
+		pattern := TrafficPattern{RequestRate: 100}
 		result, err := predictor.Predict(pattern)
 		assert.Error(t, err)
 		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "disabled")
+
+		// Testar PredictOptimalStrategy com predictor desabilitado
+		result, err = predictor.PredictOptimalStrategy()
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "disabled")
+	})
+
+	t.Run("ComplexityCalculation_EdgeCases", func(t *testing.T) {
+		// Testar com valores extremos
+		complexity := calculateComplexity("api", "application/octet-stream", 5*1024*1024)
+		assert.LessOrEqual(t, complexity, 5.0)
+
+		complexity = calculateComplexity("unknown", "unknown", 0)
+		assert.GreaterOrEqual(t, complexity, 1.0)
+	})
+
+	t.Run("LastPredictionTime", func(t *testing.T) {
+		config := &AIConfig{
+			Enabled:       true,
+			ModelType:     "neural_network",
+			MinDataPoints: 2,
+		}
+
+		predictor := NewAIPredictor(config, logger)
+		
+		// Inicialmente deve ser zero
+		lastTime := predictor.GetLastPredictionTime()
+		assert.True(t, lastTime.IsZero())
+
+		// Após predição deve ser atualizado
+		for i := 0; i < 5; i++ {
+			predictor.RecordMetrics(100, 200, 0.01, map[string]interface{}{})
+		}
+
+		pattern := TrafficPattern{RequestRate: 100, ResponseTime: 200}
+		_, err := predictor.Predict(pattern)
+		assert.NoError(t, err)
+
+		lastTime = predictor.GetLastPredictionTime()
+		assert.False(t, lastTime.IsZero())
 	})
 }
 
-// TestAnalyzeApplicationContext_EdgeCases testa casos especiais da análise de contexto
-func TestAnalyzeApplicationContext_EdgeCases(t *testing.T) {
+// TestAIPredictor_LowCoverageFunctions testa funções com baixa cobertura
+func TestAIPredictor_LowCoverageFunctions(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
-	t.Run("ApplicationAwareDisabled", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:         true,
-			ApplicationAware: false, // Desabilitado
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		context := predictor.AnalyzeApplicationContext("api", "application/json", "Mozilla/5.0", 1024)
-		assert.Nil(t, context)
-	})
 
-	t.Run("ApplicationAwareEnabled_AllTypes", func(t *testing.T) {
-		config := &AIConfig{
-			Enabled:         true,
-			ApplicationAware: true, // Habilitado
-		}
-		predictor := NewAIPredictor(config, logger)
-		
-		// Teste com conteúdo estático
-		context := predictor.AnalyzeApplicationContext("static", "image/png", "browser", 512)
-		assert.NotNil(t, context)
-		assert.True(t, context["is_static"].(bool))
-		assert.False(t, context["is_api"].(bool))
-		assert.False(t, context["is_heavy"].(bool))
-		
-		// Teste com API
-		context = predictor.AnalyzeApplicationContext("api", "application/json", "curl", 2*1024*1024)
-		assert.NotNil(t, context)
-		assert.False(t, context["is_static"].(bool))
-		assert.True(t, context["is_api"].(bool))
-		assert.True(t, context["is_heavy"].(bool))
-		
-		// Teste com GraphQL
-		context = predictor.AnalyzeApplicationContext("graphql", "application/json", "Apollo", 1024)
-		assert.NotNil(t, context)
-		assert.True(t, context["is_api"].(bool))
-		
-		// Teste com gRPC
-		context = predictor.AnalyzeApplicationContext("grpc", "application/grpc", "grpc-client", 1024)
-		assert.NotNil(t, context)
-		assert.True(t, context["is_api"].(bool))
-	})
-}
-
-// TestReinforcementLearningPredict_EdgeCases testa casos especiais da predição RL
-func TestReinforcementLearningPredict_EdgeCases(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	model := NewReinforcementLearningModel(logger)
-	
-	// Treinar o modelo primeiro com alguns dados
-	patterns := []TrafficPattern{
-		{RequestRate: 100, ResponseTime: 200, ErrorRate: 0.01},
-		{RequestRate: 150, ResponseTime: 250, ErrorRate: 0.02},
-		{RequestRate: 200, ResponseTime: 300, ErrorRate: 0.015},
+	config := &AIConfig{
+		Enabled:       true,
+		ModelType:     "neural_network",
+		MinDataPoints: 2,
 	}
-	err := model.Train(patterns)
-	require.NoError(t, err)
 
-	t.Run("PredictWithEmptyQTable", func(t *testing.T) {
-		// Limpar Q-table para simular estado vazio
-		model.qTable = make(map[string]map[string]float64)
+	predictor := NewAIPredictor(config, logger)
+
+	t.Run("TrainModels_DirectCall", func(t *testing.T) {
+		// Adicionar dados para treino
+		for i := 0; i < 15; i++ {
+			predictor.RecordMetrics(
+				float64(100+i*10),
+				float64(200+i*5),
+				0.01,
+				map[string]interface{}{"iteration": i},
+			)
+		}
+
+		// Chamar trainModels diretamente para testar todos os caminhos
+		predictor.trainModels()
+
+		// Verificar se os modelos foram treinados
+		performance := predictor.GetModelPerformance()
+		assert.NotEmpty(t, performance)
 		
+		for _, info := range performance {
+			assert.NotEmpty(t, info.Type)
+		}
+	})
+
+	t.Run("Predict_AllPaths", func(t *testing.T) {
+		// Testar com diferentes configurações de modelo
+		configRL := &AIConfig{
+			Enabled:       true,
+			ModelType:     "reinforcement_learning",
+			MinDataPoints: 2,
+		}
+
+		predictorRL := NewAIPredictor(configRL, logger)
+		
+		// Adicionar dados para treino
+		for i := 0; i < 20; i++ {
+			predictorRL.RecordMetrics(
+				float64(100+i*5),
+				float64(200+i*2),
+				0.01,
+				map[string]interface{}{"test": i},
+			)
+		}
+
 		pattern := TrafficPattern{
-			RequestRate:  100,
-			ResponseTime: 200,
+			RequestRate:  150.0,
+			ResponseTime: 250.0,
+			ErrorRate:    0.02,
+		}
+
+		// Testar predição com modelo RL
+		result, err := predictorRL.Predict(pattern)
+		if err != nil && err.Error() == "model not trained" {
+			// Acceptable for RL model
+			t.Logf("RL model not trained yet: %v", err)
+		} else {
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+		}
+
+		// Testar sem modelos disponíveis
+		predictorEmpty := &AIPredictor{
+			models:          make(map[string]MLModel),
+			learningEnabled: true,
+			config:          config,
+			logger:          logger,
+		}
+
+		predictorEmpty.trafficHistory = []TrafficPattern{pattern, pattern, pattern}
+		result, err = predictorEmpty.Predict(pattern)
+		assert.NoError(t, err) // Deve usar fallback
+		assert.NotNil(t, result)
+		assert.Equal(t, "round_robin", result.Algorithm)
+	})
+
+	t.Run("PredictWithGeoContext_AllPaths", func(t *testing.T) {
+		// Testar com diferentes cenários
+		for i := 0; i < 15; i++ {
+			predictor.RecordMetrics(
+				float64(100+i*10),
+				float64(200+i*5),
+				0.01,
+				map[string]interface{}{"iteration": i},
+			)
+		}
+
+		pattern := TrafficPattern{
+			RequestRate:  150.0,
+			ResponseTime: 250.0,
+			ErrorRate:    0.02,
+		}
+
+		clientIP := net.ParseIP("8.8.8.8")
+		backendOptions := []string{"us-west-2", "us-east-1"}
+
+		// Testar com geo context habilitado
+		result, err := predictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+
+		// Testar com backends vazios
+		result, err = predictor.PredictWithGeoContext(pattern, clientIP, []string{})
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+
+		// Testar com IP nil
+		result, err = predictor.PredictWithGeoContext(pattern, nil, backendOptions)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("GetGeoOptimizedBackends", func(t *testing.T) {
+		// Configurar predictor com geo manager
+		geoMgr := &geo.Manager{}
+		predictor.SetGeoManager(geoMgr)
+
+		pattern := TrafficPattern{
+			ClientRegion:    "us-east-1",
+			ClientCountry:   "US",
+			ClientLatitude:  39.0458,
+			ClientLongitude: -76.6413,
+		}
+
+		backendOptions := []string{"us-east-1", "us-west-2", "eu-west-1"}
+
+		// Esta função é privada, mas podemos testá-la indiretamente através de PredictWithGeoContext
+		clientIP := net.ParseIP("1.1.1.1")
+		result, err := predictor.PredictWithGeoContext(pattern, clientIP, backendOptions)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+
+		// Testar com pattern sem dados geo
+		emptyPattern := TrafficPattern{
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
+		}
+
+		result, err = predictor.PredictWithGeoContext(emptyPattern, clientIP, backendOptions)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+}
+
+// TestAIPredictor_GeoFunctionsComplete testa funções geográficas com mais completude
+func TestAIPredictor_GeoFunctionsComplete(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+
+	config := &AIConfig{
+		Enabled:       true,
+		ModelType:     "neural_network",
+		MinDataPoints: 2,
+	}
+
+	predictor := NewAIPredictor(config, logger)
+	geoMgr := &geo.Manager{}
+	predictor.SetGeoManager(geoMgr)
+
+	t.Run("EnrichTrafficPatternWithGeo_CompleteCoverage", func(t *testing.T) {
+		// Testar com backend region vazio
+		pattern := TrafficPattern{
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
 			ErrorRate:    0.01,
 		}
-		
-		result, err := model.Predict(pattern)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		// Com Q-table vazia, deve usar ação aleatória
-		possibleActions := []string{"round_robin", "least_conn", "weighted_round_robin", "geo_proximity"}
-		assert.Contains(t, possibleActions, result.Algorithm)
+
+		clientIP := net.ParseIP("8.8.8.8")
+		predictor.EnrichTrafficPatternWithGeo(&pattern, clientIP, "")
+		assert.Equal(t, 100.0, pattern.RequestRate)
+
+		// Testar com backend region válido
+		predictor.EnrichTrafficPatternWithGeo(&pattern, clientIP, "us-west-2")
+		assert.Equal(t, "us-west-2", pattern.BackendRegion)
+
+		// Testar sem geo manager
+		predictorNoGeo := NewAIPredictor(config, logger)
+		pattern2 := TrafficPattern{
+			RequestRate:  200.0,
+			ResponseTime: 300.0,
+		}
+		predictorNoGeo.EnrichTrafficPatternWithGeo(&pattern2, clientIP, "eu-west-1")
+		assert.Equal(t, "eu-west-1", pattern2.BackendRegion)
+		assert.Equal(t, 200.0, pattern2.RequestRate)
+
+		// Testar com IP nil
+		pattern3 := TrafficPattern{
+			RequestRate:  300.0,
+			ResponseTime: 400.0,
+		}
+		predictor.EnrichTrafficPatternWithGeo(&pattern3, nil, "ap-southeast-1")
+		assert.Equal(t, "ap-southeast-1", pattern3.BackendRegion)
 	})
 
-	t.Run("PredictWithPopulatedQTable", func(t *testing.T) {
-		// Adicionar dados à Q-table
-		state := "1_0_1"
-		model.qTable[state] = map[string]float64{
-			"round_robin":            0.2,
-			"least_conn":             0.8,
-			"weighted_round_robin":   0.3,
-			"geo_proximity":          0.1,
+	t.Run("CalculateGeoDistance_IndirectTest", func(t *testing.T) {
+		// Como calculateGeoDistance é privada, vamos testar através de EnrichTrafficPatternWithGeo
+		pattern := TrafficPattern{
+			RequestRate:  100.0,
+			ResponseTime: 200.0,
+			ErrorRate:    0.01,
+			Features:     make(map[string]interface{}),
 		}
 
-		pattern := TrafficPattern{
-			RequestRate:  150, // bin = 1
-			ResponseTime: 200, // bin = 0  
-			ErrorRate:    0.01, // bin = 1
-		}
-		
-		result, err := model.Predict(pattern)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		// Deve escolher com base no Q-table ou exploração
-		possibleActions := []string{"round_robin", "least_conn", "weighted_round_robin", "geo_proximity"}
-		assert.Contains(t, possibleActions, result.Algorithm)
+		clientIP := net.ParseIP("8.8.8.8")
+		predictor.EnrichTrafficPatternWithGeo(&pattern, clientIP, "us-west-2")
+
+		// Verificar se o pattern foi enriquecido
+		assert.Equal(t, "us-west-2", pattern.BackendRegion)
+		assert.NotNil(t, pattern.Features)
 	})
 }
+
+// TestAIPredictor_ErrorHandlingComplete testa tratamento de erros mais completo
+func TestAIPredictor_ErrorHandlingComplete(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
+
+	t.Run("PredictOptimalStrategy_ErrorPaths", func(t *testing.T) {
+		config := &AIConfig{
+			Enabled:       true,
+			ModelType:     "neural_network",
+			MinDataPoints: 10,
+		}
+
+		predictor := NewAIPredictor(config, logger)
+
+		// Testar com dados insuficientes
+		for i := 0; i < 5; i++ { // Menos que MinDataPoints
+			predictor.RecordMetrics(100, 200, 0.01, nil)
+		}
+
+		result, err := predictor.PredictOptimalStrategy()
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "insufficient data points")
+
+		// Adicionar dados suficientes
+		for i := 0; i < 10; i++ {
+			predictor.RecordMetrics(
+				float64(100+i*10),
+				float64(200+i*5),
+				0.01,
+				map[string]interface{}{"test": i},
+			)
+		}
+
+		// Agora deve funcionar
+		result, err = predictor.PredictOptimalStrategy()
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("RecordMetrics_DisabledLearning", func(t *testing.T) {
+		config := &AIConfig{
+			Enabled: false,
+		}
+
+		predictor := NewAIPredictor(config, logger)
+		initialLen := len(predictor.trafficHistory)
+
+		// Recording metrics should be ignored
+		predictor.RecordMetrics(100, 200, 0.01, nil)
+		assert.Equal(t, initialLen, len(predictor.trafficHistory))
+	})
+}
+

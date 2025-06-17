@@ -1421,7 +1421,7 @@ func TestAIService_AutoRestartLoopContextDone(t *testing.T) {
 		RetryBackoff:        5 * time.Millisecond,
 		AutoRestart:         true,
 	}
-	
+
 	aiConfig := &AIConfig{
 		Enabled:   true,
 		ModelType: "neural_network",
@@ -1553,3 +1553,4 @@ func TestAIHealthChecker_PerformHealthCheck_EdgeCases(t *testing.T) {
 	
 	healthChecker.performHealthCheck()
 }
+
