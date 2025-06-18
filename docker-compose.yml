@@ -155,7 +155,7 @@ services:
     ports:
       - "9091:9090"  # Prometheus Web UI (using 9091 to avoid conflict)
     volumes:
-      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/monitoring:/etc/prometheus:ro
       - prometheus_data:/prometheus
     networks:
       - veloflux-net
