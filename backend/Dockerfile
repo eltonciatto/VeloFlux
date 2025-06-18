@@ -39,9 +39,9 @@ RUN chmod +x ./veloflux
 # Expose ports
 EXPOSE 80 443 8080 9000 9090
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://localhost:8080/metrics || exit 1
+# Health check - usar endpoint principal que sabemos que funciona
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:9090/health || exit 1
 
 # Run the binary
 CMD ["./veloflux"]

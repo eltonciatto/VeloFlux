@@ -7,7 +7,7 @@ export const CONFIG = {
   // API endpoints - STANDARD PORT ALLOCATION (NEVER CHANGE)
   // Development: Backend direct ports (9090/9000)
   // Production: Nginx proxy routes (/api, /admin/api)
-  API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9090' : '/api'),
+  API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9090' : ''),
   ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || (import.meta.env.DEV ? 'http://localhost:9000' : '/admin/api'),
   
   // Demo mode - only enabled in development or when explicitly set
