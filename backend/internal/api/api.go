@@ -302,6 +302,11 @@ func (a *API) setupRoutes() {
 		
 		a.logger.Info("Tenant-specific API routes registered successfully")
 	}
+
+	// AI/ML API routes
+	a.logger.Info("Registering AI/ML API routes")
+	a.setupAIRoutes()
+	a.logger.Info("AI/ML API routes registered successfully")
 }
 
 // Stop shuts down the API server
