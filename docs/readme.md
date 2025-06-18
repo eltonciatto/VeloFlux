@@ -486,6 +486,7 @@ npm run build
 npm run type-check
 
 # Run linting
+npm install        # ensure dependencies for linting
 npm run lint
 ```
 

@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "prelint": "test -d node_modules || (echo 'node_modules not found. Run npm install in frontend/ first.' && exit 1)",
     "lint": "eslint .",
     "preview": "vite preview",
     "security:audit": "npm audit --production",

@@ -164,6 +164,7 @@ npm start
 npm run build
 
 # Linter
+npm install  # instale dependências
 npm run lint
 
 # Formatação
