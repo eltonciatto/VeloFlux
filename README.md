@@ -166,8 +166,9 @@ Este projeto está licenciado sob a **VeloFlux Public Source License (VPSL) v1.0
 2. **Fork** o projeto
 3. **Crie uma branch** (`git checkout -b feature/AmazingFeature`)
 4. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-5. **Push** para a branch (`git push origin feature/AmazingFeature`)
-6. **Abra um Pull Request**
+5. **Execute o Linter** (`cd frontend && npm install && npm run lint`)
+6. **Push** para a branch (`git push origin feature/AmazingFeature`)
+7. **Abra um Pull Request**
 
 ---
 
