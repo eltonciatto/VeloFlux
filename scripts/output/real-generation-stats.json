@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-06-19T19:41:53.774Z",
+  "totalCities": 243,
+  "totalCountries": 69,
+  "citiesPerCountry": {
+    "JP": 5,
+    "IN": 5,
+    "CN": 5,
+    "PK": 4,
+    "AR": 3,
+    "TR": 4,
+    "NG": 4,
+    "RU": 5,
+    "BR": 10,
+    "PE": 3,
+    "ID": 4,
+    "EG": 3,
+    "TH": 3,
+    "KR": 3,
+    "BD": 3,
+    "GB": 5,
+    "IR": 4,
+    "MX": 4,
+    "VN": 3,
+    "US": 10,
+    "SA": 4,
+    "CO": 4,
+    "IQ": 3,
+    "CL": 2,
+    "SG": 1,
+    "AU": 5,
+    "CI": 2,
+    "ZA": 4,
+    "KE": 3,
+    "TZ": 3,
+    "DE": 5,
+    "AE": 3,
+    "ET": 2,
+    "MA": 4,
+    "ES": 4,
+    "PY": 2,
+    "GR": 3,
+    "PH": 4,
+    "VE": 3,
+    "IT": 4,
+    "CA": 5,
+    "EC": 3,
+    "DZ": 3,
+    "GH": 3,
+    "FR": 5,
+    "AT": 3,
+    "RO": 3,
+    "PL": 4,
+    "HU": 3,
+    "NZ": 3,
+    "UG": 2,
+    "MY": 3,
+    "BO": 3,
+    "BG": 3,
+    "IE": 2,
+    "UY": 2,
+    "CZ": 3,
+    "BE": 3,
+    "SN": 2,
+    "LY": 2,
+    "TN": 2,
+    "SE": 3,
+    "IL": 3,
+    "NL": 4,
+    "NO": 3,
+    "DK": 3,
+    "FI": 3,
+    "PT": 3,
+    "CH": 4
+  },
+  "sources": [
+    "worldcities",
+    "geonames",
+    "restcountries"
+  ],
+  "largestCities": [
+    {
+      "name": "Abu Dhabi, United Arab Emirates",
+      "country": "AE"
+    },
+    {
+      "name": "Dubai, United Arab Emirates",
+      "country": "AE"
+    },
+    {
+      "name": "Sharjah, United Arab Emirates",
+      "country": "AE"
+    },
+    {
+      "name": "Buenos Aires, Argentina",
+      "country": "AR"
+    },
+    {
+      "name": "Córdoba, Argentina",
+      "country": "AR"
+    },
+    {
+      "name": "Rosario, Argentina",
+      "country": "AR"
+    },
+    {
+      "name": "Graz, Austria",
+      "country": "AT"
+    },
+    {
+      "name": "Linz, Austria",
+      "country": "AT"
+    },
+    {
+      "name": "Vienna, Austria",
+      "country": "AT"
+    },
+    {
+      "name": "Brisbane, Australia",
+      "country": "AU"
+    }
+  ]
+}
