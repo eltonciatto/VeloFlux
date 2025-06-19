@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
+import { useWebSocket } from '@/lib/websocket';
 
 // Types
 interface AnalyticsMetric {
@@ -498,26 +499,43 @@ ${insights.slice(0, 3).map(i =>
     `.trim();
   }, [metrics, alerts, insights]);
 
-  // Real-time updates (mock implementation)
+  // Real-time updates using WebSocket
   const subscribeToMetric = useCallback((metricName: string, callback: (data: AnalyticsMetric) => void) => {
-    const interval = setInterval(() => {
-      const mockMetric = generateMockMetrics().find(m => m.name === metricName);
-      if (mockMetric) {
-        callback(mockMetric);
-      }
-    }, 5000);
+    const { subscribe } = useWebSocket();
     
-    return () => clearInterval(interval);
-  }, [generateMockMetrics]);
-
-  const startRealTimeUpdates = useCallback(() => {
-    // TODO: Implement WebSocket connection for real-time updates
-    console.log('Starting real-time updates...');
+    // Subscribe to WebSocket channel for this metric
+    const unsubscribe = subscribe(`metrics.${metricName}`, (data: any) => {
+      if (data && data.name === metricName) {
+        callback(data);
+      }
+    });
+    
+    return unsubscribe;
   }, []);
 
+  const startRealTimeUpdates = useCallback(async () => {
+    try {
+      const { connect } = useWebSocket();
+      await connect();
+      console.log('Real-time updates started via WebSocket');
+    } catch (error) {
+      console.error('Failed to start real-time updates:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to establish real-time connection",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
+
   const stopRealTimeUpdates = useCallback(() => {
-    // TODO: Close WebSocket connection
-    console.log('Stopping real-time updates...');
+    try {
+      const { disconnect } = useWebSocket();
+      disconnect();
+      console.log('Real-time updates stopped');
+    } catch (error) {
+      console.error('Failed to stop real-time updates:', error);
+    }
   }, []);
 
   // Initialize data on mount
