@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Server, Activity, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, Zap, Network, Database, Globe } from 'lucide-react';
+import { Server, Activity, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, Zap, Network, Database, Globe, Wifi, WifiOff } from 'lucide-react';
 import { useBackends, useClusterInfo, useSystemMetrics } from '@/hooks/use-api';
 import { getThreshold } from '@/config/environment';
+import { AdvancedErrorBoundary } from '@/components/ui/advanced-error-boundary';
+import { useRealtimeBackends } from '@/hooks/useRealtimeWebSocket';
 import AIOverview from './AIOverview';
 import FuturisticCard from './FuturisticCard';
 
@@ -30,6 +32,17 @@ export const BackendOverview = () => {
   const { data: backends = [], isLoading: backendsLoading } = useBackends();
   const { data: cluster, isLoading: clusterLoading } = useClusterInfo();
   const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
+  
+  // 🚀 Real-time WebSocket integration
+  const { 
+    isConnected: wsConnected, 
+    lastMessage, 
+    connectionStatus,
+    error: wsError 
+  } = useRealtimeBackends();
+
+  // 🚀 Real-time state management
+  const [realtimeBackends, setRealtimeBackends] = useState(backends);
   
   const [selectedPool, setSelectedPool] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('status');
@@ -98,10 +111,71 @@ export const BackendOverview = () => {
     return `${days}d ${hours}h`;
   };
 
+  // 🚀 Process real-time WebSocket updates
+  useEffect(() => {
+    if (lastMessage) {
+      switch (lastMessage.type) {
+        case 'backend_status_update':
+          setRealtimeBackends(lastMessage.data);
+          break;
+        case 'backend_metrics_update':
+          // Update individual backend metrics
+          if (lastMessage.data.backend_id) {
+            setRealtimeBackends(prev => 
+              prev.map(backend => 
+                backend.address === lastMessage.data.backend_id 
+                  ? { ...backend, ...lastMessage.data.metrics }
+                  : backend
+              )
+            );
+          }
+          break;
+        case 'pool_status_change':
+          // Handle pool-level changes
+          break;
+      }
+    }
+  }, [lastMessage]);
+
+  // Use real-time data if available, fallback to API data
+  const currentBackends = realtimeBackends.length > 0 ? realtimeBackends : backends;
+  
   return (
-    <div className="space-y-8">
-      {/* AI Overview Section */}
-      <AIOverview />
+    <AdvancedErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('BackendOverview Error:', error, errorInfo);
+      }}
+    >
+      <div className="space-y-8">
+        {/* 🚀 Real-time Connection Status */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700"
+        >
+          <div className="flex items-center gap-3">
+            {wsConnected ? (
+              <>
+                <Wifi className="h-4 w-4 text-green-400" />
+                <span className="text-sm text-green-400">Real-time backend monitoring active</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm text-yellow-400">Connecting to real-time data...</span>
+              </>
+            )}
+          </div>
+          <Badge 
+            variant={wsConnected ? "default" : "secondary"}
+            className={wsConnected ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+          >
+            {connectionStatus}
+          </Badge>
+        </motion.div>
+
+        {/* AI Overview Section */}
+        <AIOverview />
       
       {/* Enhanced Summary Cards */}
       <motion.div 
@@ -451,5 +525,6 @@ export const BackendOverview = () => {
         </Card>
       )}
     </div>
+    </AdvancedErrorBoundary>
   );
 };

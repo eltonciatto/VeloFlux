@@ -2,8 +2,9 @@
 // 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
 // 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -18,7 +19,11 @@ import {
   AlertTriangle, 
   CheckCircle,
   RefreshCw,
-  Settings
+  Settings,
+  Wifi,
+  WifiOff,
+  AlertCircle,
+  TrendingDown
 } from 'lucide-react';
 import { 
   useAIMetrics, 
@@ -28,6 +33,7 @@ import {
   useAIStatus,
   useRetrainModel
 } from '@/hooks/useAIMetrics';
+import { useRealtimeAI } from '@/hooks/useRealtimeWebSocket';
 import { formatConfidence, formatAccuracy, getConfidenceColor, getAccuracyColor } from '@/lib/aiApi';
 
 interface AIInsightsProps {
@@ -43,7 +49,50 @@ export function AIInsights({ className }: AIInsightsProps) {
   const aiStatus = useAIStatus();
   const retrainMutation = useRetrainModel();
 
+  // 🚀 REAL-TIME WebSocket Integration
+  const { 
+    isConnected: wsConnected, 
+    lastMessage, 
+    connectionStatus,
+    error: wsError 
+  } = useRealtimeAI();
+
+  // 🚀 Real-time state management
+  const [realtimeMetrics, setRealtimeMetrics] = useState(metrics);
+  const [realtimeAlerts, setRealtimeAlerts] = useState<Array<{
+    id: string;
+    type: 'info' | 'warning' | 'error';
+    message: string;
+    timestamp: number;
+  }>>([]);
+
+  // 🚀 Process real-time updates
+  useEffect(() => {
+    if (lastMessage) {
+      switch (lastMessage.type) {
+        case 'ai_metrics_update':
+          setRealtimeMetrics(lastMessage.data);
+          break;
+        case 'ai_alert':
+          setRealtimeAlerts(prev => [
+            {
+              id: `alert_${lastMessage.timestamp}`,
+              type: lastMessage.data.severity,
+              message: lastMessage.data.message,
+              timestamp: lastMessage.timestamp
+            },
+            ...prev.slice(0, 4) // Keep only 5 most recent alerts
+          ]);
+          break;
+        case 'model_status_change':
+          // Handle model status changes
+          break;
+      }
+    }
+  }, [lastMessage]);
+
   const isLoading = metricsLoading || predictionsLoading || modelsLoading;
+  const currentMetrics = realtimeMetrics || metrics;
 
   const handleRetrain = () => {
     retrainMutation.mutate(undefined); // undefined for default model
@@ -93,43 +142,147 @@ export function AIInsights({ className }: AIInsightsProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* 🚀 Real-time Connection Status */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700"
+      >
+        <div className="flex items-center gap-3">
+          {wsConnected ? (
+            <>
+              <Wifi className="h-4 w-4 text-green-400" />
+              <span className="text-sm text-green-400">Real-time updates active</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm text-yellow-400">Connecting to real-time data...</span>
+            </>
+          )}
+        </div>
+        <Badge 
+          variant={wsConnected ? "default" : "secondary"}
+          className={wsConnected ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+        >
+          {connectionStatus}
+        </Badge>
+      </motion.div>
+
+      {/* 🚀 Real-time Alerts */}
+      <AnimatePresence>
+        {realtimeAlerts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-2"
+          >
+            {realtimeAlerts.map((alert) => (
+              <motion.div
+                key={alert.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <Alert className={`border-l-4 ${
+                  alert.type === 'error' ? 'border-red-500 bg-red-50/10' :
+                  alert.type === 'warning' ? 'border-yellow-500 bg-yellow-50/10' :
+                  'border-blue-500 bg-blue-50/10'
+                }`}>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{alert.message}</span>
+                    <span className="text-xs text-slate-400">
+                      {new Date(alert.timestamp).toLocaleTimeString()}
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* AI Status Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            AI System Status
-            {getStatusIcon()}
-          </CardTitle>
-          <CardDescription>
-            Real-time artificial intelligence load balancing insights
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">AI Status</p>
-              <Badge className={getStatusColor()}>
-                {aiStatus.ai_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI System Status
+              <motion.div
+                animate={{ rotate: wsConnected ? 360 : 0 }}
+                transition={{ duration: 2, repeat: wsConnected ? Infinity : 0 }}
+              >
+                {getStatusIcon()}
+              </motion.div>
+            </CardTitle>
+            <CardDescription>
+              Real-time artificial intelligence load balancing insights
+              {wsConnected && <span className="text-green-400 ml-2">● Live</span>}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <motion.div 
+                className="space-y-2"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <p className="text-sm text-muted-foreground">AI Status</p>
+                <Badge className={getStatusColor()}>
+                  {aiStatus.ai_enabled ? 'Enabled' : 'Disabled'}
+                </Badge>
+              </motion.div>
+              <motion.div 
+                className="space-y-2"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <p className="text-sm text-muted-foreground">Active Models</p>
+                <motion.p 
+                  className="text-2xl font-bold"
+                  key={aiStatus.models_active}
+                  initial={{ scale: 1.2, color: "#22c55e" }}
+                  animate={{ scale: 1, color: "#ffffff" }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {aiStatus.models_active}
+                </motion.p>
+              </motion.div>
+              <motion.div 
+                className="space-y-2"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <p className="text-sm text-muted-foreground">Current Algorithm</p>
+                <Badge variant="outline">{performanceMetrics.currentAlgorithm}</Badge>
+              </motion.div>
+              <motion.div 
+                className="space-y-2"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <p className="text-sm text-muted-foreground">Avg Accuracy</p>
+                <motion.p 
+                  className={`text-2xl font-bold ${getAccuracyColor(performanceMetrics.averageAccuracy)}`}
+                  key={performanceMetrics.averageAccuracy}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {formatAccuracy(performanceMetrics.averageAccuracy)}
+                </motion.p>
+              </motion.div>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Active Models</p>
-              <p className="text-2xl font-bold">{aiStatus.models_active}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Current Algorithm</p>
-              <Badge variant="outline">{performanceMetrics.currentAlgorithm}</Badge>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Avg Accuracy</p>
-              <p className={`text-2xl font-bold ${getAccuracyColor(performanceMetrics.averageAccuracy)}`}>
-                {formatAccuracy(performanceMetrics.averageAccuracy)}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Current AI Predictions */}
       {predictions && (
