@@ -91,7 +91,36 @@ tenant:
 billing:
   enabled: true
   provider: "stripe"
+  stripe_api_key: "${STRIPE_API_KEY}"
+  stripe_webhook_key: ""  # Will be set when webhook is configured
   webhook_endpoint: "/billing/webhook"
+  success_url: "http://localhost:3000/billing/success"
+  cancel_url: "http://localhost:3000/billing/cancel"
+  plan_configs:
+    - plan_type: "free"
+      stripe_price_id: "price_1RbVEGBLQoA2ESIG1nGYAEAv"
+      display_name: "Free Plan"
+      description: "Basic features for getting started"
+      features: ["10 requests/sec", "Basic support"]
+      price_monthly: 0
+      price_yearly: 0
+      trial_days: 0
+    - plan_type: "pro"
+      stripe_price_id: "price_1RbVEkBLQoA2ESIG1lQWhURH"  # Will be created in Stripe
+      display_name: "Pro Plan"
+      description: "Advanced features for growing businesses"
+      features: ["100 requests/sec", "Priority support", "Advanced analytics"]
+      price_monthly: 2900  # $29.00
+      price_yearly: 29000  # $290.00 (save 2 months)
+      trial_days: 14
+    - plan_type: "enterprise"
+      stripe_price_id: "price_1RbVFDBLQoA2ESIGmUAJsYmE"  # Will be created in Stripe
+      display_name: "Enterprise Plan"
+      description: "Full features for large organizations"
+      features: ["Unlimited requests", "24/7 support", "Custom integrations", "SLA guarantee"]
+      price_monthly: 9900  # $99.00
+      price_yearly: 99000  # $990.00 (save 2 months)
+      trial_days: 30
 
 # User accounts for testing
 users:

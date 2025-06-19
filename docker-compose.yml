@@ -71,6 +71,11 @@ services:
       # Authentication
       - VF_ADMIN_USER=admin
       - VF_ADMIN_PASS=veloflux123
+      # Stripe Billing Configuration
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_your_stripe_secret_key_here}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_your_stripe_publishable_key_here}
+      - BILLING_ENABLED=true
+      - BILLING_PROVIDER=stripe
       # Logging
       - VFX_LOG_LEVEL=info
     ports:
@@ -103,6 +108,8 @@ services:
       - VITE_ADMIN_URL=/admin/api
       # Feature Flags
       - VITE_DEMO_MODE=false
+      # Stripe Configuration
+      - VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51RbV1qBLQoA2ESIGSpS0mEscqiB7zF77Qveqprmw3BjLXE3G1nY1OzNdQlHzShpWOP7ft3Iip5GYvZraimjvcFQV00IHhhxEWz
     ports:
       - "3000:80"  # Frontend Web Interface
     networks:

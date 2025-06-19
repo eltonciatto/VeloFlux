@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +16,7 @@ import AIMetricsDashboard from '@/components/dashboard/AIMetricsDashboard';
 import ModelPerformance from '@/components/dashboard/ModelPerformance';
 import PredictiveAnalytics from '@/components/dashboard/PredictiveAnalytics';
 import AIConfiguration from '@/components/dashboard/AIConfiguration';
+import ModernBillingPanel from '@/components/billing/ModernBillingPanel';
 import { 
   Activity, 
   Server, 
@@ -31,7 +31,8 @@ import {
   TrendingUp,
   Sliders,
   Sparkles,
-  Zap
+  Zap,
+  CreditCard
 } from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/use-auth';
@@ -113,6 +114,13 @@ export const Dashboard = () => {
       icon: Shield,
       gradient: 'from-red-500 to-rose-500',
       component: (props: any) => <WAFConfig tenantId={selectedTenantId} {...props} />
+    },
+    {
+      id: 'billing',
+      label: t('dashboard.tabs.billing'),
+      icon: CreditCard,
+      gradient: 'from-emerald-500 to-green-500',
+      component: ModernBillingPanel
     },
     {
       id: 'ratelimit',
