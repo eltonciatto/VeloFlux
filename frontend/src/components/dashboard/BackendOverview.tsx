@@ -528,3 +528,5 @@ export const BackendOverview = () => {
     </AdvancedErrorBoundary>
   );
 };
+
+export default BackendOverview;

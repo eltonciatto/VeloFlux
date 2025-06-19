@@ -486,3 +486,5 @@ export const MetricsView = () => {
     </div>
   );
 };
+
+export default MetricsView;

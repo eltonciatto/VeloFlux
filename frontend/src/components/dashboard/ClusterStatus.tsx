@@ -172,3 +172,5 @@ export const ClusterStatus = () => {
     </div>
   );
 };
+
+export default ClusterStatus;

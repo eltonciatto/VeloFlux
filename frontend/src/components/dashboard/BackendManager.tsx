@@ -213,3 +213,5 @@ export const BackendManager = () => {
     </div>
   );
 };
+
+export default BackendManager;

@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 
 interface BillingExportManagerProps {
-  tenantId: string;
-  token: string;
+  tenantId?: string;
+  token?: string;
 }
 
 interface ExportJob {
@@ -32,7 +32,10 @@ interface ExportJob {
   fileSize?: number;
 }
 
-export function BillingExportManager({ tenantId, token }: BillingExportManagerProps) {
+export function BillingExportManager({ 
+  tenantId = 'default-tenant', 
+  token = 'demo-token' 
+}: BillingExportManagerProps) {
   const [exportJobs, setExportJobs] = useState<ExportJob[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<'json' | 'csv' | 'xml'>('json');

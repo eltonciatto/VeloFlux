@@ -222,6 +222,18 @@ export function useRealtimeBilling() {
   return useWebSocket(wsConfig);
 }
 
+// Hook principal para o dashboard
+export function useRealtimeWebSocket(url: string) {
+  const wsConfig = {
+    url,
+    debug: process.env.NODE_ENV === 'development',
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5
+  };
+
+  return useWebSocket(wsConfig);
+}
+
 // Hook específico para segurança
 export function useRealtimeSecurity() {
   const wsConfig = {

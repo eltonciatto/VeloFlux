@@ -292,3 +292,5 @@ pools:
     </div>
   );
 };
+
+export default ConfigManager;

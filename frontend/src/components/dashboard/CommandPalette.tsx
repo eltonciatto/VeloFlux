@@ -31,9 +31,10 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate?: (path: string) => void;
+  tabs?: any[];
 }
 
-export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose, onNavigate, tabs }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 

@@ -331,3 +331,5 @@ export const HealthMonitor = () => {
     </div>
   );
 };
+
+export default HealthMonitor;

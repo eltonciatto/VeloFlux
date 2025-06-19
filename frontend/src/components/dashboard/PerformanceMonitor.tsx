@@ -461,3 +461,5 @@ export function PerformanceMonitor() {
     </motion.div>
   );
 }
+
+export default PerformanceMonitor;
