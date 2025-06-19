@@ -16,8 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { safeApiFetch } from '@/lib/api'; // Update with your actual API utility
-import { ReloadIcon, RocketIcon, TrashIcon, SettingsIcon, GearIcon, ClockIcon, CrossCircledIcon, CheckCircledIcon } from '@radix-ui/react-icons';
+import { safeApiFetch } from '@/lib/csrfToken';
+import { ReloadIcon, RocketIcon, TrashIcon, GearIcon, ClockIcon, CrossCircledIcon, CheckCircledIcon } from '@radix-ui/react-icons';
 
 const OrchestrationSettings = () => {
   const { tenantId } = useParams();
@@ -558,7 +558,7 @@ const OrchestrationSettings = () => {
                         disabled={loading || status.status === 'not_deployed'}
                         variant="outline"
                       >
-                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        <GearIcon className="mr-2 h-4 w-4" />
                         Update Resources
                       </Button>
                     </div>
@@ -683,9 +683,8 @@ const OrchestrationSettings = () => {
                       <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                       Saving
                     </>
-                  ) : (
-                    <>
-                      <SettingsIcon className="mr-2 h-4 w-4" />
+                  ) : (                    <>
+                      <GearIcon className="mr-2 h-4 w-4" />
                       Save Configuration
                     </>
                   )}
@@ -969,8 +968,7 @@ const OrchestrationSettings = () => {
                     <Button 
                       onClick={saveConfig} 
                       disabled={loading || ['deploying', 'updating', 'scaling', 'removing'].includes(status.status)}
-                    >
-                      <SettingsIcon className="mr-2 h-4 w-4" />
+                    >                      <GearIcon className="mr-2 h-4 w-4" />
                       Update Configuration
                     </Button>
                     

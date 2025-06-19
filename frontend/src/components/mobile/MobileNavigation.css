@@ -1,0 +1,346 @@
+/* Mobile Navigation Styles */
+.mobile-app-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-app-bar .menu-button,
+.mobile-app-bar .notification-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.mobile-app-bar .menu-button:hover,
+.mobile-app-bar .notification-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-app-bar .app-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+
+/* Bottom Navigation */
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: white;
+  display: flex;
+  border-top: 1px solid #e0e0e0;
+  z-index: 1000;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px;
+  color: #757575;
+}
+
+.bottom-nav-item.active {
+  color: #667eea;
+}
+
+.bottom-nav-item:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.bottom-nav-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.bottom-nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Navigation Drawer */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1200;
+}
+
+.navigation-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background: white;
+  z-index: 1300;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  transform: translateX(0);
+  transition: transform 0.3s ease-out;
+}
+
+.drawer-header {
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.drawer-header .close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.drawer-header .close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.drawer-content {
+  padding: 8px 0;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.drawer-item:hover {
+  background-color: #f5f5f5;
+}
+
+.drawer-item.active {
+  background-color: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-right: 3px solid #667eea;
+}
+
+.drawer-item-icon {
+  font-size: 20px;
+  margin-right: 16px;
+  width: 24px;
+  text-align: center;
+}
+
+.drawer-item-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.expand-icon {
+  font-size: 12px;
+  color: #757575;
+  transition: transform 0.2s;
+}
+
+.drawer-children {
+  background-color: #fafafa;
+}
+
+/* Badge */
+.badge-container {
+  position: relative;
+  display: inline-block;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #f44336;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  text-align: center;
+  line-height: 12px;
+}
+
+/* Speed Dial */
+.speed-dial-container {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  z-index: 1100;
+}
+
+.speed-dial-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speed-dial-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.speed-dial-fab.open {
+  transform: rotate(45deg);
+}
+
+.speed-dial-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.speed-dial-action {
+  position: absolute;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+  animation: speed-dial-appear 0.3s ease-out forwards;
+  opacity: 0;
+  transform: scale(0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speed-dial-action:hover {
+  background: #667eea;
+  color: white;
+  transform: scale(1.1);
+}
+
+@keyframes speed-dial-appear {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bottom navigation spacer */
+.bottom-nav-spacer {
+  height: 56px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .navigation-drawer {
+    width: 100vw;
+  }
+  
+  .bottom-nav-label {
+    font-size: 9px;
+  }
+  
+  .bottom-nav-icon {
+    font-size: 18px;
+  }
+  
+  .mobile-app-bar .app-title {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-app-bar,
+  .bottom-navigation,
+  .navigation-drawer,
+  .speed-dial-container,
+  .bottom-nav-spacer {
+    display: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .bottom-navigation,
+  .navigation-drawer {
+    background: #1e1e1e;
+    color: white;
+  }
+  
+  .drawer-item {
+    border-bottom-color: #333;
+  }
+  
+  .drawer-item:hover {
+    background-color: #333;
+  }
+  
+  .drawer-children {
+    background-color: #2a2a2a;
+  }
+  
+  .speed-dial-action {
+    background: #333;
+    color: #667eea;
+    border-color: #667eea;
+  }
+}

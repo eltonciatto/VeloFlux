@@ -842,9 +842,15 @@
       "cluster": "Cluster",
       "backends": "Backends",
       "security": "Security",
+      "securityAdvanced": "Advanced Security",
+      "billing": "Billing",
+      "billingExport": "Billing Export",
+      "orchestration": "Orchestration",
       "rateLimit": "Rate Limiting",
       "aiConfig": "AI Configuration",
-      "configuration": "Configuration"
+      "aiHub": "Premium AI Hub",
+      "configuration": "Configuration",
+      "multiTenant": "Multi-Tenant"
     }
   },
   "auth": {
@@ -911,5 +917,79 @@
     "rateLimitExceeded": "Too many requests. Please wait and try again.",
     "maintenanceMode": "System is under maintenance. Please try again later.",
     "featureNotAvailable": "This feature is not available in your plan."
+  },
+  "multiTenant": {
+    "title": "Multi-Tenant Management",
+    "overview": {
+      "title": "Tenant Overview",
+      "totalTenants": "Total Tenants",
+      "activeTenants": "Active Tenants",
+      "suspendedTenants": "Suspended Tenants",
+      "totalRevenue": "Total Revenue",
+      "searchPlaceholder": "Search tenants...",
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "suspended": "Suspended",
+        "trial": "Trial",
+        "premium": "Premium"
+      },
+      "actions": {
+        "bulkActions": "Bulk Actions",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "suspend": "Suspend",
+        "activate": "Activate",
+        "delete": "Delete",
+        "export": "Export",
+        "createTenant": "Create Tenant",
+        "refresh": "Refresh"
+      },
+      "table": {
+        "name": "Name",
+        "status": "Status",
+        "plan": "Plan",
+        "users": "Users",
+        "revenue": "Revenue",
+        "created": "Created",
+        "lastActivity": "Last Activity",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "trial": "Trial",
+        "expired": "Expired"
+      },
+      "analytics": {
+        "tenantGrowth": "Tenant Growth",
+        "revenueByTenant": "Revenue by Tenant",
+        "userDistribution": "User Distribution",
+        "planDistribution": "Plan Distribution"
+      },
+      "metrics": {
+        "avgUsersPerTenant": "Avg Users per Tenant",
+        "avgRevenuePerTenant": "Avg Revenue per Tenant",
+        "tenantRetentionRate": "Tenant Retention Rate",
+        "newTenantsThisMonth": "New Tenants This Month"
+      },
+      "noTenants": "No tenants found",
+      "loadingTenants": "Loading tenants..."
+    },
+    "tenant": {
+      "details": "Tenant Details",
+      "configuration": "Configuration",
+      "users": "Users",
+      "billing": "Billing",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "messages": {
+      "tenantCreated": "Tenant created successfully",
+      "tenantUpdated": "Tenant updated successfully",
+      "tenantDeleted": "Tenant deleted successfully",
+      "bulkActionCompleted": "Bulk action completed",
+      "exportCompleted": "Export completed"
+    }
   }
 }

@@ -1,0 +1,173 @@
+/* Touch Gestures Container */
+.touch-gestures-container {
+  position: relative;
+  cursor: grab;
+  transition: transform 0.1s ease-out;
+}
+
+.touch-gestures-container.dragging {
+  cursor: grabbing;
+}
+
+.touch-gestures-container:active {
+  cursor: grabbing;
+}
+
+/* Prevent text selection during gestures */
+.touch-gestures-container * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Touch feedback */
+.touch-gestures-container:active {
+  transform: scale(0.98);
+}
+
+/* Smooth transitions for gesture feedback */
+.touch-gestures-container.gesture-feedback {
+  transition: transform 0.2s ease-out;
+}
+
+/* Swipe indicators (optional visual feedback) */
+.touch-gestures-container.swipe-left {
+  animation: swipe-left-feedback 0.3s ease-out;
+}
+
+.touch-gestures-container.swipe-right {
+  animation: swipe-right-feedback 0.3s ease-out;
+}
+
+.touch-gestures-container.swipe-up {
+  animation: swipe-up-feedback 0.3s ease-out;
+}
+
+.touch-gestures-container.swipe-down {
+  animation: swipe-down-feedback 0.3s ease-out;
+}
+
+@keyframes swipe-left-feedback {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-10px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes swipe-right-feedback {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes swipe-up-feedback {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes swipe-down-feedback {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+  100% { transform: translateY(0); }
+}
+
+/* Pinch zoom feedback */
+.touch-gestures-container.pinch-zoom {
+  animation: pinch-zoom-feedback 0.2s ease-out;
+}
+
+@keyframes pinch-zoom-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Rotation feedback */
+.touch-gestures-container.rotate {
+  animation: rotate-feedback 0.3s ease-out;
+}
+
+@keyframes rotate-feedback {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  75% { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Long press feedback */
+.touch-gestures-container.long-press {
+  animation: long-press-feedback 0.5s ease-out;
+}
+
+@keyframes long-press-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Tap feedback */
+.touch-gestures-container.tap {
+  animation: tap-feedback 0.15s ease-out;
+}
+
+@keyframes tap-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+/* Double tap feedback */
+.touch-gestures-container.double-tap {
+  animation: double-tap-feedback 0.3s ease-out;
+}
+
+@keyframes double-tap-feedback {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.95); }
+  50% { transform: scale(1.02); }
+  75% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+/* Disable default touch behaviors */
+.touch-gestures-container {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* For webkit browsers */
+.touch-gestures-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure smooth performance on mobile */
+.touch-gestures-container {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Responsive touch target sizes */
+@media (max-width: 768px) {
+  .touch-gestures-container {
+    min-height: 44px; /* Minimum touch target size for mobile */
+    min-width: 44px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .touch-gestures-container {
+    /* Ensure crisp rendering on retina displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
