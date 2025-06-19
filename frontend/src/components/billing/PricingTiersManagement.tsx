@@ -455,7 +455,27 @@ export default function PricingTiersManagement() {
         {enhancedTiers.map((tier) => (
           <TierCard
             key={tier.id}
-            tier={tier}
+            tier={{
+              ...tier,
+              price: tier.price || tier.pricing.basePrice,
+              currency: tier.currency || 'USD',
+              billingPeriod: tier.billingPeriod || 'monthly',
+              features: tier.features || ['Basic features'],
+              overage: tier.overage || {
+                requests: tier.pricing.overageRates.requests,
+                dataTransferGB: tier.pricing.overageRates.dataTransferGB,
+                aiPredictions: tier.pricing.overageRates.aiPredictions,
+                geoQueries: tier.pricing.overageRates.geoQueries,
+                storageGB: tier.pricing.overageRates.storageGB,
+                bandwidthGB: tier.pricing.overageRates.bandwidthGB,
+                computeHours: tier.pricing.overageRates.computeHours,
+                edgeLocations: tier.pricing.overageRates.edgeLocations,
+              },
+              limits: {
+                ...tier.limits,
+                users: tier.limits.users || 1,
+              }
+            }}
             currentTier={account.currentTier}
             usage={usage}
             onSelectTier={handleSelectTier}

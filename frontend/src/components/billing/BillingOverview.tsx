@@ -347,7 +347,17 @@ export default function BillingOverview() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {activeAlerts.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} />
+              <AlertCard 
+                key={alert.id} 
+                alert={{
+                  id: alert.id,
+                  type: alert.type || String(alert.metric),
+                  limit: alert.limit,
+                  currentUsage: alert.currentUsage,
+                  triggered: alert.triggered,
+                  message: alert.message || `${alert.metric} alert`
+                }} 
+              />
             ))}
           </div>
         </div>

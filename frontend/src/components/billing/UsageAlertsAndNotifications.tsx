@@ -37,7 +37,7 @@ import {
   TrendingUp,
   Shield
 } from 'lucide-react';
-import { formatCurrency, formatUsage } from '@/lib/billingApi';
+import { formatCurrency, formatUsage, UsageAlert, BillingNotification } from '@/lib/billingApi';
 import { useUsageAlerts, useUpdateUsageAlert, useBillingNotifications, useMarkNotificationRead } from '@/hooks/useBilling';
 
 interface AlertFormProps {
@@ -177,20 +177,7 @@ function AlertForm({ alert, onSubmit, onCancel }: AlertFormProps) {
 }
 
 interface AlertCardProps {
-  alert: {
-    id: string;
-    type: string;
-    limit: number;
-    threshold: number;
-    currentUsage: number;
-    triggered: boolean;
-    enabled: boolean;
-    email: boolean;
-    sms: boolean;
-    webhook: boolean;
-    message: string;
-    lastTriggered?: string;
-  };
+  alert: UsageAlert;
   onEdit: (alert: any) => void;
   onDelete: (alertId: string) => void;
 }
@@ -246,12 +233,12 @@ function AlertCard({ alert, onEdit, onDelete }: AlertCardProps) {
           <div className="flex justify-between text-sm">
             <span>Uso atual:</span>
             <span className="font-medium">
-              {formatUsage(alert.currentUsage, alert.type)} ({percentage.toFixed(1)}%)
+              {formatUsage(alert.currentUsage, alert.metric)} ({percentage.toFixed(1)}%)
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Limite:</span>
-            <span>{formatUsage(alert.limit, alert.type)}</span>
+            <span>{formatUsage(alert.limit, alert.metric)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Alerta em:</span>
@@ -515,7 +502,10 @@ export default function UsageAlertsAndNotifications() {
             {notifications.slice(0, 10).map((notification) => (
               <NotificationItem
                 key={notification.id}
-                notification={notification}
+                notification={{
+                  ...notification,
+                  priority: notification.priority || notification.severity || 'info'
+                }}
                 onMarkAsRead={handleMarkAsRead}
               />
             ))}

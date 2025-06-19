@@ -41,6 +41,16 @@ export default function BillingDashboard() {
     error 
   } = useBillingAccount();
 
+  // Mock data for estimate and alerts - would come from API in real implementation
+  const estimate = {
+    currentCost: 150.50,
+    estimatedCost: 180.00
+  };
+
+  const activeAlerts = [
+    // Mock active alerts - would come from API
+  ];
+
   // If enhanced view is disabled, show the existing ModernBillingPanel
   if (!showEnhancedView) {
     return (

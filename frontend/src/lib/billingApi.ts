@@ -19,7 +19,27 @@ export interface PricingTier {
   id: string;
   name: string;
   description: string;
+  // Campos compatíveis para o frontend
+  price?: number; // Monthly price for compatibility
+  currency?: string;
+  billingPeriod?: string;
+  features?: string[];
+  popular?: boolean;
+  recommended?: boolean;
+  // Estrutura original do backend
   limits: {
+    requests: number;
+    dataTransferGB: number;
+    aiPredictions: number;
+    geoQueries: number;
+    storageGB: number;
+    bandwidthGB: number;
+    computeHours: number;
+    edgeLocations: number;
+    users?: number; // Para compatibilidade
+  };
+  // Campos para overage (compatibilidade)
+  overage?: {
     requests: number;
     dataTransferGB: number;
     aiPredictions: number;
@@ -56,6 +76,8 @@ export interface BillingPeriod {
 
 export interface BillingCosts {
   basePrice: number;
+  currentCost?: number; // Compatibility field
+  estimatedCost?: number; // Compatibility field
   overageCosts: {
     requests: number;
     dataTransfer: number;
@@ -75,12 +97,22 @@ export interface Invoice {
   id: string;
   number?: string;
   amount_due: number; // Backend uses amount_due
+  amount?: number; // Compatibility field 
   currency: string;
   status: 'paid' | 'pending' | 'failed' | 'draft' | 'sent' | 'overdue' | 'cancelled';
   period_start: string; // Backend format
   period_end: string;
   created_at: string; // Backend format
   paid_at?: string;
+  // Enhanced fields for UI compatibility
+  period?: {
+    start: string;
+    end: string;
+  };
+  dueDate?: string;
+  taxRate?: number;
+  credits?: number;
+  billingAddress?: BillingAddress;
   // New system extensions
   billingPeriod?: BillingPeriod;
   lineItems?: InvoiceLineItem[];
@@ -88,8 +120,7 @@ export interface Invoice {
   tax?: number;
   discount?: number;
   total?: number;
-  paymentMethod?: string;
-  dueDate?: string;
+  paymentMethod?: PaymentMethod | string; // Can be object or string
   date?: string;
   paidAt?: string;
 }
@@ -110,6 +141,7 @@ export interface BillingAccount {
   currentTier: PricingTier;
   billingEmail: string;
   paymentMethod: PaymentMethod;
+  paymentMethods?: PaymentMethod[]; // Array for multiple payment methods
   billingAddress: BillingAddress;
   currentPeriod: BillingPeriod;
   invoices: Invoice[];
@@ -118,6 +150,7 @@ export interface BillingAccount {
   taxRate: number;
   autoPayEnabled: boolean;
   notifications: BillingNotification[];
+  nextBillingDate?: string; // Compatibility field
   // Backend subscription data compatibility
   subscription?: {
     tenant_id: string;
@@ -147,9 +180,12 @@ export interface PaymentMethod {
 
 export interface BillingAddress {
   id: string;
+  name?: string; // Compatibility field for name
   company?: string;
   address1: string;
   address2?: string;
+  line1?: string; // Compatibility field
+  line2?: string; // Compatibility field  
   city: string;
   state: string;
   postalCode: string;
@@ -163,6 +199,7 @@ export interface BillingNotification {
   title: string;
   message: string;
   severity: 'info' | 'warning' | 'error';
+  priority?: string; // Compatibility field
   timestamp: string;
   read: boolean;
   actionRequired: boolean;
@@ -171,10 +208,17 @@ export interface BillingNotification {
 export interface UsageAlert {
   id: string;
   metric: keyof UsageMetrics;
+  type?: string; // Compatibility field
   threshold: number; // Percentage of limit (0-100)
   currentUsage: number;
   limit: number;
   triggered: boolean;
+  enabled?: boolean; // Compatibility field
+  email?: boolean; // Notification methods
+  sms?: boolean;
+  webhook?: boolean;
+  message?: string; // Alert message
+  lastTriggered?: string; // Last trigger timestamp
   timestamp: string;
 }
 
@@ -218,6 +262,11 @@ class BillingApiClient {
         id: subscription?.plan || 'free',
         name: subscription?.plan || 'Free',
         description: 'Current plan',
+        // Compatibility fields
+        price: subscription?.plan === 'pro' ? 29.99 : subscription?.plan === 'enterprise' ? 99.99 : 0,
+        currency: 'USD',
+        billingPeriod: 'monthly',
+        features: ['Basic features'],
         limits: {
           requests: 10000,
           dataTransferGB: 100,
@@ -227,6 +276,17 @@ class BillingApiClient {
           bandwidthGB: 100,
           computeHours: 24,
           edgeLocations: 1,
+          users: 5,
+        },
+        overage: {
+          requests: 0.001,
+          dataTransferGB: 0.10,
+          aiPredictions: 0.01,
+          geoQueries: 0.005,
+          storageGB: 0.25,
+          bandwidthGB: 0.10,
+          computeHours: 0.50,
+          edgeLocations: 5.00,
         },
         pricing: {
           basePrice: subscription?.plan === 'pro' ? 29.99 : subscription?.plan === 'enterprise' ? 99.99 : 0,
@@ -252,9 +312,13 @@ class BillingApiClient {
         expiryYear: 2030,
         last4: '0000'
       } as PaymentMethod,
+      paymentMethods: [],
+      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       billingAddress: { 
         id: 'default',
+        name: '',
         address1: '',
+        line1: '',
         city: '',
         state: '',
         postalCode: '',
@@ -457,13 +521,19 @@ class BillingApiClient {
   /**
    * Get invoices (using existing endpoint)
    */
+  /**
+   * Get invoices with compatibility mapping
+   */
   async getInvoices(limit: number = 20): Promise<Invoice[]> {
     const invoicesData = await this.apiCall(`/api/billing/invoices?limit=${limit}`);
-    return invoicesData.items || [];
+    const invoices = invoicesData.items || [];
+    
+    // Map invoices to include compatibility fields
+    return invoices.map(this.mapInvoiceForCompatibility);
   }
 
   /**
-   * Get specific invoice
+   * Get specific invoice with compatibility mapping
    */
   async getInvoice(invoiceId: string): Promise<Invoice> {
     const invoicesData = await this.apiCall('/api/billing/invoices');
@@ -471,7 +541,34 @@ class BillingApiClient {
     if (!invoice) {
       throw new Error('Invoice not found');
     }
-    return invoice;
+    return this.mapInvoiceForCompatibility(invoice);
+  }
+
+  /**
+   * Map invoice data for frontend compatibility
+   */
+  private mapInvoiceForCompatibility(invoice: any): Invoice {
+    return {
+      ...invoice,
+      // Map backend fields to frontend compatibility fields
+      amount: invoice.amount_due || invoice.amount || 0,
+      period: {
+        start: invoice.period_start,
+        end: invoice.period_end,
+      },
+      dueDate: invoice.due_date || invoice.period_end,
+      taxRate: invoice.tax_rate || 0,
+      credits: invoice.credits || 0,
+      billingAddress: invoice.billing_address ? {
+        ...invoice.billing_address,
+        name: invoice.billing_address.name || '',
+        line1: invoice.billing_address.address1 || invoice.billing_address.line1 || '',
+        line2: invoice.billing_address.address2 || invoice.billing_address.line2 || '',
+      } : undefined,
+      paymentMethod: typeof invoice.paymentMethod === 'string' 
+        ? { id: 'default', type: 'credit_card', isDefault: true, isValid: true } 
+        : invoice.paymentMethod,
+    };
   }
 
   /**

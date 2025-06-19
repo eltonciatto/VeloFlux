@@ -464,7 +464,7 @@ export default function PaymentMethodsAndBilling() {
                         {getPaymentMethodIcon(method.type)}
                         <div>
                           <div className="font-medium flex items-center space-x-2">
-                            {method.type === 'card' ? (
+                            {method.type === 'credit_card' ? (
                               <>
                                 <span className="capitalize">{method.brand}</span>
                                 <span>**** **** **** {method.last4}</span>
@@ -479,7 +479,7 @@ export default function PaymentMethodsAndBilling() {
                               </Badge>
                             )}
                           </div>
-                          {method.type === 'card' && method.expiryMonth && method.expiryYear && (
+                          {method.type === 'credit_card' && method.expiryMonth && method.expiryYear && (
                             <div className="text-sm text-muted-foreground">
                               Expira em {method.expiryMonth.toString().padStart(2, '0')}/{method.expiryYear}
                             </div>
@@ -545,7 +545,15 @@ export default function PaymentMethodsAndBilling() {
                 </DialogDescription>
               </DialogHeader>
               <BillingAddressForm
-                address={account.billingAddress}
+                address={{
+                  name: account.billingAddress?.name || '',
+                  line1: account.billingAddress?.line1 || account.billingAddress?.address1 || '',
+                  line2: account.billingAddress?.line2 || account.billingAddress?.address2 || '',
+                  city: account.billingAddress?.city || '',
+                  state: account.billingAddress?.state || '',
+                  postalCode: account.billingAddress?.postalCode || '',
+                  country: account.billingAddress?.country || '',
+                }}
                 onSubmit={handleUpdateAddress}
                 onCancel={() => setShowAddressForm(false)}
               />

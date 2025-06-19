@@ -144,9 +144,10 @@ function InvoiceDetailDialog({ invoiceId, open, onClose }: InvoiceDetailDialogPr
               </CardHeader>
               <CardContent>
                 <div className="text-sm">
-                  {invoice.paymentMethod?.type === 'card' ? 
+                  {typeof invoice.paymentMethod === 'object' && invoice.paymentMethod?.type === 'credit_card' ? 
                     `**** **** **** ${invoice.paymentMethod.last4}` : 
-                    invoice.paymentMethod?.type || 'Não definido'
+                    typeof invoice.paymentMethod === 'object' ? invoice.paymentMethod?.type || 'Não definido' :
+                    invoice.paymentMethod || 'Não definido'
                   }
                 </div>
               </CardContent>
