@@ -1,0 +1,137 @@
+{
+  "timestamp": "2025-06-19T00:43:37.461670",
+  "duration": 0.031972408294677734,
+  "statistics": {
+    "total": 13,
+    "passed": 8,
+    "failed": 5,
+    "success_rate": 61.53846153846154
+  },
+  "categories": {
+    "Consist\u00eancia API": {
+      "total": 4,
+      "passed": 4
+    },
+    "Health endpoint": {
+      "total": 1,
+      "passed": 1
+    },
+    "Registro de usu\u00e1rio": {
+      "total": 1,
+      "passed": 0
+    },
+    "Billing": {
+      "total": 1,
+      "passed": 0
+    },
+    "Tenant": {
+      "total": 1,
+      "passed": 0
+    },
+    "LoadBalancer": {
+      "total": 1,
+      "passed": 0
+    },
+    "Dashboard": {
+      "total": 1,
+      "passed": 0
+    },
+    "Error Handling": {
+      "total": 3,
+      "passed": 3
+    }
+  },
+  "detailed_results": [
+    {
+      "test": "Consist\u00eancia API - /auth/profile",
+      "success": true,
+      "message": "Nginx: 404, Direto: 404",
+      "timestamp": "2025-06-19T00:43:37.435662",
+      "data": null
+    },
+    {
+      "test": "Consist\u00eancia API - /billing/subscriptions",
+      "success": true,
+      "message": "Nginx: 401, Direto: 401",
+      "timestamp": "2025-06-19T00:43:37.440225",
+      "data": null
+    },
+    {
+      "test": "Consist\u00eancia API - /billing/plans",
+      "success": true,
+      "message": "Nginx: 404, Direto: 404",
+      "timestamp": "2025-06-19T00:43:37.445101",
+      "data": null
+    },
+    {
+      "test": "Consist\u00eancia API - /tenants",
+      "success": true,
+      "message": "Nginx: 401, Direto: 401",
+      "timestamp": "2025-06-19T00:43:37.449720",
+      "data": null
+    },
+    {
+      "test": "Health endpoint",
+      "success": true,
+      "message": "Nginx: 200, Direto: 200",
+      "timestamp": "2025-06-19T00:43:37.454692",
+      "data": null
+    },
+    {
+      "test": "Registro de usu\u00e1rio",
+      "success": false,
+      "message": "Falha no registro: <Response [400]>",
+      "timestamp": "2025-06-19T00:43:37.457109",
+      "data": null
+    },
+    {
+      "test": "Billing - Pr\u00e9-requisito",
+      "success": false,
+      "message": "Token n\u00e3o dispon\u00edvel",
+      "timestamp": "2025-06-19T00:43:37.457177",
+      "data": null
+    },
+    {
+      "test": "Tenant - Pr\u00e9-requisito",
+      "success": false,
+      "message": "Token n\u00e3o dispon\u00edvel",
+      "timestamp": "2025-06-19T00:43:37.457227",
+      "data": null
+    },
+    {
+      "test": "LoadBalancer - Pr\u00e9-requisito",
+      "success": false,
+      "message": "Token n\u00e3o dispon\u00edvel",
+      "timestamp": "2025-06-19T00:43:37.457280",
+      "data": null
+    },
+    {
+      "test": "Dashboard - Pr\u00e9-requisito",
+      "success": false,
+      "message": "Token n\u00e3o dispon\u00edvel",
+      "timestamp": "2025-06-19T00:43:37.457361",
+      "data": null
+    },
+    {
+      "test": "Error Handling - Token inv\u00e1lido",
+      "success": true,
+      "message": "Erro 401 retornado corretamente",
+      "timestamp": "2025-06-19T00:43:37.458576",
+      "data": null
+    },
+    {
+      "test": "Error Handling - Endpoint inexistente",
+      "success": true,
+      "message": "Erro 404 retornado corretamente",
+      "timestamp": "2025-06-19T00:43:37.459866",
+      "data": null
+    },
+    {
+      "test": "Error Handling - Dados inv\u00e1lidos",
+      "success": true,
+      "message": "Erro 400 retornado corretamente",
+      "timestamp": "2025-06-19T00:43:37.461334",
+      "data": null
+    }
+  ]
+}
