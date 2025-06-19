@@ -28,6 +28,22 @@
 
 ## 🔧 **Documentação Técnica**
 
+### 📡 **API Documentation (✨ Nova e Aprimorada)**
+- **[📡 API Documentation (EN)](./api.md)** - ⭐ **Documentação completa e profissional** (44KB+)
+- **[📡 API Documentation (PT-BR)](./api_pt-BR.md)** - ⭐ **Documentação em português brasileiro** (16KB+)  
+- **[📋 API Reference Complete](./API_DOCUMENTATION_COMPLETE.md)** - Referência técnica detalhada
+
+#### 🚀 **Novos Recursos da Documentação API**
+- ✅ **Exemplos de código profissionais** (JavaScript, TypeScript, React, Python, Bash)
+- ✅ **Scripts de automação prontos** para produção
+- ✅ **Cliente API completo** com auto-retry e error handling
+- ✅ **React Hooks otimizados** com cache e cleanup
+- ✅ **Webhooks e eventos** com verificação de assinatura
+- ✅ **40+ endpoints documentados** com payloads reais
+- ✅ **Códigos de erro detalhados** com soluções
+- ✅ **Segurança e performance** best practices
+- ✅ **SDKs para múltiplas linguagens** (JS, Python, Go, Java, C#)
+
 ### 🏗️ Arquitetura e Backend
 - **[Backend APIs Completo](./backend_apis_completo.md)** - 📋 Documentação completa das APIs
 - **[Desenvolvimento e Arquitetura](./desenvolvimento_arquitetura_completo.md)** - 🏗️ Arquitetura completa
