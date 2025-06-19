@@ -1,4 +1,20 @@
-# 🚀 VeloFlux - Container-Native Global Load Balancer
+# 🚀 VeloFlux - Container-Na### 📖 **Documentação Completa**
+> **Toda documentação do projeto está centralizada em [`/docs`](./docs/INDEX.md)**
+
+### 🎯 **Documentação Principal**
+- **[📋 Índice Central](./docs/INDEX.md)** - **COMECE AQUI**
+- **[⚡ Quick Install](./docs/QUICK_INSTALL.md)** - Instalação rápida
+- **[👨‍💻 Quickstart Desenvolvedores](./docs/quickstart_desenvolvedor.md)** - Para devs
+
+### 🏆 **Relatórios das Fases**
+- **[FASE 1](./docs/phases/RELATORIO_FINAL_FASE1_SUCESSO_TOTAL.md)** - Base Implementation ✅
+- **[FASE 2](./docs/phases/RELATORIO_FINAL_FASE2_SUCESSO_TOTAL.md)** - Advanced Features ✅  
+- **[FASE 3](./docs/phases/RELATORIO_FINAL_FASE3_SUCESSO_TOTAL.md)** - Premium Features ✅
+
+### 🔧 **Documentação Técnica**
+- **[🔧 Correções](./docs/fixes/)** - Todas as correções aplicadas
+- **[⚙️ Configuração](./docs/organization/)** - Setup e configuração
+- **[🛡️ Segurança](./docs/organization/SECURITY_FIXES_APPLIED.md)** - SegurançaBalancer
 
 [![License: VPSL-1.0](https://img.shields.io/badge/License-VPSL--1.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://golang.org/)
@@ -24,27 +40,25 @@ cd VeloFlux
 open http://localhost:3000
 ```
 
-## 📚 Documentação Central
+## 📚 Documentação
 
-> **📖 Toda documentação está centralizada em [`/docs`](./docs/INDEX.md)**
+### 📖 **Documentação Completa**
+> **Toda documentação do projeto está organizada em [`/documentation`](./documentation/README.md)**
 
-### 🎯 Para Começar
-- **[📋 Documentação Central](./docs/INDEX.md)** - **COMECE AQUI**
-- **[⚡ Quick Install](./docs/QUICK_INSTALL.md)** - Instalação em 5 minutos
-- **[👨‍💻 Quickstart Desenvolvedores](./docs/quickstart_desenvolvedor.md)** - Para devs
+### 🎯 **Documentação Principal**
+- **[📋 Índice Central](./documentation/README.md)** - **COMECE AQUI**
+- **[📖 Docs Técnicos](./docs/INDEX.md)** - Documentação detalhada
+- **[⚡ Quick Install](./docs/QUICK_INSTALL.md)** - Instalação rápida
 
-### 🏗️ Arquitetura
-- **[🏗️ Arquitetura Completa](./docs/desenvolvimento_arquitetura_completo.md)**
-- **[📋 APIs Backend](./docs/backend_apis_completo.md)**
-- **[🎨 Frontend Guide](./docs/frontend_integration_guide.md)**
+### � **Relatórios das Fases**
+- **[FASE 1](./documentation/phases/RELATORIO_FINAL_FASE1_SUCESSO_TOTAL.md)** - Base Implementation ✅
+- **[FASE 2](./documentation/phases/RELATORIO_FINAL_FASE2_SUCESSO_TOTAL.md)** - Advanced Features ✅  
+- **[FASE 3](./documentation/phases/RELATORIO_FINAL_FASE3_SUCESSO_TOTAL.md)** - Premium Features ✅
 
-### 🧠 IA/ML
-- **[🤖 Documentação IA](./docs/ai_ml_documentation_complete.md)**
-- **[📊 Como Funciona](./docs/ai_como_funciona.md)**
-
-### 🔒 Segurança
-- **[🔐 Sistema Auth](./docs/AUTH-SISTEMA-COMPLETO.md)**
-- **[🛡️ Segurança](./docs/security_pt-BR.md)**
+### 🔧 **Documentação Técnica**
+- **[🔧 Correções](./documentation/fixes/)** - Todas as correções aplicadas
+- **[⚙️ Configuração](./documentation/technical/)** - Setup e configuração
+- **[�️ Segurança](./documentation/technical/SECURITY_FIXES_APPLIED.md)** - Segurança
 
 ## 🚀 Características Principais
 
