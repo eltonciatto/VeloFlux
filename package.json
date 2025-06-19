@@ -12,7 +12,10 @@
     "create:modules": "node scripts/create-modules.js",
     "cities:stats": "cat scripts/output/real-generation-stats.json",
     "cleanup": "bash scripts/cleanup.sh",
-    "cleanup:test": "rm -f frontend/src/data/test-*.json scripts/test-*.js frontend/public/test-*.js"
+    "cleanup:test": "rm -f frontend/src/data/test-*.json scripts/test-*.js frontend/public/test-*.js",
+    "demo:components": "echo 'Componentes avançados disponíveis: GeoAnalytics, EdgeManager, SecurityMonitoringEnhanced, WorldCitiesIntegrationDemo'",
+    "validate:cities": "node -e \"const data = require('./frontend/src/data/world-cities.json'); console.log('✅ World Cities JSON válido:', data.length, 'cidades')\"",
+    "info:coverage": "node -e \"const data = require('./frontend/src/data/world-cities.json'); const countries = new Set(data.map(c => c.country)); console.log('🌍 Cobertura Global:', data.length, 'cidades,', countries.size, 'países')\""
   },
   "dependencies": {
     "csv-parse": "^5.6.0",
