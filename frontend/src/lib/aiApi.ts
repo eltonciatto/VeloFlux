@@ -68,6 +68,13 @@ export interface AIConfig {
   model_version?: string;
   batch_size?: number;
   memory_limit?: number;
+  // Geographic AI Configuration
+  geo_optimization_enabled?: boolean;
+  geo_affinity_threshold?: number;
+  cross_region_penalty?: number;
+  geo_algorithm_preference?: string;
+  region_prioritization?: boolean;
+  max_geo_distance_km?: number;
 }
 
 export interface ModelStatus {
@@ -142,6 +149,25 @@ class AIApiClient {
    */
   async getAIHealth(): Promise<{ status: string; models: string[]; last_prediction: string }> {
     const response = await apiFetch('/ai/health');
+    return response;
+  }
+
+  /**
+   * Get AI geographic metrics
+   */
+  async getAIGeoMetrics(): Promise<{
+    geo_predictions: number;
+    average_geo_affinity: number;
+    cross_region_requests: number;
+    geo_optimizations: number;
+    regions: Array<{
+      region: string;
+      predictions: number;
+      avg_latency: number;
+      optimization_score: number;
+    }>;
+  }> {
+    const response = await apiFetch('/ai/metrics/geo');
     return response;
   }
 

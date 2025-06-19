@@ -201,6 +201,23 @@ export function useAIPerformanceMetrics() {
 }
 
 /**
+ * Hook to fetch AI geographic metrics
+ */
+export function useAIGeoMetrics(refreshInterval: number = 10000) {
+  return useQuery({
+    queryKey: [AI_QUERY_KEYS.metrics, 'geo'],
+    queryFn: () => aiApiClient.getAIGeoMetrics(),
+    refetchInterval: refreshInterval,
+    staleTime: 5000,
+    gcTime: 60000,
+    retry: 2,
+    meta: {
+      errorMessage: 'Failed to fetch AI geographic metrics',
+    },
+  });
+}
+
+/**
  * Custom hook for real-time AI status
  */
 export function useAIStatus() {

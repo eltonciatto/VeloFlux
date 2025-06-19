@@ -31,6 +31,9 @@ import {
   Save,
   RotateCcw,
   Info,
+  Globe,
+  MapPin,
+  Radar,
 } from 'lucide-react';
 import { useAIConfig, useUpdateAIConfig } from '@/hooks/useAIMetrics';
 import { toast } from 'sonner';
@@ -56,6 +59,13 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
     model_version: 'latest',
     batch_size: 32,
     memory_limit: 4096,
+    // 🌍 Configurações Geográficas
+    geo_optimization_enabled: true,
+    geo_affinity_threshold: 0.8,
+    cross_region_penalty: 0.3,
+    geo_algorithm_preference: 'distance_weighted',
+    region_prioritization: true,
+    max_geo_distance_km: 5000,
   });
 
   // Update local state when config loads
@@ -75,6 +85,13 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
         model_version: config.model_version ?? 'latest',
         batch_size: config.batch_size ?? 32,
         memory_limit: config.memory_limit ?? 4096,
+        // 🌍 Configurações Geográficas
+        geo_optimization_enabled: config.geo_optimization_enabled ?? true,
+        geo_affinity_threshold: config.geo_affinity_threshold ?? 0.8,
+        cross_region_penalty: config.cross_region_penalty ?? 0.3,
+        geo_algorithm_preference: config.geo_algorithm_preference ?? 'distance_weighted',
+        region_prioritization: config.region_prioritization ?? true,
+        max_geo_distance_km: config.max_geo_distance_km ?? 5000,
       });
     }
   }, [config]);
@@ -104,6 +121,13 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
         model_version: config.model_version ?? 'latest',
         batch_size: config.batch_size ?? 32,
         memory_limit: config.memory_limit ?? 4096,
+        // 🌍 Configurações Geográficas
+        geo_optimization_enabled: config.geo_optimization_enabled ?? true,
+        geo_affinity_threshold: config.geo_affinity_threshold ?? 0.8,
+        cross_region_penalty: config.cross_region_penalty ?? 0.3,
+        geo_algorithm_preference: config.geo_algorithm_preference ?? 'distance_weighted',
+        region_prioritization: config.region_prioritization ?? true,
+        max_geo_distance_km: config.max_geo_distance_km ?? 5000,
       });
     }
   };
@@ -116,18 +140,8 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
 
   if (isLoading) {
     return (
-      <div className={`space-y-6 ${className}`}>
-        <Card>
-          <CardContent className="p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-6 bg-muted rounded w-1/3"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-                <div className="h-10 bg-muted rounded"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className={`flex items-center justify-center h-64 ${className}`}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -135,24 +149,33 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Brain className="h-6 w-6 text-blue-400" />
             AI Configuration
-          </CardTitle>
-          <CardDescription>
-            Configure AI/ML parameters, thresholds, and algorithm preferences
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </h2>
+          <p className="text-slate-400">Configure AI models and algorithms</p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleResetConfig}>
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+          <Button onClick={handleSaveConfig} disabled={updateConfigMutation.isPending}>
+            <Save className="h-4 w-4 mr-2" />
+            {updateConfigMutation.isPending ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
+      <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="models">Models</TabsTrigger>
+          <TabsTrigger value="algorithms">Algorithms</TabsTrigger>
+          <TabsTrigger value="geographic">Geographic</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
         {/* General Configuration */}
@@ -254,13 +277,13 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
           </Card>
         </TabsContent>
 
-        {/* Model Configuration */}
-        <TabsContent value="models" className="space-y-6">
+        {/* Algorithms Configuration */}
+        <TabsContent value="algorithms" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5" />
-                Model Configuration
+                Algorithm Configuration
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -369,6 +392,144 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
           </Card>
         </TabsContent>
 
+        {/* Geographic Configuration */}
+        <TabsContent value="geographic" className="space-y-6">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Globe className="h-5 w-5 text-green-400" />
+                Geographic Intelligence
+              </CardTitle>
+              <CardDescription>
+                Configure AI predictions based on geographic location and proximity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Geo Optimization Enabled */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-white">Geographic Optimization</Label>
+                  <p className="text-sm text-slate-400">
+                    Enable AI predictions based on client and backend locations
+                  </p>
+                </div>
+                <Switch
+                  checked={localConfig.geo_optimization_enabled}
+                  onCheckedChange={(checked) =>
+                    setLocalConfig({ ...localConfig, geo_optimization_enabled: checked })
+                  }
+                />
+              </div>
+
+              {/* Geo Affinity Threshold */}
+              <div className="space-y-2">
+                <Label className="text-white flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Geo Affinity Threshold: {localConfig.geo_affinity_threshold}
+                </Label>
+                <Slider
+                  value={[localConfig.geo_affinity_threshold]}
+                  onValueChange={([value]) =>
+                    setLocalConfig({ ...localConfig, geo_affinity_threshold: value })
+                  }
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  className="w-full"
+                />
+                <p className="text-sm text-slate-400">
+                  Minimum geographic affinity score to prefer regional backends
+                </p>
+              </div>
+
+              {/* Cross Region Penalty */}
+              <div className="space-y-2">
+                <Label className="text-white flex items-center gap-2">
+                  <Radar className="h-4 w-4" />
+                  Cross-Region Penalty: {localConfig.cross_region_penalty}
+                </Label>
+                <Slider
+                  value={[localConfig.cross_region_penalty]}
+                  onValueChange={([value]) =>
+                    setLocalConfig({ ...localConfig, cross_region_penalty: value })
+                  }
+                  min={0.0}
+                  max={1.0}
+                  step={0.05}
+                  className="w-full"
+                />
+                <p className="text-sm text-slate-400">
+                  Penalty factor applied to cross-region backend selections
+                </p>
+              </div>
+
+              {/* Max Geo Distance */}
+              <div className="space-y-2">
+                <Label className="text-white">Maximum Geographic Distance (km)</Label>
+                <Input
+                  type="number"
+                  value={localConfig.max_geo_distance_km}
+                  onChange={(e) =>
+                    setLocalConfig({ ...localConfig, max_geo_distance_km: parseInt(e.target.value) || 5000 })
+                  }
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+                <p className="text-sm text-slate-400">
+                  Maximum distance to consider for geo-optimized routing
+                </p>
+              </div>
+
+              {/* Geo Algorithm Preference */}
+              <div className="space-y-2">
+                <Label className="text-white">Geographic Algorithm</Label>
+                <Select
+                  value={localConfig.geo_algorithm_preference}
+                  onValueChange={(value) =>
+                    setLocalConfig({ ...localConfig, geo_algorithm_preference: value })
+                  }
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="distance_weighted">Distance Weighted</SelectItem>
+                    <SelectItem value="geo_proximity">Geo Proximity</SelectItem>
+                    <SelectItem value="region_priority">Region Priority</SelectItem>
+                    <SelectItem value="latency_optimized">Latency Optimized</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-slate-400">
+                  Algorithm to use for geographic optimization
+                </p>
+              </div>
+
+              {/* Region Prioritization */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-white">Regional Prioritization</Label>
+                  <p className="text-sm text-slate-400">
+                    Prioritize backends in the same region as the client
+                  </p>
+                </div>
+                <Switch
+                  checked={localConfig.region_prioritization}
+                  onCheckedChange={(checked) =>
+                    setLocalConfig({ ...localConfig, region_prioritization: checked })
+                  }
+                />
+              </div>
+
+              <Alert className="border-blue-500/20 bg-blue-500/10">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-blue-200">
+                  Geographic intelligence uses data from 243 cities across 69 countries to optimize AI predictions.
+                  Enable this for better performance in multi-region deployments.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Performance Configuration */}
         <TabsContent value="performance" className="space-y-6">
           <Card>
@@ -458,71 +619,7 @@ export default function AIConfiguration({ className = '' }: AIConfigurationProps
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Advanced Configuration */}
-        <TabsContent value="advanced" className="space-y-6">
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Advanced settings should only be modified by experienced users. 
-              Incorrect values may impact system performance.
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sliders className="h-5 w-5" />
-                Advanced Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* JSON Configuration Editor */}
-              <div className="space-y-3">
-                <Label className="text-base">Raw Configuration (JSON)</Label>
-                <textarea
-                  className="w-full h-64 p-3 border rounded-md font-mono text-sm"
-                  value={JSON.stringify(localConfig, null, 2)}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value);
-                      setLocalConfig(parsed);
-                    } catch {
-                      // Invalid JSON, ignore
-                    }
-                  }}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Direct JSON editing for advanced configuration
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
-
-      {/* Save/Reset Actions */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex gap-4 justify-end">
-            <Button 
-              variant="outline" 
-              onClick={handleResetConfig}
-              disabled={updateConfigMutation.isPending}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-            <Button 
-              onClick={handleSaveConfig}
-              disabled={updateConfigMutation.isPending}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {updateConfigMutation.isPending ? 'Saving...' : 'Save Configuration'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

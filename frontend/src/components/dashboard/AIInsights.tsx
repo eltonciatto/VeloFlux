@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, 
   TrendingUp, 
@@ -23,7 +24,8 @@ import {
   Wifi,
   WifiOff,
   AlertCircle,
-  TrendingDown
+  TrendingDown,
+  Globe
 } from 'lucide-react';
 import { 
   useAIMetrics, 
@@ -35,6 +37,7 @@ import {
 } from '@/hooks/useAIMetrics';
 import { useRealtimeAI } from '@/hooks/useRealtimeWebSocket';
 import { formatConfidence, formatAccuracy, getConfidenceColor, getAccuracyColor } from '@/lib/aiApi';
+import AIGeoInsights from './AIGeoInsights';
 
 interface AIInsightsProps {
   className?: string;
@@ -458,6 +461,64 @@ export function AIInsights({ className }: AIInsightsProps) {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* AI Insights with Tabs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            AI Analytics Dashboard
+          </CardTitle>
+          <CardDescription>
+            Comprehensive AI performance and geographic intelligence
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="geographic">Geographic</TabsTrigger>
+              <TabsTrigger value="models">Models</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              {/* System Alerts */}
+              {aiStatus.ai_enabled && aiStatus.current_confidence < 0.5 && (
+                <Alert className="border-yellow-200">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription>
+                    AI confidence is low ({formatConfidence(aiStatus.current_confidence)}). The system is using fallback algorithms. Consider retraining the models.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {aiStatus.models_active === 0 && aiStatus.ai_enabled && (
+                <Alert className="border-red-200">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    No AI models are currently active. AI features will not work until models are loaded and trained.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Additional overview content */}
+              <div className="text-center text-slate-400 py-8">
+                Additional overview metrics will be displayed here
+              </div>
+            </TabsContent>
+
+            <TabsContent value="geographic" className="space-y-4">
+              <AIGeoInsights />
+            </TabsContent>
+
+            <TabsContent value="models" className="space-y-4">
+              <div className="text-center text-slate-400 py-8">
+                Model performance and training status will be displayed here
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
