@@ -5,16 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
-import { User, Mail, Lock, Building, ArrowRight, Brain, Sparkles, Check } from 'lucide-react';
+import { User, Mail, Lock, Building, ArrowRight, Brain, Sparkles, Check, AlertCircle, Wifi, WifiOff, X } from 'lucide-react';
 
 export const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -25,13 +25,39 @@ export const Register = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+    
+    // Clear field-specific error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
+
+  // Monitor network status
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const validatePassword = (password: string) => {
     const requirements = [
@@ -43,41 +69,100 @@ export const Register = () => {
     ];
     return requirements;
   };
+  const getErrorMessage = (error: unknown): string => {
+    if (!isOnline) {
+      return 'No internet connection. Please check your network and try again.';
+    }
+    
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('network') || message.includes('fetch')) {
+        return 'Unable to connect to server. Please check your connection and try again.';
+      }
+      
+      if (message.includes('user already exists') || message.includes('email already')) {
+        return 'An account with this email already exists. Try logging in instead.';
+      }
+      
+      if (message.includes('invalid email')) {
+        return 'Please enter a valid email address.';
+      }
+      
+      if (message.includes('password')) {
+        return 'Password does not meet security requirements.';
+      }
+      
+      if (message.includes('tenant_name') || message.includes('company')) {
+        return 'Company name is required and must be unique.';
+      }
+      
+      return error.message;
+    }
+    
+    return 'Registration failed. Please check your information and try again.';
+  };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.firstName) {
+      newErrors.firstName = 'First name is required';
+    }
+    
+    if (!formData.lastName) {
+      newErrors.lastName = 'Last name is required';
+    }
+    
+    if (!formData.company) {
+      newErrors.company = 'Company name is required';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (!isPasswordValid) {
+      newErrors.password = 'Password does not meet security requirements';
+    }
+    
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const passwordRequirements = validatePassword(formData.password);
   const isPasswordValid = passwordRequirements.every(req => req.test);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
-    if (!formData.email || !formData.password || !formData.firstName || 
-        !formData.lastName || !formData.company) {
+    if (!isOnline) {
       toast({
-        title: 'Registration failed',
-        description: 'All fields are required',
+        title: 'Connection error',
+        description: 'Please check your internet connection and try again.',
         variant: 'destructive',
       });
       return;
     }
-
-    if (formData.password !== formData.confirmPassword) {
+    
+    if (!validateForm()) {
       toast({
         title: 'Registration failed',
-        description: 'Passwords do not match',
+        description: 'Please check the form for errors and try again.',
         variant: 'destructive',
       });
-      return;
-    }
-
-    if (!isPasswordValid) {
-      toast({
-        title: 'Registration failed',
-        description: 'Password does not meet requirements',
-        variant: 'destructive',
-      });
-      return;
-    }    setIsLoading(true);
+      return;    }
+    
+    setIsLoading(true);
     try {
       // Register user
       const response = await apiFetch('/auth/register', {
@@ -91,10 +176,10 @@ export const Register = () => {
           plan: 'free', // Default plan
         }),
       });
-
+      
       toast({
-        title: 'Registration successful',
-        description: 'Your account has been created',
+        title: 'Registration successful!',
+        description: 'Welcome to VeloFlux! Your account has been created.',
       });
 
       // Store token and redirect to dashboard
@@ -111,7 +196,13 @@ export const Register = () => {
       // Redirect to dashboard
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
+      const message = getErrorMessage(err);
+      
+      // Set specific field errors if applicable
+      if (message.includes('email already exists')) {
+        setErrors({ email: 'This email is already registered' });
+      }
+      
       toast({ title: 'Registration failed', description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -145,12 +236,37 @@ export const Register = () => {
           <p className="text-blue-200 text-lg">
             Create your account and experience the future of load balancing
           </p>
-        </div>
+        </div>        <Card className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 space-y-6">
+          {/* Connection Status */}
+          {!isOnline && (
+            <Alert className="bg-red-500/10 border-red-500/20 text-red-200">
+              <WifiOff className="h-4 w-4" />
+              <AlertDescription>
+                You're offline. Please check your internet connection.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* General Errors */}
+          {Object.keys(errors).length > 0 && (
+            <Alert className="bg-red-500/10 border-red-500/20 text-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Please correct the errors below and try again.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Success indicator when online */}
+          {isOnline && Object.keys(errors).length === 0 && !isLoading && (
+            <div className="flex items-center text-green-200 text-sm">
+              <Wifi className="h-4 w-4 mr-2" />
+              Connected to VeloFlux
+            </div>
+          )}
 
-        <Card className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Name Fields */}            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-white font-medium">First Name</Label>
                 <div className="relative">
@@ -160,12 +276,20 @@ export const Register = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                    className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                      errors.firstName ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                    }`}
                     disabled={isLoading}
+                    required
                   />
                 </div>
-              </div>
-              
+                {errors.firstName && (
+                  <p className="text-red-300 text-sm ml-1 flex items-center">
+                    <X className="w-3 h-3 mr-1" />
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>              
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-white font-medium">Last Name</Label>
                 <div className="relative">
@@ -175,10 +299,19 @@ export const Register = () => {
                     name="lastName" 
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                    className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                      errors.lastName ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                    }`}
                     disabled={isLoading}
+                    required
                   />
                 </div>
+                {errors.lastName && (
+                  <p className="text-red-300 text-sm ml-1 flex items-center">
+                    <X className="w-3 h-3 mr-1" />
+                    {errors.lastName}
+                  </p>
+                )}
               </div>
             </div>
             
@@ -192,14 +325,21 @@ export const Register = () => {
                   name="company" 
                   value={formData.company}
                   onChange={handleChange}
-                  className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    errors.company ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
-              </div>
+              </div>              {errors.company && (
+                <p className="text-red-300 text-sm ml-1 flex items-center">
+                  <X className="w-3 h-3 mr-1" />
+                  {errors.company}
+                </p>
+              )}
             </div>
             
-            {/* Email */}
-            <div className="space-y-2">
+            {/* Email */}            <div className="space-y-2">
               <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-300 w-4 h-4" />
@@ -209,10 +349,19 @@ export const Register = () => {
                   type="email" 
                   value={formData.email}
                   onChange={handleChange}
-                  className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    errors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-300 text-sm ml-1 flex items-center">
+                  <X className="w-3 h-3 mr-1" />
+                  {errors.email}
+                </p>
+              )}
             </div>
             
             {/* Password */}
@@ -225,26 +374,45 @@ export const Register = () => {
                   name="password"
                   type="password" 
                   value={formData.password}
-                  onChange={handleChange}
-                  className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  onChange={(e) => {
+                    handleChange(e);
+                    setShowPasswordRequirements(e.target.value.length > 0);
+                  }}
+                  onFocus={() => setShowPasswordRequirements(true)}
+                  onBlur={() => setShowPasswordRequirements(false)}
+                  className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    errors.password ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
               </div>
-              
+              {errors.password && (
+                <p className="text-red-300 text-sm ml-1 flex items-center">
+                  <X className="w-3 h-3 mr-1" />
+                  {errors.password}
+                </p>
+              )}              
               {/* Password Requirements */}
-              {formData.password && (
-                <div className="mt-3 space-y-1">
+              {(showPasswordRequirements || formData.password.length > 0) && (
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
+                  <p className="text-blue-200 text-sm font-medium">Password Requirements:</p>
                   {passwordRequirements.map((req, index) => (
-                    <div key={index} className={`flex items-center text-xs ${req.test ? 'text-green-400' : 'text-blue-300'}`}>
-                      <Check className={`w-3 h-3 mr-2 ${req.test ? 'text-green-400' : 'text-gray-400'}`} />
-                      {req.text}
+                    <div key={index} className="flex items-center text-sm">
+                      {req.test ? (
+                        <Check className="w-3 h-3 text-green-400 mr-2" />
+                      ) : (
+                        <X className="w-3 h-3 text-red-400 mr-2" />
+                      )}
+                      <span className={req.test ? 'text-green-200' : 'text-red-200'}>
+                        {req.text}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            
-            {/* Confirm Password */}
+              {/* Confirm Password */}
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-white font-medium">Confirm Password</Label>
               <div className="relative">
@@ -255,12 +423,24 @@ export const Register = () => {
                   type="password"
                   value={formData.confirmPassword}
                   onChange={handleChange} 
-                  className="bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  className={`bg-white/10 border-white/20 text-white pl-10 h-11 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    errors.confirmPassword ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
               </div>
-              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+              {errors.confirmPassword && (
+                <p className="text-red-300 text-sm ml-1 flex items-center">
+                  <X className="w-3 h-3 mr-1" />
+                  {errors.confirmPassword}
+                </p>
+              )}
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && !errors.confirmPassword && (
+                <p className="text-red-300 text-sm ml-1 flex items-center">
+                  <X className="w-3 h-3 mr-1" />
+                  Passwords do not match
+                </p>
               )}
             </div>
             

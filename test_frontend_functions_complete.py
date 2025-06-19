@@ -19,7 +19,7 @@ NGINX_PORT = "80"
 # URLs para teste
 FRONTEND_URL = f"{BASE_URL}:{FRONTEND_PORT}"
 DIRECT_API_URL = f"{BASE_URL}:{BACKEND_PORT}"  # API direta
-NGINX_API_URL = f"{BASE_URL}:{NGINX_PORT}/api"  # Via nginx
+NGINX_BASE_URL = f"{BASE_URL}:{NGINX_PORT}"  # Via nginx
 
 class FrontendTester:
     def __init__(self):
@@ -51,7 +51,7 @@ class FrontendTester:
             auth = ('admin', 'VeloFlux2025!')
             
             if via_nginx:
-                url = f"{NGINX_API_URL}{endpoint}"
+                url = f"{NGINX_BASE_URL}/api{endpoint}"
             else:
                 url = f"{DIRECT_API_URL}/api{endpoint}"
             
@@ -71,43 +71,24 @@ class FrontendTester:
             return False, str(e)
 
     def test_api_endpoint(self, method, endpoint, headers=None, data=None, expected_status=200, via_nginx=True):
-        """Testa um endpoint da API com Basic Auth"""
-        try:
-            # Credenciais do config
-            auth = ('admin', 'VeloFlux2025!')
-            
-            if via_nginx:
-                url = f"{NGINX_API_URL}{endpoint}"
-            else:
-                url = f"{DIRECT_API_URL}/api{endpoint}"
-            
-            response = self.session.request(
-                method=method,
-                url=url,
-                auth=auth,
-                timeout=10
-            )
-            
-            success = response.status_code == expected_status
-            return success, response
-            
-        except Exception as e:
-            if via_nginx:
-                return self.test_api_endpoint_basic_auth(method, endpoint, expected_status, via_nginx=False)
-            return False, str(e)
         """Testa um endpoint da API - preferencialmente via nginx, fallback para direto"""
         try:
             # Primeiro tenta via nginx (como o frontend faria)
             if via_nginx:
-                url = f"{NGINX_API_URL}{endpoint}"
+                url = f"{NGINX_BASE_URL}{endpoint}"
             else:
                 # Fallback para API direta
                 url = f"{DIRECT_API_URL}{endpoint}" if endpoint.startswith('/api') else f"{DIRECT_API_URL}/api{endpoint}"
             
+            # Prepara headers
+            request_headers = headers or {}
+            if data and 'Content-Type' not in request_headers:
+                request_headers['Content-Type'] = 'application/json'
+            
             response = self.session.request(
                 method=method,
                 url=url,
-                headers=headers,
+                headers=request_headers,
                 json=data if data else None,
                 timeout=10
             )
@@ -128,10 +109,11 @@ class FrontendTester:
         # 1. Teste de registro
         register_data = {
             "email": f"test_{int(time.time())}@example.com",
-            "password": "testpass123",
+            "password": "StrongPass123!",
             "first_name": "Test",
             "last_name": "User",
-            "tenant_name": f"Test Tenant {int(time.time())}"
+            "tenant_name": f"Test Tenant {int(time.time())}",
+            "plan": "free"
         }
         
         success, response = self.test_api_endpoint(
@@ -303,7 +285,7 @@ class FrontendTester:
         # 1. Teste de listagem de tenants
         success, response = self.test_api_endpoint(
             "GET", 
-            "/tenants", 
+            "/api/tenants", 
             headers=headers
         )
         
@@ -320,7 +302,7 @@ class FrontendTester:
         
         success, response = self.test_api_endpoint(
             "POST", 
-            "/tenants", 
+            "/api/tenants", 
             headers=headers,
             data=tenant_data,
             expected_status=201
@@ -461,7 +443,7 @@ class FrontendTester:
         for endpoint in test_endpoints:
             # Testa URL via nginx (como frontend faz)
             try:
-                nginx_url = f"{NGINX_API_URL}{endpoint}"
+                nginx_url = f"{NGINX_BASE_URL}/api{endpoint}"
                 nginx_response = requests.get(nginx_url, timeout=5)
                 
                 # URL correta deve responder (mesmo que seja 401/403/404 por auth)

@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock, ArrowRight, Brain, Zap, Shield } from 'lucide-react';
+import { User, Lock, ArrowRight, Brain, Zap, Shield, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 
 export const Login = () => {
   const { login } = useAuth();
@@ -17,25 +18,82 @@ export const Login = () => {
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const from = (
     (location.state as { from?: { pathname: string } } | null)?.from?.pathname ||
     '/dashboard'
   );
 
+  // Monitor network status
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const getErrorMessage = (error: unknown): string => {
+    if (!isOnline) {
+      return 'No internet connection. Please check your network and try again.';
+    }
+    
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('network') || message.includes('fetch')) {
+        return 'Unable to connect to server. Please check your connection and try again.';
+      }
+      
+      if (message.includes('unauthorized') || message.includes('invalid credentials')) {
+        return 'Invalid email or password. Please check your credentials and try again.';
+      }
+      
+      if (message.includes('too many')) {
+        return 'Too many login attempts. Please wait 15 minutes before trying again.';
+      }
+      
+      if (message.includes('demo credentials')) {
+        return 'Demo credentials are not allowed. Please use your real account credentials.';
+      }
+      
+      return error.message;
+    }
+    
+    return 'An unexpected error occurred. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
     if (!user || !pass) {
-      toast({ title: 'Login failed', description: 'Username and password required', variant: 'destructive' });
+      setError('Email and password are required');
+      toast({ title: 'Login failed', description: 'Email and password are required', variant: 'destructive' });
+      return;
+    }
+    
+    if (!isOnline) {
+      setError('No internet connection');
+      toast({ title: 'Connection error', description: 'Please check your internet connection', variant: 'destructive' });
       return;
     }
     
     setIsLoading(true);
     try {
       await login(user, pass);
+      toast({ title: 'Welcome back!', description: 'Successfully signed in to your account' });
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Invalid credentials';
+      const message = getErrorMessage(err);
+      setError(message);
       toast({ title: 'Login failed', description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -71,18 +129,54 @@ export const Login = () => {
         </div>
 
         <Card className="bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 space-y-6">
+          {/* Connection Status */}
+          {!isOnline && (
+            <Alert className="bg-red-500/10 border-red-500/20 text-red-200">
+              <WifiOff className="h-4 w-4" />
+              <AlertDescription>
+                You're offline. Please check your internet connection.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Error Display */}
+          {error && (
+            <Alert className="bg-red-500/10 border-red-500/20 text-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Success indicator when online */}
+          {isOnline && !error && !isLoading && (
+            <div className="flex items-center text-green-200 text-sm">
+              <Wifi className="h-4 w-4 mr-2" />
+              Connected to VeloFlux
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-300 w-5 h-5" />
                 <Input 
                   value={user} 
-                  onChange={(e) => setUser(e.target.value)} 
-                  placeholder="Enter your username"
-                  className="bg-white/10 border-white/20 text-white pl-12 h-12 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  onChange={(e) => {
+                    setUser(e.target.value);
+                    setError(null); // Clear error when user types
+                  }} 
+                  placeholder="Enter your email"
+                  type="email"
+                  className={`bg-white/10 border-white/20 text-white pl-12 h-12 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    error && !user ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
               </div>
+              {error && !user && (
+                <p className="text-red-300 text-sm ml-1">Email is required</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -91,20 +185,38 @@ export const Login = () => {
                 <Input 
                   type="password" 
                   value={pass} 
-                  onChange={(e) => setPass(e.target.value)} 
+                  onChange={(e) => {
+                    setPass(e.target.value);
+                    setError(null); // Clear error when user types
+                  }} 
                   placeholder="Enter your password"
-                  className="bg-white/10 border-white/20 text-white pl-12 h-12 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                  className={`bg-white/10 border-white/20 text-white pl-12 h-12 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 ${
+                    error && !pass ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                  }`}
                   disabled={isLoading}
+                  required
                 />
               </div>
+              {error && !pass && (
+                <p className="text-red-300 text-sm ml-1">Password is required</p>
+              )}
             </div>
 
             <Button 
               type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
-              disabled={isLoading}
+              className={`w-full h-12 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group ${
+                !isOnline 
+                  ? 'bg-gray-600 hover:bg-gray-600 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
+              } text-white`}
+              disabled={isLoading || !isOnline}
             >
-              {isLoading ? (
+              {!isOnline ? (
+                <div className="flex items-center">
+                  <WifiOff className="w-5 h-5 mr-2" />
+                  No Connection
+                </div>
+              ) : isLoading ? (
                 <div className="flex items-center">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                   Signing in...

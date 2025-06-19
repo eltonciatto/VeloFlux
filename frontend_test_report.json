@@ -1,11 +1,11 @@
 {
-  "timestamp": "2025-06-19T00:43:37.461670",
-  "duration": 0.031972408294677734,
+  "timestamp": "2025-06-19T01:00:14.553560",
+  "duration": 0.06744217872619629,
   "statistics": {
-    "total": 13,
-    "passed": 8,
-    "failed": 5,
-    "success_rate": 61.53846153846154
+    "total": 21,
+    "passed": 19,
+    "failed": 2,
+    "success_rate": 90.47619047619048
   },
   "categories": {
     "Consist\u00eancia API": {
@@ -18,23 +18,35 @@
     },
     "Registro de usu\u00e1rio": {
       "total": 1,
-      "passed": 0
+      "passed": 1
+    },
+    "Login de usu\u00e1rio": {
+      "total": 1,
+      "passed": 1
+    },
+    "Valida\u00e7\u00e3o de token": {
+      "total": 1,
+      "passed": 1
+    },
+    "Busca de perfil": {
+      "total": 1,
+      "passed": 1
     },
     "Billing": {
-      "total": 1,
-      "passed": 0
+      "total": 4,
+      "passed": 4
     },
     "Tenant": {
-      "total": 1,
+      "total": 2,
       "passed": 0
     },
     "LoadBalancer": {
-      "total": 1,
-      "passed": 0
+      "total": 2,
+      "passed": 2
     },
     "Dashboard": {
       "total": 1,
-      "passed": 0
+      "passed": 1
     },
     "Error Handling": {
       "total": 3,
@@ -46,91 +58,147 @@
       "test": "Consist\u00eancia API - /auth/profile",
       "success": true,
       "message": "Nginx: 404, Direto: 404",
-      "timestamp": "2025-06-19T00:43:37.435662",
+      "timestamp": "2025-06-19T01:00:14.494854",
       "data": null
     },
     {
       "test": "Consist\u00eancia API - /billing/subscriptions",
       "success": true,
       "message": "Nginx: 401, Direto: 401",
-      "timestamp": "2025-06-19T00:43:37.440225",
+      "timestamp": "2025-06-19T01:00:14.499403",
       "data": null
     },
     {
       "test": "Consist\u00eancia API - /billing/plans",
       "success": true,
       "message": "Nginx: 404, Direto: 404",
-      "timestamp": "2025-06-19T00:43:37.445101",
+      "timestamp": "2025-06-19T01:00:14.503784",
       "data": null
     },
     {
       "test": "Consist\u00eancia API - /tenants",
       "success": true,
       "message": "Nginx: 401, Direto: 401",
-      "timestamp": "2025-06-19T00:43:37.449720",
+      "timestamp": "2025-06-19T01:00:14.508489",
       "data": null
     },
     {
       "test": "Health endpoint",
       "success": true,
       "message": "Nginx: 200, Direto: 200",
-      "timestamp": "2025-06-19T00:43:37.454692",
+      "timestamp": "2025-06-19T01:00:14.512980",
       "data": null
     },
     {
       "test": "Registro de usu\u00e1rio",
-      "success": false,
-      "message": "Falha no registro: <Response [400]>",
-      "timestamp": "2025-06-19T00:43:37.457109",
+      "success": true,
+      "message": "Usu\u00e1rio registrado com sucesso",
+      "timestamp": "2025-06-19T01:00:14.525476",
       "data": null
     },
     {
-      "test": "Billing - Pr\u00e9-requisito",
-      "success": false,
-      "message": "Token n\u00e3o dispon\u00edvel",
-      "timestamp": "2025-06-19T00:43:37.457177",
+      "test": "Login de usu\u00e1rio",
+      "success": true,
+      "message": "Login realizado com sucesso",
+      "timestamp": "2025-06-19T01:00:14.527325",
       "data": null
     },
     {
-      "test": "Tenant - Pr\u00e9-requisito",
-      "success": false,
-      "message": "Token n\u00e3o dispon\u00edvel",
-      "timestamp": "2025-06-19T00:43:37.457227",
+      "test": "Valida\u00e7\u00e3o de token",
+      "success": true,
+      "message": "Token v\u00e1lido",
+      "timestamp": "2025-06-19T01:00:14.528934",
       "data": null
     },
     {
-      "test": "LoadBalancer - Pr\u00e9-requisito",
-      "success": false,
-      "message": "Token n\u00e3o dispon\u00edvel",
-      "timestamp": "2025-06-19T00:43:37.457280",
+      "test": "Busca de perfil",
+      "success": true,
+      "message": "Perfil carregado",
+      "timestamp": "2025-06-19T01:00:14.528969",
       "data": null
     },
     {
-      "test": "Dashboard - Pr\u00e9-requisito",
+      "test": "Billing - Listagem de assinaturas",
+      "success": true,
+      "message": "Assinaturas carregadas",
+      "timestamp": "2025-06-19T01:00:14.530655",
+      "data": null
+    },
+    {
+      "test": "Billing - Cria\u00e7\u00e3o de assinatura",
+      "success": true,
+      "message": "Assinatura criada",
+      "timestamp": "2025-06-19T01:00:14.533286",
+      "data": null
+    },
+    {
+      "test": "Billing - Listagem de faturas",
+      "success": true,
+      "message": "Faturas carregadas",
+      "timestamp": "2025-06-19T01:00:14.536201",
+      "data": null
+    },
+    {
+      "test": "Billing - Webhook",
+      "success": true,
+      "message": "Webhook processado",
+      "timestamp": "2025-06-19T01:00:14.537780",
+      "data": null
+    },
+    {
+      "test": "Tenant - Listagem",
       "success": false,
-      "message": "Token n\u00e3o dispon\u00edvel",
-      "timestamp": "2025-06-19T00:43:37.457361",
+      "message": "Falha: <Response [404]>",
+      "timestamp": "2025-06-19T01:00:14.539799",
+      "data": null
+    },
+    {
+      "test": "Tenant - Cria\u00e7\u00e3o",
+      "success": false,
+      "message": "Falha: <Response [404]>",
+      "timestamp": "2025-06-19T01:00:14.541823",
+      "data": null
+    },
+    {
+      "test": "LoadBalancer - Health Check",
+      "success": true,
+      "message": "Sistema saud\u00e1vel",
+      "timestamp": "2025-06-19T01:00:14.543705",
+      "data": null
+    },
+    {
+      "test": "LoadBalancer - Status",
+      "success": true,
+      "message": "Status dispon\u00edvel",
+      "timestamp": "2025-06-19T01:00:14.545966",
+      "data": null
+    },
+    {
+      "test": "Dashboard - Info do cluster",
+      "success": true,
+      "message": "Info carregada",
+      "timestamp": "2025-06-19T01:00:14.548197",
       "data": null
     },
     {
       "test": "Error Handling - Token inv\u00e1lido",
       "success": true,
       "message": "Erro 401 retornado corretamente",
-      "timestamp": "2025-06-19T00:43:37.458576",
+      "timestamp": "2025-06-19T01:00:14.550085",
       "data": null
     },
     {
       "test": "Error Handling - Endpoint inexistente",
       "success": true,
       "message": "Erro 404 retornado corretamente",
-      "timestamp": "2025-06-19T00:43:37.459866",
+      "timestamp": "2025-06-19T01:00:14.551394",
       "data": null
     },
     {
       "test": "Error Handling - Dados inv\u00e1lidos",
       "success": true,
       "message": "Erro 400 retornado corretamente",
-      "timestamp": "2025-06-19T00:43:37.461334",
+      "timestamp": "2025-06-19T01:00:14.552878",
       "data": null
     }
   ]

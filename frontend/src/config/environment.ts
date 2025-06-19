@@ -1,8 +1,8 @@
 // Environment configuration
 export const CONFIG = {
   // Determine if we're in development mode
-  // Force development mode when serving via nginx on localhost
-  isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development' || window.location.hostname === 'localhost',
+  // In Docker production build, we want production mode even on localhost
+  isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development',
   
   // API endpoints - STANDARD PORT ALLOCATION (NEVER CHANGE)
   // Development: Backend direct ports (9090/9000)
@@ -10,8 +10,8 @@ export const CONFIG = {
   API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9090' : ''),
   ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || (import.meta.env.DEV ? 'http://localhost:9000' : '/admin/api'),
   
-  // Demo mode - only enabled in development or when explicitly set
-  DEMO_MODE: import.meta.env.VITE_DEMO_MODE === 'true' || import.meta.env.DEV,
+  // Demo mode - only enabled when explicitly set
+  DEMO_MODE: import.meta.env.VITE_DEMO_MODE === 'true',
   
   // Demo credentials (only used in demo mode)
   DEMO_CREDENTIALS: {

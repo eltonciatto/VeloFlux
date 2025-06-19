@@ -67,7 +67,7 @@ services:
       - ENV=production
       - PORT=9090              # Main API Port
       - ADMIN_PORT=9000        # Admin API Port
-      - METRICS_PORT=8181      # Health/Metrics Port
+      - METRICS_PORT=8080      # Health/Metrics Port
       # Authentication
       - VF_ADMIN_USER=admin
       - VF_ADMIN_PASS=veloflux123
@@ -79,7 +79,7 @@ services:
       # Logging
       - VFX_LOG_LEVEL=info
     ports:
-      - "8181:8181"  # Health/Metrics Endpoint
+      - "8080:8080"  # Health/Metrics Endpoint
       - "9000:9000"  # Admin API (backend management)
       - "9090:9090"  # Main API (auth, tenants, etc.)
     volumes:
@@ -88,7 +88,7 @@ services:
     networks:
       - veloflux-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
