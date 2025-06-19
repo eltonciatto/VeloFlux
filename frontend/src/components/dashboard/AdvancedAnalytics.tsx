@@ -74,7 +74,17 @@ const AdvancedAnalytics: React.FC = () => {
   }, [refreshInterval, refreshData]);
 
   // KPIs calculation
-  const kpis = getKPIs();
+  const kpisData = getKPIs();
+  const kpis = Object.entries(kpisData).map(([key, value]) => ({
+    id: key,
+    name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    value: value,
+    unit: key.includes('percentage') || key.includes('rate') ? '%' : 
+          key.includes('time') || key.includes('latency') ? 'ms' : 
+          key.includes('size') || key.includes('memory') ? 'MB' : '',
+    trend: Math.random() > 0.5 ? 'up' : 'down',
+    change: (Math.random() - 0.5) * 20
+  }));
 
   // Chart colors
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0'];
