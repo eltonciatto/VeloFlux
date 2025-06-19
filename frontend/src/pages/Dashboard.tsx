@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackendOverview } from '@/components/dashboard/BackendOverview';
 import { HealthMonitor } from '@/components/dashboard/HealthMonitor';
@@ -17,6 +19,8 @@ import ModelPerformance from '@/components/dashboard/ModelPerformance';
 import PredictiveAnalytics from '@/components/dashboard/PredictiveAnalytics';
 import AIConfiguration from '@/components/dashboard/AIConfiguration';
 import ModernBillingPanel from '@/components/billing/ModernBillingPanel';
+import { useProductionData } from '@/hooks/useProductionData';
+import { getThreshold } from '@/config/environment';
 import { 
   Activity, 
   Server, 
@@ -32,7 +36,13 @@ import {
   Sliders,
   Sparkles,
   Zap,
-  CreditCard
+  CreditCard,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  Download,
+  Bell
 } from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,6 +53,35 @@ export const Dashboard = () => {
   const { user } = useAuth();
   const { selectedTenantId } = useTenant();
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Production data
+  const { metrics, alerts, loading, error, lastUpdate, refreshAll, exportData } = useProductionData();
+
+  // System health calculation
+  const getSystemHealth = () => {
+    if (!metrics) return 'unknown';
+    
+    const cpuUsage = metrics.system.cpu_usage;
+    const memoryUsage = metrics.system.memory_usage;
+    const errorRate = metrics.requests.error_rate;
+    
+    if (cpuUsage > getThreshold('CPU_CRITICAL') || 
+        memoryUsage > getThreshold('MEMORY_CRITICAL') || 
+        errorRate > getThreshold('ERROR_RATE_CRITICAL')) {
+      return 'critical';
+    }
+    
+    if (cpuUsage > getThreshold('CPU_WARNING') || 
+        memoryUsage > getThreshold('MEMORY_WARNING') || 
+        errorRate > getThreshold('ERROR_RATE_WARNING')) {
+      return 'warning';
+    }
+    
+    return 'healthy';
+  };
+
+  const systemHealth = getSystemHealth();
+  const activeAlerts = alerts?.filter(a => !a.resolved) || [];
 
   const tabsData = [
     {
@@ -195,56 +234,155 @@ export const Dashboard = () => {
       
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto p-6">
-        {/* Hero Section */}
+        {/* Hero Section with Production Status */}
         <motion.div 
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
+          {/* System Status Badge */}
           <motion.div
-            className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 mb-6"
+            className={`inline-flex items-center px-6 py-3 rounded-full mb-6 border ${
+              systemHealth === 'healthy' ? 'bg-green-500/20 border-green-400/30' :
+              systemHealth === 'warning' ? 'bg-yellow-500/20 border-yellow-400/30' :
+              systemHealth === 'critical' ? 'bg-red-500/20 border-red-400/30' :
+              'bg-gray-500/20 border-gray-400/30'
+            }`}
             animate={{
               boxShadow: [
-                '0 0 20px rgba(6, 182, 212, 0.3)',
-                '0 0 40px rgba(6, 182, 212, 0.5)',
-                '0 0 20px rgba(6, 182, 212, 0.3)',
+                `0 0 20px ${systemHealth === 'healthy' ? 'rgba(34, 197, 94, 0.3)' :
+                           systemHealth === 'warning' ? 'rgba(245, 158, 11, 0.3)' :
+                           systemHealth === 'critical' ? 'rgba(239, 68, 68, 0.3)' :
+                           'rgba(156, 163, 175, 0.3)'}`,
+                `0 0 40px ${systemHealth === 'healthy' ? 'rgba(34, 197, 94, 0.5)' :
+                           systemHealth === 'warning' ? 'rgba(245, 158, 11, 0.5)' :
+                           systemHealth === 'critical' ? 'rgba(239, 68, 68, 0.5)' :
+                           'rgba(156, 163, 175, 0.5)'}`,
+                `0 0 20px ${systemHealth === 'healthy' ? 'rgba(34, 197, 94, 0.3)' :
+                           systemHealth === 'warning' ? 'rgba(245, 158, 11, 0.3)' :
+                           systemHealth === 'critical' ? 'rgba(239, 68, 68, 0.3)' :
+                           'rgba(156, 163, 175, 0.3)'}`,
               ]
             }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <Brain className="w-5 h-5 text-cyan-400 mr-3" />
-            <span className="text-cyan-300 font-semibold">{t('dashboard.badge')}</span>
+            {systemHealth === 'healthy' ? (
+              <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+            ) : systemHealth === 'warning' ? (
+              <AlertTriangle className="w-5 h-5 text-yellow-400 mr-3" />
+            ) : systemHealth === 'critical' ? (
+              <AlertTriangle className="w-5 h-5 text-red-400 mr-3" />
+            ) : (
+              <Clock className="w-5 h-5 text-gray-400 mr-3" />
+            )}
+            
+            <span className={`font-semibold mr-3 ${
+              systemHealth === 'healthy' ? 'text-green-300' :
+              systemHealth === 'warning' ? 'text-yellow-300' :
+              systemHealth === 'critical' ? 'text-red-300' :
+              'text-gray-300'
+            }`}>
+              System {systemHealth.charAt(0).toUpperCase() + systemHealth.slice(1)}
+            </span>
+            
+            {metrics && (
+              <div className="flex items-center gap-2">
+                <span className="text-slate-300 text-sm">
+                  {metrics.requests.rate_per_minute.toLocaleString()} req/min
+                </span>
+                <div className="w-px h-4 bg-slate-500"></div>
+                <span className="text-slate-300 text-sm">
+                  {metrics.backends.healthy}/{metrics.backends.total} backends
+                </span>
+                {activeAlerts.length > 0 && (
+                  <>
+                    <div className="w-px h-4 bg-slate-500"></div>
+                    <div className="flex items-center gap-1">
+                      <Bell className="w-4 h-4 text-red-400" />
+                      <span className="text-red-300 text-sm">{activeAlerts.length}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            
             <motion.div
               className="ml-3 flex space-x-1"
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+              <div className={`w-2 h-2 rounded-full ${
+                systemHealth === 'healthy' ? 'bg-green-400' :
+                systemHealth === 'warning' ? 'bg-yellow-400' :
+                'bg-red-400'
+              }`}></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
             </motion.div>
           </motion.div>
 
-          <motion.h1 
-            className="text-5xl md:text-6xl font-bold mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <span className="bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent">
-              {t('dashboard.title')}
-            </span>
-          </motion.h1>
-          
-          <motion.p 
-            className="text-xl text-blue-200/80 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            {t('dashboard.subtitle')}
-          </motion.p>
+          <div className="flex items-center justify-between">
+            <div>
+              <motion.h1 
+                className="text-5xl md:text-6xl font-bold mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <span className="bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent">
+                  {t('dashboard.title')}
+                </span>
+              </motion.h1>
+              
+              <motion.p 
+                className="text-xl text-blue-200/80 max-w-2xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                {t('dashboard.subtitle')}
+              </motion.p>
+            </div>
+
+            {/* Production Controls */}
+            <motion.div
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              {lastUpdate && (
+                <div className="text-right">
+                  <div className="text-sm text-slate-400">Last Update</div>
+                  <div className="text-white font-mono text-sm">
+                    {lastUpdate.toLocaleTimeString()}
+                  </div>
+                </div>
+              )}
+              
+              <Button
+                onClick={exportData}
+                variant="outline"
+                size="sm"
+                className="border-slate-600 hover:bg-slate-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              
+              <Button
+                onClick={refreshAll}
+                variant="outline"
+                size="sm"
+                className="border-slate-600 hover:bg-slate-700"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Enhanced Tabs */}
@@ -293,6 +431,14 @@ export const Dashboard = () => {
                     <div className="relative flex items-center gap-2 z-10">
                       <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
                       <span className="font-medium whitespace-nowrap">{tab.label}</span>
+                      
+                      {/* Alert indicators */}
+                      {tab.id === 'health' && activeAlerts.length > 0 && (
+                        <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                      )}
+                      {tab.id === 'metrics' && systemHealth === 'critical' && (
+                        <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                      )}
                     </div>
                     
                     {/* Glow effect on hover */}
