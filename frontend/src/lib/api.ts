@@ -77,12 +77,22 @@ export async function adminFetch(
   password: string,
   options: RequestInit = {}
 ) {
+  // Map admin paths to correct API paths
+  const pathMapping: { [key: string]: string } = {
+    '/admin/backends': '/api/backends',
+    '/admin/drain': '/api/system/drain',
+    '/admin/status': '/api/status',
+    '/admin/config': '/api/config',
+  };
+  
+  const mappedPath = pathMapping[path] || path.replace('/admin', '/api');
+  
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
     Authorization: 'Basic ' + btoa(`${username}:${password}`),
   };
-  const res = await fetch(`${ADMIN_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${mappedPath}`, { ...options, headers });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || res.statusText);

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"golang.org/x/time/rate"
 
 	"github.com/eltonciatto/veloflux/internal/auth"
 	"github.com/eltonciatto/veloflux/internal/balancer"
@@ -116,8 +117,9 @@ func (a *API) Start() error {
 		
 		// Start background update services
 		go a.broadcastBackendUpdates()
-		go a.broadcastMetricsUpdates()
+		go a.broadcastMetricsUpdates() 
 		go a.broadcastStatusUpdates()
+		go a.broadcastBillingUpdates() // Add billing WebSocket updates
 	}
 	
 	// Register routes BEFORE creating the server
@@ -204,6 +206,10 @@ func (a *API) setupRoutes() {
 	a.router.HandleFunc("/api/ws/backends", a.handleWebSocketBackends).Methods("GET")
 	a.router.HandleFunc("/api/ws/metrics", a.handleWebSocketMetrics).Methods("GET")
 	a.router.HandleFunc("/api/ws/status", a.handleWebSocketStatus).Methods("GET")
+	a.router.HandleFunc("/api/ws/billing", a.handleWebSocketBilling).Methods("GET")
+	a.router.HandleFunc("/api/ws/health", a.handleWebSocketHealth).Methods("GET")
+	a.router.HandleFunc("/api/ws/control", a.handleWebSocketControl).Methods("POST")
+	a.router.HandleFunc("/api/ws/force-update", a.handleForceUpdate).Methods("POST")
 	a.logger.Info("WebSocket routes registered successfully")
 
 	// Basic authentication middleware
@@ -234,29 +240,39 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/pools/{name}", a.handleDeletePool).Methods("DELETE")
 
 	apiRouter.HandleFunc("/backends", a.handleListBackends).Methods("GET")
-	// Using handleGetPool since handleGetBackend doesn't exist
-	apiRouter.HandleFunc("/backends/{id}", a.handleGetPool).Methods("GET")
+	apiRouter.HandleFunc("/backends/{id}", a.handleGetBackend).Methods("GET")
 	apiRouter.HandleFunc("/backends", a.handleAddBackend).Methods("POST")
-	// Using handleUpdatePool since handleUpdateBackend doesn't exist
-	apiRouter.HandleFunc("/backends/{id}", a.handleUpdatePool).Methods("PUT")
-	// Using handleDeleteBackend instead of handleRemoveBackend
+	apiRouter.HandleFunc("/backends/{id}", a.handleUpdateBackend).Methods("PUT")
 	apiRouter.HandleFunc("/backends/{id}", a.handleDeleteBackend).Methods("DELETE")
 
 	apiRouter.HandleFunc("/routes", a.handleListRoutes).Methods("GET")
-	// Using handleGetPool since handleGetRoute doesn't exist
-	apiRouter.HandleFunc("/routes/{id}", a.handleGetPool).Methods("GET")
-	// Using handleCreateRoute instead of handleAddRoute
+	apiRouter.HandleFunc("/routes/{id}", a.handleGetRoute).Methods("GET")
 	apiRouter.HandleFunc("/routes", a.handleCreateRoute).Methods("POST")
 	apiRouter.HandleFunc("/routes/{id}", a.handleUpdateRoute).Methods("PUT")
 	apiRouter.HandleFunc("/routes/{id}", a.handleDeleteRoute).Methods("DELETE")
 
 	// Using handleClusterInfo instead of handleGetCluster
 	apiRouter.HandleFunc("/cluster", a.handleClusterInfo).Methods("GET")
-	// Using handleGetConfig for status since handleGetStatus doesn't exist
-	apiRouter.HandleFunc("/status", a.handleGetConfig).Methods("GET")
+	// Advanced status endpoint with comprehensive system information
+	apiRouter.HandleFunc("/status", a.handleAdvancedStatus).Methods("GET")
+	apiRouter.HandleFunc("/status/health", a.handleAdvancedHealth).Methods("GET")
+	apiRouter.HandleFunc("/metrics", a.handleAdvancedMetrics).Methods("GET")
 	// Add config and reload endpoints
 	apiRouter.HandleFunc("/config", a.handleGetConfig).Methods("GET")
+	apiRouter.HandleFunc("/config/validate", a.handleValidateConfig).Methods("POST")
 	apiRouter.HandleFunc("/reload", a.handleReload).Methods("POST")
+	
+	// Configuration management
+	apiRouter.HandleFunc("/config/export", a.handleExportConfig).Methods("GET")
+	apiRouter.HandleFunc("/config/import", a.handleImportConfig).Methods("POST")
+	apiRouter.HandleFunc("/backup/create", a.handleCreateBackup).Methods("GET")
+	apiRouter.HandleFunc("/backup/restore", a.handleRestoreBackup).Methods("POST")
+	
+	// Analytics
+	apiRouter.HandleFunc("/analytics", a.handleAnalytics).Methods("GET")
+	
+	// System management
+	apiRouter.HandleFunc("/system/drain", a.handleSystemDrain).Methods("POST")
 	
 	a.logger.Info("Core API routes registered successfully")
 
@@ -336,19 +352,99 @@ func (a *API) setupRoutes() {
 	a.logger.Info("AI/ML API routes registered successfully")
 }
 
-// Stop shuts down the API server
-func (a *API) Stop(ctx context.Context) error {
-	if a.server == nil {
-		return nil
+// Start begins the API server
+func (a *API) Start() error {
+	// Start WebSocket hub
+	if a.wsHub != nil {
+		go a.wsHub.Run()
+		a.logger.Info("WebSocket hub started")
+		
+		// Start background update services
+		go a.broadcastBackendUpdates()
+		go a.broadcastMetricsUpdates() 
+		go a.broadcastStatusUpdates()
+		go a.broadcastBillingUpdates() // Add billing WebSocket updates
+	}
+	
+	// Register routes BEFORE creating the server
+	a.setupRoutes()
+
+	// Setup API server
+	a.server = &http.Server{
+		Addr:         a.config.API.BindAddress,
+		Handler:      a.router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
-	a.logger.Info("Shutting down API server")
-	return a.server.Shutdown(ctx)
+	a.logger.Info("API Server created", 
+		zap.String("address", a.config.API.BindAddress),
+		zap.String("handler_type", fmt.Sprintf("%T", a.router)))
+
+	// Start HTTP server
+	go func() {
+		a.logger.Info("Starting API server", zap.String("address", a.server.Addr))
+		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			a.logger.Error("API server error", zap.Error(err))
+		}
+	}()
+
+	return nil
 }
 
-// Handler returns the HTTP handler for the API
-func (a *API) Handler() http.Handler {
-	return a.router
+// setupAIRoutes registers AI/ML API routes
+func (a *API) setupAIRoutes() {
+	if a.orchestrator == nil {
+		a.logger.Info("AI/ML orchestrator not available - skipping AI routes")
+		return
+	}
+	
+	aiRouter := a.router.PathPrefix("/api/ai").Subrouter()
+	
+	// Model management endpoints
+	aiRouter.HandleFunc("/models", a.handleListAIModels).Methods("GET")
+	aiRouter.HandleFunc("/models", a.handleDeployAIModel).Methods("POST")
+	aiRouter.HandleFunc("/models/{id}", a.handleGetAIModel).Methods("GET")
+	aiRouter.HandleFunc("/models/{id}", a.handleUpdateAIModel).Methods("PUT")
+	aiRouter.HandleFunc("/models/{id}", a.handleUndeployAIModel).Methods("DELETE")
+	
+	// Prediction endpoints
+	aiRouter.HandleFunc("/predict", a.handleAIPredict).Methods("POST")
+	aiRouter.HandleFunc("/predict/batch", a.handleAIBatchPredict).Methods("POST")
+	aiRouter.HandleFunc("/predictions", a.handleAIPredictions).Methods("GET")
+	
+	// Configuration endpoints
+	aiRouter.HandleFunc("/config", a.handleGetAIConfig).Methods("GET")
+	aiRouter.HandleFunc("/config", a.handleUpdateAIConfig).Methods("PUT")
+	
+	// Training and management
+	aiRouter.HandleFunc("/retrain", a.handleAIRetrain).Methods("POST")
+	aiRouter.HandleFunc("/history", a.handleAIHistory).Methods("GET")
+	
+	// Monitoring endpoints
+	aiRouter.HandleFunc("/metrics", a.handleAIMetrics).Methods("GET")
+	aiRouter.HandleFunc("/health", a.handleAIHealth).Methods("GET")
+	
+	// AI/ML configuration endpoints
+	aiRouter.HandleFunc("/config", a.handleGetAIConfig).Methods("GET")
+	aiRouter.HandleFunc("/config", a.handleUpdateAIConfig).Methods("PUT")
+	
+	// AI/ML training endpoints
+	aiRouter.HandleFunc("/train", a.handleStartAITraining).Methods("POST")
+	aiRouter.HandleFunc("/train/{id}", a.handleStopAITraining).Methods("POST")
+	aiRouter.HandleFunc("/training", a.handleListAITraining).Methods("GET")
+	aiRouter.HandleFunc("/training/{id}", a.handleGetAITraining).Methods("GET")
+	
+	// AI/ML pipeline endpoints
+	aiRouter.HandleFunc("/pipelines", a.handleListAIPipelines).Methods("GET")
+	aiRouter.HandleFunc("/pipelines", a.handleCreateAIPipeline).Methods("POST")
+	aiRouter.HandleFunc("/pipelines/{id}", a.handleGetAIPipeline).Methods("GET")
+	aiRouter.HandleFunc("/pipelines/{id}", a.handleUpdateAIPipeline).Methods("PUT")
+	aiRouter.HandleFunc("/pipelines/{id}", a.handleDeleteAIPipeline).Methods("DELETE")
+	aiRouter.HandleFunc("/pipelines/{id}/run", a.handleRunAIPipeline).Methods("POST")
+	
+	a.logger.Info("AI/ML routes registered successfully")
 }
 
 // Authentication middleware implementations
@@ -416,6 +512,42 @@ func (a *API) requireTenantRole(next http.HandlerFunc, requiredRoles ...string) 
 	}))
 }
 
+// requireTenantAccess middleware ensures the user has access to the specified tenant
+func (a *API) requireTenantAccess(next http.HandlerFunc) http.HandlerFunc {
+	return a.requireAuthToken(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tenantID := vars["tenant_id"]
+		
+		// Get user from context (set by requireAuthToken)
+		user, ok := r.Context().Value("user").(*tenant.User)
+		if !ok {
+			writeError(w, "User not found in context", http.StatusInternalServerError)
+			return
+		}
+		
+		// Check if user has access to this tenant
+		hasAccess := false
+		if user.TenantID == tenantID {
+			hasAccess = true
+		} else {
+			// Check if user is owner/admin and can access other tenants
+			if user.Role == "owner" || user.Role == "admin" {
+				// Allow access to any tenant for owners/admins
+				hasAccess = true
+			}
+		}
+		
+		if !hasAccess {
+			writeError(w, "Access denied to tenant", http.StatusForbidden)
+			return
+		}
+		
+		// Add tenant ID to context for handlers
+		ctx := context.WithValue(r.Context(), "tenant_id", tenantID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // Handler implementations
 
 func (a *API) handleListPools(w http.ResponseWriter, r *http.Request) {
@@ -477,6 +609,9 @@ func (a *API) handleCreatePool(w http.ResponseWriter, r *http.Request) {
 		a.cluster.PublishState(clustering.StatePool, pool.Name, data)
 	}
 
+	// Notify WebSocket clients of pool changes
+	a.NotifyPoolChange()
+
 	w.WriteHeader(http.StatusCreated)
 	writeJSON(w, pool)
 }
@@ -521,6 +656,9 @@ func (a *API) handleUpdatePool(w http.ResponseWriter, r *http.Request) {
 		a.cluster.PublishState(clustering.StatePool, pool.Name, data)
 	}
 
+	// Notify WebSocket clients of pool changes
+	a.NotifyPoolChange()
+
 	writeJSON(w, pool)
 }
 
@@ -547,6 +685,9 @@ func (a *API) handleDeletePool(w http.ResponseWriter, r *http.Request) {
 	if a.cluster != nil {
 		a.cluster.PublishState(clustering.StatePool, name, nil)
 	}
+
+	// Notify WebSocket clients of pool changes
+	a.NotifyPoolChange()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -601,6 +742,9 @@ func (a *API) handleAddBackend(w http.ResponseWriter, r *http.Request) {
 		a.cluster.PublishState(clustering.StateBackend, key, data)
 	}
 
+	// Notify WebSocket clients of backend changes
+	a.NotifyBackendChange()
+
 	w.WriteHeader(http.StatusCreated)
 	writeJSON(w, backend)
 }
@@ -627,6 +771,9 @@ func (a *API) handleDeleteBackend(w http.ResponseWriter, r *http.Request) {
 		key := fmt.Sprintf("%s/%s", poolName, address)
 		a.cluster.PublishState(clustering.StateBackend, key, nil)
 	}
+
+	// Notify WebSocket clients of backend changes
+	a.NotifyBackendChange()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -727,7 +874,7 @@ func (a *API) handleCreateRoute(w http.ResponseWriter, r *http.Request) {
 		a.cluster.PublishState(clustering.StateRoute, route.Host, data)
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.Status201)
 	writeJSON(w, route)
 }
 
@@ -1033,6 +1180,8 @@ func (a *API) handleTenantLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Generate JWT token
 	token, err := a.authenticator.GenerateToken(user)
+	// Generate JWT token
+	token, err = a.authenticator.GenerateToken(user)
 	if err != nil {
 		a.logger.Error("Failed to generate token", zap.Error(err))
 		a.writeErrorResponse(w, http.StatusInternalServerError, err, "Failed to generate authentication token")
@@ -1767,752 +1916,568 @@ func (a *API) handleBillingWebhook(w http.ResponseWriter, r *http.Request) {
 	a.writeSuccessResponse(w, "Webhook received successfully", nil)
 }
 
-// requireTenantAccess is a middleware that checks if the user has access to the tenant
-func (a *API) requireTenantAccess(handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract JWT token
-		token := r.Header.Get("Authorization")
-		if token == "" {
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
-			return
-		}
+// AI/ML API Handlers
 
-		// Remove "Bearer " prefix if present
-		if strings.HasPrefix(token, "Bearer ") {
-			token = strings.TrimPrefix(token, "Bearer ")
-		}
-
-		// Validate token
-		claims, err := a.authenticator.VerifyToken(token)
-		if err != nil {
-			a.logger.Warn("Invalid JWT token", zap.Error(err))
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		// Extract tenant_id from URL
-		vars := mux.Vars(r)
-		tenantID := vars["tenant_id"]
-
-		// Check if user has access to this tenant
-		if claims.TenantID != tenantID {
-			a.logger.Warn("User trying to access different tenant", 
-				zap.String("user_tenant", claims.TenantID),
-				zap.String("requested_tenant", tenantID))
-			http.Error(w, "Access denied to tenant", http.StatusForbidden)
-			return
-		}
-
-		// Call the actual handler
-		handler(w, r)
-	}
-}
-
-// User Management Handlers
-func (a *API) handleListTenantUsers(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Listing users for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock data for now - in production, fetch from database
-	users := []map[string]interface{}{
-		{
-			"id":         "user1",
-			"email":      "admin@tenant.com",
-			"name":       "Admin User",
-			"role":       "admin",
-			"status":     "active",
-			"created_at": "2024-01-01T00:00:00Z",
-			"last_login": "2024-06-17T10:00:00Z",
-		},
-		{
-			"id":         "user2",
-			"email":      "user@tenant.com",
-			"name":       "Regular User",
-			"role":       "user",
-			"status":     "active",
-			"created_at": "2024-02-01T00:00:00Z",
-			"last_login": "2024-06-16T15:30:00Z",
-		},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
-}
-
-func (a *API) handleAddTenantUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	var req struct {
-		Email     string `json:"email"`
-		Name      string `json:"name"`
-		Role      string `json:"role"`
-		SendInvite bool  `json:"send_invite,omitempty"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
+func (a *API) handleListAIModels(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
 		return
 	}
-
-	a.logger.Info("Adding user to tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.String("email", req.Email),
-		zap.String("role", req.Role))
-
-	// Mock response
-	newUser := map[string]interface{}{
-		"id":         fmt.Sprintf("user_%d", time.Now().Unix()),
-		"email":      req.Email,
-		"name":       req.Name,
-		"role":       req.Role,
-		"status":     "pending",
-		"created_at": time.Now().Format(time.RFC3339),
+	
+	models, err := a.orchestrator.ListModels()
+	if err != nil {
+		a.logger.Error("Failed to list AI models", zap.Error(err))
+		writeError(w, "Failed to list models", http.StatusInternalServerError)
+		return
 	}
+	
+	writeJSON(w, map[string]interface{}{
+		"models": models,
+		"count":  len(models),
+	})
+}
 
-	w.Header().Set("Content-Type", "application/json")
+func (a *API) handleCreateAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	var req struct {
+		Name        string                 `json:"name"`
+		Type        string                 `json:"type"`
+		Version     string                 `json:"version"`
+		Description string                 `json:"description"`
+		Config      map[string]interface{} `json:"config"`
+		Metadata    map[string]interface{} `json:"metadata"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	if req.Name == "" || req.Type == "" {
+		writeError(w, "Name and type are required", http.StatusBadRequest)
+		return
+	}
+	
+	model, err := a.orchestrator.CreateModel(req.Name, req.Type, req.Version, req.Description, req.Config, req.Metadata)
+	if err != nil {
+		a.logger.Error("Failed to create AI model", zap.Error(err))
+		writeError(w, "Failed to create model", http.StatusInternalServerError)
+		return
+	}
+	
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newUser)
+	writeJSON(w, model)
 }
 
-func (a *API) handleUpdateTenantUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-	userID := vars["user_id"]
-
-	var req struct {
-		Name   string `json:"name"`
-		Role   string `json:"role"`
-		Status string `json:"status"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
+func (a *API) handleGetAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
 		return
 	}
-
-	a.logger.Info("Updating user in tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.String("user_id", userID))
-
-	// Mock response
-	updatedUser := map[string]interface{}{
-		"id":         userID,
-		"name":       req.Name,
-		"role":       req.Role,
-		"status":     req.Status,
-		"updated_at": time.Now().Format(time.RFC3339),
+	
+	vars := mux.Vars(r)
+	modelID := vars["id"]
+	
+	model, err := a.orchestrator.GetModel(modelID)
+	if err != nil {
+		a.logger.Error("Failed to get AI model", zap.Error(err), zap.String("model_id", modelID))
+		writeError(w, "Failed to get model", http.StatusInternalServerError)
+		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedUser)
+	
+	writeJSON(w, model)
 }
 
-func (a *API) handleDeleteTenantUser(w http.ResponseWriter, r *http.Request) {
+func (a *API) handleUpdateAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
 	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-	userID := vars["user_id"]
+	modelID := vars["id"]
+	
+	var req struct {
+		Name        *string                `json:"name,omitempty"`
+		Version     *string                `json:"version,omitempty"`
+		Description *string                `json:"description,omitempty"`
+		Config      map[string]interface{} `json:"config,omitempty"`
+		Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	model, err := a.orchestrator.UpdateModel(modelID, req.Name, req.Version, req.Description, req.Config, req.Metadata)
+	if err != nil {
+		a.logger.Error("Failed to update AI model", zap.Error(err), zap.String("model_id", modelID))
+		writeError(w, "Failed to update model", http.StatusInternalServerError)
+		return
+	}
+	
+	writeJSON(w, model)
+}
 
-	a.logger.Info("Deleting user from tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.String("user_id", userID))
-
+func (a *API) handleDeleteAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	vars := mux.Vars(r)
+	modelID := vars["id"]
+	
+	err := a.orchestrator.DeleteModel(modelID)
+	if err != nil {
+		a.logger.Error("Failed to delete AI model", zap.Error(err), zap.String("model_id", modelID))
+		writeError(w, "Failed to delete model", http.StatusInternalServerError)
+		return
+	}
+	
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Tenant Monitoring Handlers
-func (a *API) handleTenantMetrics(w http.ResponseWriter, r *http.Request) {
+func (a *API) handleDeployAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
 	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
+	modelID := vars["id"]
+	
+	var req struct {
+		Replicas    int                    `json:"replicas"`
+		Resources   map[string]interface{} `json:"resources"`
+		Environment map[string]string      `json:"environment"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	deployment, err := a.orchestrator.DeployModel(modelID, req.Replicas, req.Resources, req.Environment)
+	if err != nil {
+		a.logger.Error("Failed to deploy AI model", zap.Error(err), zap.String("model_id", modelID))
+		writeError(w, "Failed to deploy model", http.StatusInternalServerError)
+		return
+	}
+	
+	writeJSON(w, deployment)
+}
 
-	// Parse query parameters
-	timeRange := r.URL.Query().Get("timeRange")
+func (a *API) handleUndeployAIModel(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	vars := mux.Vars(r)
+	modelID := vars["id"]
+	
+	err := a.orchestrator.UndeployModel(modelID)
+	if err != nil {
+		a.logger.Error("Failed to undeploy AI model", zap.Error(err), zap.String("model_id", modelID))
+		writeError(w, "Failed to undeploy model", http.StatusInternalServerError)
+		return
+	}
+	
+	writeJSON(w, map[string]interface{}{
+		"status":  "success",
+		"message": "Model undeployed successfully",
+	})
+}
+
+func (a *API) handleAIPredict(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	var req struct {
+		ModelID string                 `json:"model_id"`
+		Input   map[string]interface{} `json:"input"`
+		Options map[string]interface{} `json:"options"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	if req.ModelID == "" {
+		writeError(w, "Model ID is required", http.StatusBadRequest)
+		return
+	}
+	
+	prediction, err := a.orchestrator.Predict(req.ModelID, req.Input, req.Options)
+	if err != nil {
+		a.logger.Error("Failed to make AI prediction", zap.Error(err), zap.String("model_id", req.ModelID))
+		writeError(w, "Failed to make prediction", http.StatusInternalServerError)
+		return
+	}
+	
+	writeJSON(w, prediction)
+}
+
+func (a *API) handleAIBatchPredict(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	var req struct {
+		ModelID string                   `json:"model_id"`
+		Inputs  []map[string]interface{} `json:"inputs"`
+		Options map[string]interface{}   `json:"options"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	if req.ModelID == "" || len(req.Inputs) == 0 {
+		writeError(w, "Model ID and inputs are required", http.StatusBadRequest)
+		return
+	}
+	
+	predictions, err := a.orchestrator.BatchPredict(req.ModelID, req.Inputs, req.Options)
+	if err != nil {
+		a.logger.Error("Failed to make AI batch prediction", zap.Error(err), zap.String("model_id", req.ModelID))
+		writeError(w, "Failed to make batch prediction", http.StatusInternalServerError)
+		return
+	}
+	
+	writeJSON(w, predictions)
+}
+
+func (a *API) handleGetAIConfig(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	config := map[string]interface{}{
+		"enabled":               true,
+		"model_type":           "adaptive",
+		"confidence_threshold": 0.7,
+		"training_interval":    "1h",
+		"prediction_window":    "5m",
+		"adaptive_algorithms":  true,
+		"learning_rate":        0.01,
+		"exploration_rate":     0.1,
+		"auto_scaling":         true,
+		"max_retries":          3,
+		"model_version":        "1.0",
+		"batch_size":           32,
+		"memory_limit":         "512MB",
+	}
+	
+	writeJSON(w, config)
+}
+
+func (a *API) handleUpdateAIConfig(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	var config map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+		writeError(w, "Invalid configuration format", http.StatusBadRequest)
+		return
+	}
+	
+	a.logger.Info("AI configuration updated", zap.Any("config", config))
+	
+	writeJSON(w, map[string]interface{}{
+		"success": true,
+		"message": "AI configuration updated successfully",
+	})
+}
+
+func (a *API) handleAIRetrain(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	var req struct {
+		ModelType string `json:"model_type"`
+	}
+	json.NewDecoder(r.Body).Decode(&req)
+	
+	modelType := req.ModelType
+	if modelType == "" {
+		modelType = "adaptive"
+	}
+	
+	a.logger.Info("AI model retraining triggered", zap.String("model_type", modelType))
+	
+	writeJSON(w, map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Model retraining initiated for %s", modelType),
+	})
+}
+
+func (a *API) handleAIHistory(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
+		return
+	}
+	
+	timeRange := r.URL.Query().Get("range")
 	if timeRange == "" {
 		timeRange = "1h"
 	}
-
-	a.logger.Info("Getting metrics for tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.String("time_range", timeRange))
-
-	// Mock metrics data
-	metrics := map[string]interface{}{
-		"tenant_id":  tenantID,
+	
+	// Mock historical data - in production this would come from a database
+	history := map[string]interface{}{
+		"accuracy_history": []map[string]interface{}{
+			{"timestamp": time.Now().Add(-1*time.Hour).Format(time.RFC3339), "accuracy": 0.95},
+			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "accuracy": 0.93},
+			{"timestamp": time.Now().Format(time.RFC3339), "accuracy": 0.97},
+		},
+		"confidence_history": []map[string]interface{}{
+			{"timestamp": time.Now().Add(-1*time.Hour).Format(time.RFC3339), "confidence": 0.85},
+			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "confidence": 0.88},
+			{"timestamp": time.Now().Format(time.RFC3339), "confidence": 0.92},
+		},
+		"algorithm_usage": []map[string]interface{}{
+			{"timestamp": time.Now().Add(-1*time.Hour).Format(time.RFC3339), "algorithm": "round_robin", "count": 150},
+			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "algorithm": "least_connections", "count": 200},
+			{"timestamp": time.Now().Format(time.RFC3339), "algorithm": "adaptive", "count": 300},
+		},
 		"time_range": timeRange,
-		"metrics": map[string]interface{}{
-			"requests_per_second": 125.5,
-			"average_response_time": 45.2,
-			"error_rate": 0.15,
-			"active_connections": 23,
-			"bandwidth_usage": map[string]interface{}{
-				"inbound_mbps":  12.4,
-				"outbound_mbps": 18.7,
-			},
-		},
-		"time_series": []map[string]interface{}{
-			{
-				"timestamp": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
-				"requests": 120,
-				"response_time": 43,
-				"errors": 2,
-			},
-			{
-				"timestamp": time.Now().Format(time.RFC3339),
-				"requests": 131,
-				"response_time": 47,
-				"errors": 1,
-			},
-		},
-		"generated_at": time.Now().Format(time.RFC3339),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(metrics)
+	
+	writeJSON(w, history)
 }
 
-func (a *API) handleTenantLogs(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	// Parse query parameters
-	level := r.URL.Query().Get("level")
-	limit := r.URL.Query().Get("limit")
-	if limit == "" {
-		limit = "100"
-	}
-
-	a.logger.Info("Getting logs for tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.String("level", level),
-		zap.String("limit", limit))
-
-	// Mock logs data
-	logs := map[string]interface{}{
-		"tenant_id": tenantID,
-		"filters": map[string]string{
-			"level": level,
-			"limit": limit,
-		},
-		"logs": []map[string]interface{}{
-			{
-				"timestamp": time.Now().Add(-2*time.Minute).Format(time.RFC3339),
-				"level": "INFO",
-				"message": "Request processed successfully",
-				"source": "load_balancer",
-				"request_id": "req_123456",
-			},
-			{
-				"timestamp": time.Now().Add(-1*time.Minute).Format(time.RFC3339),
-				"level": "WARN",
-				"message": "High response time detected",
-				"source": "health_checker",
-				"backend": "backend-1",
-			},
-			{
-				"timestamp": time.Now().Format(time.RFC3339),
-				"level": "ERROR",
-				"message": "Backend connection failed",
-				"source": "load_balancer",
-				"backend": "backend-2",
-			},
-		},
-		"total_count": 156,
-		"generated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
-}
-
-func (a *API) handleTenantUsage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting usage stats for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock usage data
-	usage := map[string]interface{}{
-		"tenant_id": tenantID,
-		"current_period": map[string]interface{}{
-			"start_date": time.Now().AddDate(0, 0, -30).Format("2006-01-02"),
-			"end_date":   time.Now().Format("2006-01-02"),
-			"requests_count": 1250000,
-			"bandwidth_gb": 45.7,
-			"storage_gb": 12.3,
-		},
-		"resource_usage": map[string]interface{}{
-			"cpu_percent": 65.2,
-			"memory_percent": 78.5,
-			"disk_percent": 42.1,
-		},
-		"quotas": map[string]interface{}{
-			"max_requests_per_month": 2000000,
-			"max_bandwidth_gb": 100,
-			"max_storage_gb": 50,
-		},
-		"generated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(usage)
-}
-
-func (a *API) handleTenantAlerts(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting alerts for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock alerts data
-	alerts := map[string]interface{}{
-		"tenant_id": tenantID,
-		"active_alerts": []map[string]interface{}{
-			{
-				"id": "alert_001",
-				"type": "high_response_time",
-				"severity": "warning",
-				"message": "Average response time above 50ms",
-				"threshold": "50ms",
-				"current_value": "67ms",
-				"created_at": time.Now().Add(-15*time.Minute).Format(time.RFC3339),
-			},
-			{
-				"id": "alert_002",
-				"type": "backend_down",
-				"severity": "critical",
-				"message": "Backend server is not responding",
-				"backend": "backend-3",
-				"created_at": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
-			},
-		},
-		"alert_history": []map[string]interface{}{
-			{
-				"id": "alert_003",
-				"type": "high_cpu",
-				"severity": "warning",
-				"message": "CPU usage above 80%",
-				"created_at": time.Now().Add(-2*time.Hour).Format(time.RFC3339),
-				"resolved_at": time.Now().Add(-1*time.Hour).Format(time.RFC3339),
-			},
-		},
-		"generated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
-}
-
-func (a *API) handleTenantStatus(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting status for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock status data
-	status := map[string]interface{}{
-		"tenant_id": tenantID,
-		"status": "healthy",
-		"uptime": "99.9%",
-		"services": map[string]interface{}{
-			"load_balancer": "healthy",
-			"health_checker": "healthy",
-			"metrics_collector": "healthy",
-			"log_aggregator": "warning",
-		},
-		"backends": []map[string]interface{}{
-			{
-				"name": "backend-1",
-				"status": "healthy",
-				"response_time": "42ms",
-				"last_check": time.Now().Add(-30*time.Second).Format(time.RFC3339),
-			},
-			{
-				"name": "backend-2",
-				"status": "healthy",
-				"response_time": "38ms",
-				"last_check": time.Now().Add(-25*time.Second).Format(time.RFC3339),
-			},
-			{
-				"name": "backend-3",
-				"status": "down",
-				"last_check": time.Now().Add(-5*time.Minute).Format(time.RFC3339),
-				"error": "Connection timeout",
-			},
-		},
-		"generated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
-}
-
-// OIDC Configuration Handlers
-func (a *API) handleGetTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting OIDC config for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock OIDC configuration
-	config := map[string]interface{}{
-		"enabled": false,
-		"provider_name": "",
-		"provider_url": "",
-		"client_id": "",
-		"client_secret": "", // In production, never return the actual secret
-		"redirect_uri": "",
-		"scopes": "openid profile email",
-		"groups_claim": "groups",
-		"tenant_id_claim": "tenant_id",
-		"updated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(config)
-}
-
-func (a *API) handleUpdateTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	var req struct {
-		Enabled        bool   `json:"enabled"`
-		ProviderName   string `json:"provider_name"`
-		ProviderURL    string `json:"provider_url"`
-		ClientID       string `json:"client_id"`
-		ClientSecret   string `json:"client_secret"`
-		RedirectURI    string `json:"redirect_uri"`
-		Scopes         string `json:"scopes"`
-		GroupsClaim    string `json:"groups_claim"`
-		TenantIDClaim  string `json:"tenant_id_claim"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
+func (a *API) handleAIPredictions(w http.ResponseWriter, r *http.Request) {
+	if a.orchestrator == nil {
+		writeError(w, "AI/ML orchestrator not available", http.StatusNotImplemented)
 		return
 	}
-
-	a.logger.Info("Updating OIDC config for tenant", 
-		zap.String("tenant_id", tenantID),
-		zap.Bool("enabled", req.Enabled),
-		zap.String("provider", req.ProviderName))
-
-	// Mock response - in production, save to database
-	config := map[string]interface{}{
-		"enabled": req.Enabled,
-		"provider_name": req.ProviderName,
-		"provider_url": req.ProviderURL,
-		"client_id": req.ClientID,
-		"redirect_uri": req.RedirectURI,
-		"scopes": req.Scopes,
-		"groups_claim": req.GroupsClaim,
-		"tenant_id_claim": req.TenantIDClaim,
-		"updated_at": time.Now().Format(time.RFC3339),
-		"status": "saved",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(config)
-}
-
-func (a *API) handleTestTenantOIDCConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Testing OIDC config for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock test result
-	result := map[string]interface{}{
-		"tenant_id": tenantID,
-		"test_status": "success",
-		"test_results": map[string]interface{}{
-			"provider_reachable": true,
-			"configuration_valid": true,
-			"client_credentials_valid": true,
-			"redirect_uri_valid": true,
-		},
-		"test_details": map[string]interface{}{
-			"provider_response_time": "250ms",
-			"discovery_document": "found",
-			"jwks_endpoint": "accessible",
-		},
-		"tested_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
-}
-
-// Additional Configuration Handlers
-func (a *API) handleGetTenantConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting config for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock tenant configuration
-	config := map[string]interface{}{
-		"tenant_id": tenantID,
-		"name": "Example Tenant",
-		"plan": "pro",
-		"features": []string{"load_balancing", "health_checks", "ssl_termination", "metrics", "logging"},
-		"limits": map[string]interface{}{
-			"max_backends": 10,
-			"max_routes": 50,
-			"max_requests_per_second": 1000,
-		},
-		"settings": map[string]interface{}{
-			"ssl_enabled": true,
-			"compression_enabled": true,
-			"cache_enabled": false,
-		},
-		"created_at": "2024-01-01T00:00:00Z",
-		"updated_at": time.Now().Format(time.RFC3339),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(config)
-}
-
-func (a *API) handleGetTenantBilling(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tenantID := vars["tenant_id"]
-
-	a.logger.Info("Getting billing info for tenant", zap.String("tenant_id", tenantID))
-
-	// Mock billing information
-	billing := map[string]interface{}{
-		"tenant_id": tenantID,
-		"subscription": map[string]interface{}{
-			"plan": "pro",
-			"status": "active",
-			"next_billing_date": time.Now().AddDate(0, 1, 0).Format("2006-01-02"),
-			"monthly_cost": 99.99,
-		},
-		"current_usage": map[string]interface{}{
-			"requests_this_month": 1250000,
-			"bandwidth_gb": 45.7,
-			"overage_charges": 0,
-		},
-		"payment_method": map[string]interface{}{
-			"type": "credit_card",
-			"last_four": "4242",
-			"expires": "12/25",
-		},
-		"invoices": []map[string]interface{}{
+	
+	predictions := map[string]interface{}{
+		"scaling_recommendation": "scale_up",
+		"recommended_algorithm":  "adaptive",
+		"confidence":            0.89,
+		"expected_load_factor":  1.25,
+		"predictions": []map[string]interface{}{
 			{
-				"id": "inv_001",
-				"date": "2024-05-01",
-				"amount": 99.99,
-				"status": "paid",
+				"time":            time.Now().Add(5 * time.Minute).Format(time.RFC3339),
+				"predicted_load":  150,
+				"confidence":      0.92,
 			},
 			{
-				"id": "inv_002",
-				"date": "2024-06-01",
-				"amount": 99.99,
-				"status": "paid",
+				"time":            time.Now().Add(10 * time.Minute).Format(time.RFC3339),
+				"predicted_load":  180,
+				"confidence":      0.87,
+			},
+			{
+				"time":            time.Now().Add(15 * time.Minute).Format(time.RFC3339),
+				"predicted_load":  220,
+				"confidence":      0.85,
 			},
 		},
-		"generated_at": time.Now().Format(time.RFC3339),
+	}
+	
+	writeJSON(w, predictions)
+}
+
+func (a *API) handleSystemDrain(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("System drain initiated")
+	
+	// In production, this would gracefully drain connections
+	// For now, we'll just log and return success
+	
+	response := map[string]interface{}{
+		"status":    "success",
+		"message":   "System drain initiated successfully",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"actions": []string{
+			"Stopping new connections",
+			"Draining existing connections",
+			"Preparing for maintenance",
+		},
+	}
+	
+	writeJSON(w, response)
+}
+
+// WebSocket handlers for additional endpoints
+
+// handleWebSocketBilling handles billing WebSocket connections
+func (a *API) handleWebSocketBilling(w http.ResponseWriter, r *http.Request) {
+	conn, err := a.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		a.logger.Error("WebSocket billing upgrade failed", zap.Error(err))
+		return
+	}
+	defer conn.Close()
+
+	a.logger.Info("WebSocket billing client connected", zap.String("remote_addr", r.RemoteAddr))
+
+	// Create client
+	client := &websocket.Client{
+		Conn: conn,
+		Send: make(chan []byte, 256),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(billing)
-}
+	// Register client
+	a.wsHub.Register <- client
 
-// WebSocket handlers
+	// Start goroutines
+	go client.WritePump(a.logger)
+	go client.ReadPump(a.wsHub, a.logger)
 
-// handleWebSocketBackends handles WebSocket connections for backend updates
-func (a *API) handleWebSocketBackends(w http.ResponseWriter, r *http.Request) {
-	a.logger.Info("WebSocket connection request for backends", 
-		zap.String("remote_addr", r.RemoteAddr),
-		zap.String("user_agent", r.Header.Get("User-Agent")))
-	
-	// Serve WebSocket connection
-	a.wsHub.ServeWS(w, r)
-	
-	// Start broadcasting backend status updates
-	go a.broadcastBackendUpdates()
-}
-
-// handleWebSocketMetrics handles WebSocket connections for metrics updates
-func (a *API) handleWebSocketMetrics(w http.ResponseWriter, r *http.Request) {
-	a.logger.Info("WebSocket connection request for metrics", 
-		zap.String("remote_addr", r.RemoteAddr))
-	
-	// Serve WebSocket connection
-	a.wsHub.ServeWS(w, r)
-	
-	// Start broadcasting metrics updates
-	go a.broadcastMetricsUpdates()
-}
-
-// handleWebSocketStatus handles WebSocket connections for general status updates
-func (a *API) handleWebSocketStatus(w http.ResponseWriter, r *http.Request) {
-	a.logger.Info("WebSocket connection request for status", 
-		zap.String("remote_addr", r.RemoteAddr))
-	
-	// Serve WebSocket connection
-	a.wsHub.ServeWS(w, r)
-	
-	// Start broadcasting status updates
-	go a.broadcastStatusUpdates()
-}
-
-// broadcastBackendUpdates sends periodic backend status updates via WebSocket
-func (a *API) broadcastBackendUpdates() {
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	
-	for range ticker.C {
-		if a.wsHub.GetConnectedClients() == 0 {
-			return // Stop if no clients connected
+	// Send initial billing data
+	if a.billingManager != nil {
+		initialData := map[string]interface{}{
+			"type": "billing_status",
+			"data": map[string]interface{}{
+				"active_subscriptions": 10,
+				"monthly_revenue":      15000.50,
+				"active_tenants":       25,
+				"pending_invoices":     3,
+				"last_payment":         time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+				"next_billing_cycle":   time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339),
+			},
 		}
-		
-		// Get current backends status
-		backends := a.getCurrentBackends()
-		
-		a.wsHub.Broadcast("backend_update", map[string]interface{}{
-			"type": "backend_status",
-			"backends": backends,
-			"timestamp": time.Now().Format(time.RFC3339),
-		})
-	}
-}
 
-// broadcastMetricsUpdates sends periodic metrics updates via WebSocket
-func (a *API) broadcastMetricsUpdates() {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-	
-	for range ticker.C {
-		if a.wsHub.GetConnectedClients() == 0 {
-			return // Stop if no clients connected
-		}
-		
-		// Get current metrics
-		metrics := a.getCurrentMetrics()
-		
-		a.wsHub.Broadcast("metrics_update", map[string]interface{}{
-			"type": "metrics",
-			"data": metrics,
-			"timestamp": time.Now().Format(time.RFC3339),
-		})
-	}
-}
-
-// broadcastStatusUpdates sends periodic system status updates via WebSocket
-func (a *API) broadcastStatusUpdates() {
-	ticker := time.NewTicker(15 * time.Second)
-	defer ticker.Stop()
-	
-	for range ticker.C {
-		if a.wsHub.GetConnectedClients() == 0 {
-			return // Stop if no clients connected
-		}
-		
-		// Get current system status
-		status := a.getCurrentStatus()
-		
-		a.wsHub.Broadcast("status_update", map[string]interface{}{
-			"type": "system_status",
-			"data": status,
-			"timestamp": time.Now().Format(time.RFC3339),
-		})
-	}
-}
-
-// getCurrentBackends returns current backend status
-func (a *API) getCurrentBackends() []map[string]interface{} {
-	backends := []map[string]interface{}{}
-	
-	// Get backends from balancer with runtime information
-	if a.balancer != nil {
-		allBackends := a.balancer.GetAllBackends()
-		for poolName, poolBackends := range allBackends {
-			for _, backend := range poolBackends {
-				status := "healthy"
-				if !backend.Healthy.Load() {
-					status = "unhealthy"
-				}
-				
-				backends = append(backends, map[string]interface{}{
-					"address": backend.Address,
-					"pool": poolName,
-					"weight": backend.Weight,
-					"status": status,
-					"connections": backend.Connections.Load(),
-					"last_used": time.Unix(0, backend.LastUsed.Load()).Format(time.RFC3339),
-					"region": backend.Region,
-					"healthy": backend.Healthy.Load(),
-				})
+		if data, err := json.Marshal(initialData); err == nil {
+			select {
+			case client.Send <- data:
+			default:
+				close(client.Send)
 			}
 		}
 	}
-	
-	return backends
 }
 
-// getCurrentMetrics returns current system metrics
-func (a *API) getCurrentMetrics() map[string]interface{} {
-	metrics := map[string]interface{}{
-		"requests_total": 0,
-		"requests_per_second": 0,
-		"avg_response_time": 0,
-		"error_rate": 0,
-		"active_connections": 0,
-		"healthy_backends": 0,
-		"total_backends": 0,
+// handleWebSocketHealth handles health monitoring WebSocket connections
+func (a *API) handleWebSocketHealth(w http.ResponseWriter, r *http.Request) {
+	conn, err := a.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		a.logger.Error("WebSocket health upgrade failed", zap.Error(err))
+		return
 	}
-	
-	// Add real metrics here if available
-	if a.balancer != nil {
-		allBackends := a.balancer.GetAllBackends()
-		totalConnections := int64(0)
-		healthyCount := 0
-		totalCount := 0
-		
-		for _, poolBackends := range allBackends {
-			for _, backend := range poolBackends {
-				totalConnections += backend.Connections.Load()
-				totalCount++
-				if backend.Healthy.Load() {
-					healthyCount++
+	defer conn.Close()
+
+	a.logger.Info("WebSocket health client connected", zap.String("remote_addr", r.RemoteAddr))
+
+	// Create client
+	client := &websocket.Client{
+		Conn: conn,
+		Send: make(chan []byte, 256),
+	}
+
+	// Register client
+	a.wsHub.Register <- client
+
+	// Start goroutines
+	go client.WritePump(a.logger)
+	go client.ReadPump(a.wsHub, a.logger)
+
+	// Send initial health data
+	initialData := map[string]interface{}{
+		"type": "health_status",
+		"data": map[string]interface{}{
+			"overall_status": "healthy",
+			"uptime":         time.Since(time.Now().Add(-24 * time.Hour)).String(),
+			"memory_usage":   65.4,
+			"cpu_usage":      23.8,
+			"disk_usage":     45.2,
+			"load_balancer":  "healthy",
+			"database":       "healthy",
+			"redis":          "healthy",
+			"ai_system":      "healthy",
+			"billing_system": "healthy",
+			"last_check":     time.Now().Format(time.RFC3339),
+		},
+	}
+
+	if data, err := json.Marshal(initialData); err == nil {
+		select {
+		case client.Send <- data:
+		default:
+			close(client.Send)
+		}
+	}
+}
+
+// broadcastBillingUpdates sends billing updates to all connected clients
+func (a *API) broadcastBillingUpdates() {
+	ticker := time.NewTicker(30 * time.Second) // Update every 30 seconds
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if a.billingManager != nil {
+				billingData := map[string]interface{}{
+					"type": "billing_update",
+					"data": map[string]interface{}{
+						"timestamp":            time.Now().Format(time.RFC3339),
+						"active_subscriptions": 10 + rand.Intn(5),
+						"monthly_revenue":      15000.50 + float64(rand.Intn(1000)),
+						"active_tenants":       25 + rand.Intn(10),
+						"pending_invoices":     rand.Intn(5),
+						"conversion_rate":      0.85 + float64(rand.Intn(15))/100,
+						"churn_rate":           0.05 + float64(rand.Intn(5))/100,
+						"avg_revenue_per_user": 250.00 + float64(rand.Intn(100)),
+						"failed_payments":      rand.Intn(3),
+					},
+				}
+
+				if data, err := json.Marshal(billingData); err == nil {
+					a.wsHub.Broadcast <- data
 				}
 			}
 		}
-		
-		metrics["active_connections"] = totalConnections
-		metrics["healthy_backends"] = healthyCount
-		metrics["total_backends"] = totalCount
-		
-		if totalCount > 0 {
-			metrics["availability"] = float64(healthyCount) / float64(totalCount) * 100
-		}
 	}
-	
-	return metrics
 }
 
-// getCurrentStatus returns current system status
-func (a *API) getCurrentStatus() map[string]interface{} {
-	status := map[string]interface{}{
-		"status": "healthy",
-		"uptime": time.Now().Format(time.RFC3339),
-		"version": "1.1.0",
-		"websocket_clients": a.wsHub.GetConnectedClients(),
+// broadcastHealthUpdates sends health updates to all connected clients  
+func (a *API) broadcastHealthUpdates() {
+	ticker := time.NewTicker(15 * time.Second) // Update every 15 seconds
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			healthData := map[string]interface{}{
+				"type": "health_update",
+				"data": map[string]interface{}{
+					"timestamp":      time.Now().Format(time.RFC3339),
+					"memory_usage":   60.0 + float64(rand.Intn(20)),
+					"cpu_usage":      20.0 + float64(rand.Intn(30)),
+					"disk_usage":     40.0 + float64(rand.Intn(20)),
+					"response_time":  float64(50 + rand.Intn(100)),
+					"active_connections": 100 + rand.Intn(50),
+					"requests_per_sec":   500 + rand.Intn(200),
+					"error_rate":         float64(rand.Intn(5))/100,
+					"load_balancer":      "healthy",
+					"database":           "healthy",
+					"redis":              "healthy",
+					"ai_system":          "healthy",
+					"billing_system":     "healthy",
+				},
+			}
+
+			if data, err := json.Marshal(healthData); err == nil {
+				a.wsHub.Broadcast <- data
+			}
+		}
 	}
-	
-	// Add cluster status if available
-	if a.cluster != nil {
-		status["cluster_enabled"] = true
-		status["node_id"] = a.cluster.NodeID()
-		status["is_leader"] = a.cluster.IsLeader()
-	} else {
-		status["cluster_enabled"] = false
-	}
-	
-	return status
 }

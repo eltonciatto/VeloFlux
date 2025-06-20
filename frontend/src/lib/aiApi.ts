@@ -110,7 +110,7 @@ class AIApiClient {
       confidence: number;
     }>;
   }> {
-    const response = await apiFetch('/ai/predictions');
+    const response = await apiFetch('/api/ai/predict');
     return response;
   }
 
@@ -118,7 +118,7 @@ class AIApiClient {
    * Get ML model status and performance
    */
   async getModelStatus(): Promise<ModelStatus> {
-    const response = await apiFetch('/ai/models');
+    const response = await apiFetch('/api/ai/models');
     return response;
   }
 
@@ -126,7 +126,7 @@ class AIApiClient {
    * Get AI configuration
    */
   async getAIConfig(): Promise<AIConfig> {
-    const response = await apiFetch('/ai/config');
+    const response = await apiFetch('/api/ai/config');
     return response;
   }
 
@@ -134,7 +134,7 @@ class AIApiClient {
    * Update AI configuration
    */
   async updateAIConfig(config: Partial<AIConfig>): Promise<{ success: boolean; message: string }> {
-    const response = await apiFetch('/ai/config', {
+    const response = await apiFetch('/api/ai/config', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

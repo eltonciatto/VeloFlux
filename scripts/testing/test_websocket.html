@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔌 Teste WebSocket VeloFlux</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #374151;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-connect {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-disconnect {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-control {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-connecting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        
+        .log-timestamp {
+            color: #9ca3af;
+        }
+        
+        .log-info {
+            color: #60a5fa;
+        }
+        
+        .log-success {
+            color: #34d399;
+        }
+        
+        .log-error {
+            color: #f87171;
+        }
+        
+        .log-data {
+            color: #fbbf24;
+        }
+        
+        .clear-btn {
+            background: #6b7280;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Teste WebSocket VeloFlux</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h3>📊 Backends WebSocket</h3>
+                <div>Status: <span id="backends-status" class="status status-disconnected">Desconectado</span></div>
+                <div>
+                    <button id="backends-connect" class="btn-connect">Conectar</button>
+                    <button id="backends-disconnect" class="btn-disconnect" disabled>Desconectar</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>📈 Metrics WebSocket</h3>
+                <div>Status: <span id="metrics-status" class="status status-disconnected">Desconectado</span></div>
+                <div>
+                    <button id="metrics-connect" class="btn-connect">Conectar</button>
+                    <button id="metrics-disconnect" class="btn-disconnect" disabled>Desconectar</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🔧 System Status WebSocket</h3>
+                <div>Status: <span id="status-status" class="status status-disconnected">Desconectado</span></div>
+                <div>
+                    <button id="status-connect" class="btn-connect">Conectar</button>
+                    <button id="status-disconnect" class="btn-disconnect" disabled>Desconectar</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎛️ Controles</h3>
+                <div>
+                    <button class="btn-control" onclick="pauseUpdates('all')">⏸️ Pausar Todos</button>
+                    <button class="btn-control" onclick="resumeUpdates('all')">▶️ Retomar Todos</button>
+                    <button class="btn-control" onclick="forceUpdate('all')">🔄 Forçar Update</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-messages">0</div>
+                <div class="stat-label">Total Mensagens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="backend-messages">0</div>
+                <div class="stat-label">Backend Updates</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="metrics-messages">0</div>
+                <div class="stat-label">Metrics Updates</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="status-messages">0</div>
+                <div class="stat-label">Status Updates</div>
+            </div>
+        </div>
+        
+        <button class="clear-btn" onclick="clearLog()">🗑️ Limpar Log</button>
+        <div id="output" class="output">
+            <div class="log-entry log-info">
+                <span class="log-timestamp">[Iniciado]</span> Teste WebSocket VeloFlux carregado. Configure o host se necessário e clique em "Conectar" para começar.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração
+        const VELOFLUX_HOST = 'localhost:8080';
+        const WS_BASE_URL = `ws://${VELOFLUX_HOST}/api/ws`;
+        const HTTP_BASE_URL = `http://${VELOFLUX_HOST}/api/ws`;
+        
+        // Estado das conexões
+        const connections = {
+            backends: null,
+            metrics: null,
+            status: null
+        };
+        
+        // Contadores de mensagens
+        let messageCounters = {
+            total: 0,
+            backends: 0,
+            metrics: 0,
+            status: 0
+        };
+        
+        // Função para logging
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Função para atualizar status
+        function updateStatus(type, status) {
+            const statusElement = document.getElementById(`${type}-status`);
+            const connectBtn = document.getElementById(`${type}-connect`);
+            const disconnectBtn = document.getElementById(`${type}-disconnect`);
+            
+            statusElement.className = `status status-${status}`;
+            
+            switch(status) {
+                case 'connected':
+                    statusElement.textContent = 'Conectado';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    break;
+                case 'connecting':
+                    statusElement.textContent = 'Conectando...';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = true;
+                    break;
+                case 'disconnected':
+                    statusElement.textContent = 'Desconectado';
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    break;
+            }
+        }
+        
+        // Função para atualizar contadores
+        function updateCounters() {
+            document.getElementById('total-messages').textContent = messageCounters.total;
+            document.getElementById('backend-messages').textContent = messageCounters.backends;
+            document.getElementById('metrics-messages').textContent = messageCounters.metrics;
+            document.getElementById('status-messages').textContent = messageCounters.status;
+        }
+        
+        // Função para conectar WebSocket
+        function connectWebSocket(type) {
+            if (connections[type]) {
+                connections[type].close();
+            }
+            
+            updateStatus(type, 'connecting');
+            log(`Conectando ao WebSocket ${type}...`, 'info');
+            
+            const ws = new WebSocket(`${WS_BASE_URL}/${type}`);
+            
+            ws.onopen = function() {
+                log(`✅ WebSocket ${type} conectado com sucesso`, 'success');
+                updateStatus(type, 'connected');
+                connections[type] = ws;
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    messageCounters.total++;
+                    messageCounters[type]++;
+                    updateCounters();
+                    
+                    log(`📨 ${type}: ${data.type || 'unknown'} (${Object.keys(data).length} campos)`, 'data');
+                    
+                    // Log dados específicos para debugging
+                    if (type === 'backends' && data.backends) {
+                        log(`   📊 ${data.backends.length} backends encontrados`, 'info');
+                    } else if (type === 'metrics' && data.data) {
+                        const metrics = data.data;
+                        log(`   📈 ${metrics.healthy_backends || 0}/${metrics.total_backends || 0} backends saudáveis`, 'info');
+                    } else if (type === 'status' && data.data) {
+                        log(`   🔧 Status: ${data.data.status || 'unknown'}`, 'info');
+                    }
+                } catch (error) {
+                    log(`⚠️ Erro ao parsear mensagem de ${type}: ${error.message}`, 'error');
+                }
+            };
+            
+            ws.onerror = function(error) {
+                log(`❌ Erro no WebSocket ${type}: ${error.message || 'Erro desconhecido'}`, 'error');
+                updateStatus(type, 'disconnected');
+            };
+            
+            ws.onclose = function() {
+                log(`🔒 WebSocket ${type} desconectado`, 'info');
+                updateStatus(type, 'disconnected');
+                connections[type] = null;
+            };
+        }
+        
+        // Função para desconectar WebSocket
+        function disconnectWebSocket(type) {
+            if (connections[type]) {
+                connections[type].close();
+                connections[type] = null;
+                log(`Desconectando WebSocket ${type}`, 'info');
+            }
+        }
+        
+        // Funções de controle
+        async function pauseUpdates(type) {
+            try {
+                const response = await fetch(`${HTTP_BASE_URL}/control`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'pause', type: type })
+                });
+                
+                if (response.ok) {
+                    log(`⏸️ Atualizações ${type} pausadas`, 'success');
+                } else {
+                    log(`❌ Erro ao pausar atualizações ${type}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro de rede ao pausar: ${error.message}`, 'error');
+            }
+        }
+        
+        async function resumeUpdates(type) {
+            try {
+                const response = await fetch(`${HTTP_BASE_URL}/control`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resume', type: type })
+                });
+                
+                if (response.ok) {
+                    log(`▶️ Atualizações ${type} retomadas`, 'success');
+                } else {
+                    log(`❌ Erro ao retomar atualizações ${type}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro de rede ao retomar: ${error.message}`, 'error');
+            }
+        }
+        
+        async function forceUpdate(type) {
+            try {
+                const response = await fetch(`${HTTP_BASE_URL}/force-update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type })
+                });
+                
+                if (response.ok) {
+                    log(`🔄 Atualização ${type} forçada`, 'success');
+                } else {
+                    log(`❌ Erro ao forçar atualização ${type}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro de rede ao forçar atualização: ${error.message}`, 'error');
+            }
+        }
+        
+        // Função para limpar log
+        function clearLog() {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+            messageCounters = { total: 0, backends: 0, metrics: 0, status: 0 };
+            updateCounters();
+            log('Log limpo', 'info');
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Backends
+            document.getElementById('backends-connect').onclick = () => connectWebSocket('backends');
+            document.getElementById('backends-disconnect').onclick = () => disconnectWebSocket('backends');
+            
+            // Metrics
+            document.getElementById('metrics-connect').onclick = () => connectWebSocket('metrics');
+            document.getElementById('metrics-disconnect').onclick = () => disconnectWebSocket('metrics');
+            
+            // Status
+            document.getElementById('status-connect').onclick = () => connectWebSocket('status');
+            document.getElementById('status-disconnect').onclick = () => disconnectWebSocket('status');
+            
+            log(`🔧 Teste configurado para conectar em: ${VELOFLUX_HOST}`, 'info');
+            log('💡 Clique nos botões "Conectar" para iniciar os testes WebSocket', 'info');
+        });
+        
+        // Cleanup ao fechar a página
+        window.addEventListener('beforeunload', function() {
+            Object.keys(connections).forEach(type => {
+                if (connections[type]) {
+                    connections[type].close();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

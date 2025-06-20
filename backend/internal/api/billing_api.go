@@ -44,15 +44,32 @@ func (api *BillingAPI) Handler() http.Handler {
 
 // setupRoutes configures the billing API routes
 func (api *BillingAPI) setupRoutes() {
-	// Billing webhooks (public endpoint)
-	api.router.HandleFunc("/api/billing/webhook", api.handleWebhook).Methods("POST")
+	// Core billing routes
+	api.router.HandleFunc("/subscriptions", api.handleGetSubscriptions).Methods("GET")
+	api.router.HandleFunc("/subscriptions", api.handleCreateSubscription).Methods("POST")
+	api.router.HandleFunc("/subscriptions/{id}", api.handleGetSubscription).Methods("GET")
+	api.router.HandleFunc("/subscriptions/{id}", api.handleUpdateSubscription).Methods("PUT")
+	api.router.HandleFunc("/subscriptions/{id}", api.handleDeleteSubscription).Methods("DELETE")
 
-	// Tenant-specific billing endpoints (require authentication)
-	api.router.HandleFunc("/api/tenants/{tenant_id}/billing", api.handleGetBilling).Methods("GET")
-	api.router.HandleFunc("/api/tenants/{tenant_id}/billing/checkout", api.handleCreateCheckout).Methods("POST")
-	api.router.HandleFunc("/api/tenants/{tenant_id}/billing/usage", api.handleGetUsage).Methods("GET")
-	api.router.HandleFunc("/api/tenants/{tenant_id}/billing/export", api.handleExportBilling).Methods("GET")
-	api.router.HandleFunc("/api/tenants/{tenant_id}/billing/plans", api.handleGetPlans).Methods("GET")
+	api.router.HandleFunc("/invoices", api.handleGetInvoices).Methods("GET")
+	api.router.HandleFunc("/invoices/{id}", api.handleGetInvoice).Methods("GET")
+	api.router.HandleFunc("/invoices/{id}/download", api.handleDownloadInvoice).Methods("GET")
+
+	// Webhook routes
+	api.router.HandleFunc("/webhooks", api.handleWebhook).Methods("POST")
+	api.router.HandleFunc("/webhooks", api.handleGetWebhooks).Methods("GET")
+	api.router.HandleFunc("/webhooks", api.handleCreateWebhookConfig).Methods("POST")
+	api.router.HandleFunc("/webhooks/{id}", api.handleUpdateWebhookConfig).Methods("PUT")
+	api.router.HandleFunc("/webhooks/{id}", api.handleDeleteWebhookConfig).Methods("DELETE")
+
+	// Enhanced billing features
+	api.router.HandleFunc("/export", api.handleExportBilling).Methods("GET")
+	api.router.HandleFunc("/transactions", api.handleGetTransactions).Methods("GET")
+	api.router.HandleFunc("/usage-alerts", api.handleGetUsageAlerts).Methods("GET")
+	api.router.HandleFunc("/usage-alerts", api.handleCreateUsageAlert).Methods("POST")
+	api.router.HandleFunc("/usage-alerts/{id}", api.handleUpdateUsageAlert).Methods("PUT")
+	api.router.HandleFunc("/notifications", api.handleGetNotifications).Methods("GET")
+	api.router.HandleFunc("/notifications/{id}/read", api.handleMarkNotificationRead).Methods("POST")
 }
 
 // handleWebhook handles webhooks from payment providers
@@ -321,4 +338,206 @@ func (api *BillingAPI) handleGetPlans(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(plans)
+}
+
+// handleGetWebhooks retrieves webhook configurations
+func (api *BillingAPI) handleGetWebhooks(w http.ResponseWriter, r *http.Request) {
+	// Mock webhook data - in production, get from database
+	webhooks := []map[string]interface{}{
+		{
+			"id":            "wh_001",
+			"name":          "Stripe Payment Webhook",
+			"url":           "https://api.example.com/webhooks/stripe",
+			"events":        []string{"invoice.created", "payment.completed", "subscription.updated"},
+			"enabled":       true,
+			"status":        "active",
+			"created_at":    "2024-01-01T00:00:00Z",
+			"last_triggered": "2024-01-15T10:30:00Z",
+			"retry_config": map[string]interface{}{
+				"max_retries":        3,
+				"retry_delay":       1000,
+				"exponential_backoff": true,
+			},
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(webhooks)
+}
+
+// handleCreateWebhookConfig creates a new webhook configuration
+func (api *BillingAPI) handleCreateWebhookConfig(w http.ResponseWriter, r *http.Request) {
+	var webhook map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&webhook); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Add ID and timestamps
+	webhook["id"] = fmt.Sprintf("wh_%d", time.Now().Unix())
+	webhook["created_at"] = time.Now().Format(time.RFC3339)
+	webhook["status"] = "active"
+
+	api.logger.Info("Created webhook configuration", zap.Any("webhook", webhook))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(webhook)
+}
+
+// handleUpdateWebhookConfig updates a webhook configuration
+func (api *BillingAPI) handleUpdateWebhookConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	var updates map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updates["id"] = webhookID
+	updates["updated_at"] = time.Now().Format(time.RFC3339)
+
+	api.logger.Info("Updated webhook configuration", zap.String("webhook_id", webhookID))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updates)
+}
+
+// handleDeleteWebhookConfig deletes a webhook configuration
+func (api *BillingAPI) handleDeleteWebhookConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	api.logger.Info("Deleted webhook configuration", zap.String("webhook_id", webhookID))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// handleGetTransactions retrieves billing transactions
+func (api *BillingAPI) handleGetTransactions(w http.ResponseWriter, r *http.Request) {
+	transactions := []map[string]interface{}{
+		{
+			"id":               "txn_001",
+			"tenant_id":        "tenant_001",
+			"tenant_name":      "Example Corp",
+			"transaction_type": "charge",
+			"amount":           150.50,
+			"currency":         "USD",
+			"description":      "Monthly usage charge",
+			"service_type":     "load_balancer",
+			"usage_details": map[string]interface{}{
+				"bandwidth_gb":  245.7,
+				"compute_hours": 720,
+				"storage_gb":    50.2,
+				"api_calls":     15000,
+			},
+			"timestamp":  time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+			"invoice_id": "inv_001",
+			"status":     "completed",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(transactions)
+}
+
+// handleGetUsageAlerts retrieves usage alerts
+func (api *BillingAPI) handleGetUsageAlerts(w http.ResponseWriter, r *http.Request) {
+	alerts := []map[string]interface{}{
+		{
+			"id":           "alert_001",
+			"name":         "High Bandwidth Usage",
+			"metric":       "bandwidth_gb",
+			"limit":        1000,
+			"current_usage": 850.5,
+			"threshold":    80,
+			"triggered":    true,
+			"created_at":   time.Now().Add(-7 * 24 * time.Hour).Format(time.RFC3339),
+			"last_checked": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(alerts)
+}
+
+// handleCreateUsageAlert creates a new usage alert
+func (api *BillingAPI) handleCreateUsageAlert(w http.ResponseWriter, r *http.Request) {
+	var alert map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&alert); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	alert["id"] = fmt.Sprintf("alert_%d", time.Now().Unix())
+	alert["created_at"] = time.Now().Format(time.RFC3339)
+	alert["triggered"] = false
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(alert)
+}
+
+// handleUpdateUsageAlert updates a usage alert
+func (api *BillingAPI) handleUpdateUsageAlert(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	alertID := vars["id"]
+
+	var updates map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updates["id"] = alertID
+	updates["updated_at"] = time.Now().Format(time.RFC3339)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updates)
+}
+
+// handleGetNotifications retrieves billing notifications
+func (api *BillingAPI) handleGetNotifications(w http.ResponseWriter, r *http.Request) {
+	notifications := []map[string]interface{}{
+		{
+			"id":        "notif_001",
+			"type":      "payment_success",
+			"title":     "Payment Processed Successfully",
+			"message":   "Your payment of $150.50 has been processed successfully.",
+			"read":      false,
+			"timestamp": time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			"priority":  "normal",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notifications)
+}
+
+// handleMarkNotificationRead marks a notification as read
+func (api *BillingAPI) handleMarkNotificationRead(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	notificationID := vars["id"]
+
+	api.logger.Info("Marked notification as read", zap.String("notification_id", notificationID))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// handleDownloadInvoice downloads invoice PDF
+func (api *BillingAPI) handleDownloadInvoice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	invoiceID := vars["id"]
+
+	// In production, generate and return actual PDF
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=invoice_%s.pdf", invoiceID))
+	
+	// Mock PDF content
+	w.Write([]byte("Mock PDF content for invoice " + invoiceID))
 }
