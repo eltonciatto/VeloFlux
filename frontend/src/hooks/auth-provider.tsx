@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loginAttempts, setLoginAttempts] = useState<Record<string, number>>({});
   const [lastLoginAttempt, setLastLoginAttempt] = useState<Record<string, number>>({});  const fetchProfile = useCallback(async (tok: string) => {
     try {
-      const profile = await safeApiFetch('/profile', {
+      const profile = await safeApiFetch('/api/profile', {
         headers: { Authorization: `Bearer ${tok}` },
       });
       const authUser = profile as UserInfo; // API returns AuthContext UserInfo format
@@ -52,8 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
       if (!token) return false;
-      
-      const res = await safeApiFetch('/auth/refresh', {
+        const res = await safeApiFetch('/api/auth/refresh', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -193,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };  const updateProfile = async (first: string, last: string) => {
-    const updated = await safeApiFetch('/profile', {
+    const updated = await safeApiFetch('/api/profile', {
       method: 'PUT',
       body: JSON.stringify({ first_name: first, last_name: last }),
     });

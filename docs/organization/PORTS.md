@@ -11,7 +11,7 @@ docker-compose exec frontend curl localhost/api/health----|---------|-----------
 | **3000** | Frontend | Web application (direct dev) | http://localhost:3000 |
 | **3001** | Grafana | Monitoring dashboard | http://localhost:3001 |
 | **6379** | Redis | Cache/sessions (**INTERNO APENAS**) | N/A |
-| **8080** | Backend | Health/Metrics endpoint | http://localhost:8080/health |
+| **8080** | Backend | Health/Metrics endpoint | http://localhost:8080/api/health |
 | **9000** | Backend | Admin API (direct dev) | http://localhost:9000 |
 | **9090** | Backend | Main API (direct dev) | http://localhost:9090 |
 | **9091** | Prometheus | Metrics collection | http://localhost:9091 |
@@ -131,7 +131,7 @@ docker-compose logs redis
 
 # Execute commands in container
 docker-compose exec backend curl localhost:8080/api/health
-docker-compose exec frontend curl localhost/health
+docker-compose exec frontend curl localhost/api/health
 ```
 
 ### Reset Everything

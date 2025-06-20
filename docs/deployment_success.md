@@ -35,7 +35,7 @@ ssh root@<YOUR_IP_ADDRESS> "cd /tmp && tar xzf veloflux-saas-production-fixed.ta
 ## 🌐 Pontos de Acesso Após Instalação
 
 - **🏠 Aplicação Principal**: http://<YOUR_IP_ADDRESS>/
-- **⚡ Health Check**: http://<YOUR_IP_ADDRESS>/health
+- **⚡ Health Check**: http://<YOUR_IP_ADDRESS>/api/health
 - **📊 Grafana**: http://<YOUR_IP_ADDRESS>:3000 (admin/admin)
 - **📈 Prometheus**: http://<YOUR_IP_ADDRESS>:9090
 - **🔧 Admin Panel**: http://<YOUR_IP_ADDRESS>/admin

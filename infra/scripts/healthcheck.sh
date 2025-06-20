@@ -6,8 +6,8 @@
 set -e
 
 # Configuration
-HEALTH_ENDPOINT="http://localhost:8080/health"
-ADMIN_ENDPOINT="http://localhost:9000/health"
+HEALTH_ENDPOINT="http://localhost:8080/api/health"
+ADMIN_ENDPOINT="http://localhost:9000/api/health"
 METRICS_ENDPOINT="http://localhost:8090/metrics"
 
 # Colors

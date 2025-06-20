@@ -109,7 +109,7 @@ echo
 test_endpoint "http://localhost:8880/metrics" "VeloFlux Metrics"
 
 # Admin API
-test_endpoint "http://localhost:9090/health" "Admin API" 
+test_endpoint "http://localhost:9090/api/health" "Admin API" 
 
 echo
 

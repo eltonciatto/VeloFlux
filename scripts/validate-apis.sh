@@ -105,7 +105,7 @@ echo ""
 echo -e "${YELLOW}📋 TESTANDO ENDPOINTS PÚBLICOS${NC}"
 echo "================================================="
 
-test_endpoint "GET" "/health" "200" "" "Health check do sistema"
+test_endpoint "GET" "/api/health" "200" "" "Health check do sistema"
 test_endpoint "GET" "/api/version" "200" "" "Versão da API"
 
 # Try to get JWT token (if authentication is implemented)

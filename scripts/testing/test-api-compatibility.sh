@@ -41,11 +41,11 @@ echo "📋 ENDPOINTS ESPERADOS PELO FRONTEND:"
 echo "-----------------------------------"
 
 # Teste dos endpoints principais
-test_endpoint "/metrics" "GET" "Métricas gerais da IA"
+test_endpoint "/api/metrics" "GET" "Métricas gerais da IA"
 test_endpoint "/predictions" "GET" "Predições atuais"
 test_endpoint "/models" "GET" "Status dos modelos"
 test_endpoint "/config" "GET" "Configuração da IA"
-test_endpoint "/health" "GET" "Health check da IA"
+test_endpoint "/api/health" "GET" "Health check da IA"
 test_endpoint "/history?range=1h" "GET" "Dados históricos"
 
 echo ""

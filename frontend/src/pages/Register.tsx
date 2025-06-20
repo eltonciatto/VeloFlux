@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
+import { getEndpoint } from '@/config/environment';
 import { User, Mail, Lock, Building, ArrowRight, Brain, Sparkles, Check, AlertCircle, Wifi, WifiOff, X } from 'lucide-react';
 
 export const Register = () => {
@@ -162,10 +163,9 @@ export const Register = () => {
       });
       return;    }
     
-    setIsLoading(true);
-    try {
+    setIsLoading(true);    try {
       // Register user
-      const response = await apiFetch('/auth/register', {
+      const response = await apiFetch(getEndpoint('REGISTER'), {
         method: 'POST',
         body: JSON.stringify({
           email: formData.email,

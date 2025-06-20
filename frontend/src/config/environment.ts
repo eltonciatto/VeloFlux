@@ -31,6 +31,7 @@ export const CONFIG = {
     // Real backend endpoints for production
     ENDPOINTS: {
       LOGIN: '/api/auth/login',
+      REGISTER: '/api/auth/register',
       REFRESH: '/api/auth/refresh',
       PROFILE: '/api/profile',
       LOGOUT: '/api/auth/logout',

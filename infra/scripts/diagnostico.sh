@@ -252,10 +252,10 @@ check_connectivity() {
         warn "O health check na porta 80 falhou"
         
         echo -n "Tentando na porta 8080: "
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health 2>/dev/null | grep -q "200"; then
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/health 2>/dev/null | grep -q "200"; then
             echo -e "${GREEN}OK (200)${NC}"
         else
-            echo -e "${RED}FALHA$(curl -s -o /dev/null -w " (%{http_code})" http://localhost:8080/health 2>/dev/null || echo " (erro de conexão)")${NC}"
+            echo -e "${RED}FALHA$(curl -s -o /dev/null -w " (%{http_code})" http://localhost:8080/api/health 2>/dev/null || echo " (erro de conexão)")${NC}"
         fi
     fi
     

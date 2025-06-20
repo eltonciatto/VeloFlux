@@ -214,7 +214,7 @@ run_health_checks() {
     
     # Check VeloFlux LB
     for i in {1..5}; do
-        if curl -sf http://localhost:8080/health >/dev/null; then
+        if curl -sf http://localhost:8080/api/health >/dev/null; then
             log_success "VeloFlux LB health check passed"
             break
         else

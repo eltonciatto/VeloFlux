@@ -123,7 +123,7 @@ run_remote "curl -s -I http://localhost:80 | head -3 || echo 'Endpoint principal
 
 echo ""
 echo "🔧 Testando API do VeloFlux:"
-run_remote "curl -s -I http://localhost:8080/health 2>/dev/null | head -3 || echo 'API não responde'"
+run_remote "curl -s -I http://localhost:8080/api/health 2>/dev/null | head -3 || echo 'API não responde'"
 
 echo ""
 echo "📊 Testando Grafana:"

@@ -103,7 +103,7 @@ echo "=============================================="
 
 # Test 1: Health Check
 log_info "\n📋 Test 1: Health Check"
-test_endpoint "GET" "/health" "" "" "200" "Health check endpoint"
+test_endpoint "GET" "/api/health" "" "" "200" "Health check endpoint"
 
 # Test 2: Root endpoint
 log_info "\n📋 Test 2: Root Endpoint"
@@ -140,7 +140,7 @@ login_data='{
     "password": "'$TEST_PASSWORD'"
 }'
 
-login_response=$(test_endpoint "POST" "/auth/login" "$login_data" "" "200" "Login with registered user")
+login_response=$(test_endpoint "POST" "/api/auth/login" "$login_data" "" "200" "Login with registered user")
 if [ $? -eq 0 ]; then
     JWT_TOKEN=$(echo "$login_response" | jq -r '.token // empty')
     if [ -n "$JWT_TOKEN" ] && [ "$JWT_TOKEN" != "null" ]; then

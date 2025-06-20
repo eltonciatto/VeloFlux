@@ -262,7 +262,7 @@ func categorizeRequest(path string) string {
 	if strings.HasPrefix(path, "/static/") {
 		return "static"
 	}
-	if path == "/health" {
+	if path == "/api/health" {
 		return "health"
 	}
 	if strings.Contains(path, "upload") {

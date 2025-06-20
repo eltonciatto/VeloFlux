@@ -270,7 +270,7 @@ services:
     networks:
       - veloflux-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -824,7 +824,7 @@ else
     print_error "✗ Métricas VeloFlux não estão respondendo"
 fi
 
-if curl -f http://localhost:9000/health >/dev/null 2>&1; then
+if curl -f http://localhost:9000/api/health >/dev/null 2>&1; then
     print_success "✓ API VeloFlux está funcionando"
 else
     print_error "✗ API VeloFlux não está respondendo"

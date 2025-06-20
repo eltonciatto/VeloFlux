@@ -94,7 +94,7 @@ echo ""
 echo -e "${CYAN}🌐 Testando Endpoints:${NC}"
 run_remote "curl -I http://localhost:80 2>/dev/null | head -3 || echo 'Load Balancer não respondeu'"
 run_remote "curl -I http://localhost:8080/metrics 2>/dev/null | head -3 || echo 'Métricas não responderam'"
-run_remote "curl -I http://localhost:9000/health 2>/dev/null | head -3 || echo 'API não respondeu'"
+run_remote "curl -I http://localhost:9000/api/health 2>/dev/null | head -3 || echo 'API não respondeu'"
 
 # Obter credenciais
 print_step "Obtendo credenciais de acesso..."
