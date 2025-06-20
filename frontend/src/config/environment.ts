@@ -5,10 +5,10 @@ export const CONFIG = {
   isDevelopment: import.meta.env.DEV || import.meta.env.MODE === 'development',
   
   // API endpoints - STANDARD PORT ALLOCATION (NEVER CHANGE)
-  // Development: Backend direct ports (9090/9000)
+  // Development: Always use /api prefix for consistency
   // Production: Nginx proxy routes (/api, /admin/api)
-  API_BASE: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:9090' : ''),
-  ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || (import.meta.env.DEV ? 'http://localhost:9000' : '/admin/api'),
+  API_BASE: import.meta.env.VITE_API_URL || '',
+  ADMIN_BASE: import.meta.env.VITE_ADMIN_URL || '/admin/api',
   
   // Demo mode - only enabled when explicitly set
   DEMO_MODE: import.meta.env.VITE_DEMO_MODE === 'true',
@@ -30,33 +30,33 @@ export const CONFIG = {
     
     // Real backend endpoints for production
     ENDPOINTS: {
-      LOGIN: '/auth/login',
-      REFRESH: '/auth/refresh',
-      PROFILE: '/profile',
-      LOGOUT: '/auth/logout',
+      LOGIN: '/api/auth/login',
+      REFRESH: '/api/auth/refresh',
+      PROFILE: '/api/profile',
+      LOGOUT: '/api/auth/logout',
       
       // System Metrics & Monitoring
-      METRICS: '/metrics',
-      HEALTH: '/health',
-      STATUS: '/status',
-      PROMETHEUS: '/metrics/prometheus',
+      METRICS: '/api/metrics',
+      HEALTH: '/api/health',
+      STATUS: '/api/status',
+      PROMETHEUS: '/api/metrics/prometheus',
       
       // Real-time data
-      REAL_TIME_METRICS: '/metrics/realtime',
+      REAL_TIME_METRICS: '/api/metrics/realtime',
       WEBSOCKET: import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? 'ws://localhost:9090/ws' : '/ws'),
       
       // System Information
-      SYSTEM_INFO: '/system/info',
-      PERFORMANCE: '/system/performance',
-      LOGS: '/system/logs',
-      ALERTS: '/system/alerts',
+      SYSTEM_INFO: '/api/system/info',
+      PERFORMANCE: '/api/system/performance',
+      LOGS: '/api/system/logs',
+      ALERTS: '/api/system/alerts',
       
       // Load Balancer specific
-      BACKENDS: '/backends',
-      POOLS: '/pools',
-      CLUSTER: '/cluster',
-      CONFIG: '/config',
-      RELOAD: '/reload'
+      BACKENDS: '/api/backends',
+      POOLS: '/api/pools',
+      CLUSTER: '/api/cluster',
+      CONFIG: '/api/config',
+      RELOAD: '/api/reload'
     }
   },
   
@@ -107,14 +107,12 @@ export const CONFIG = {
 // Export utility functions
 export const isProduction = () => !CONFIG.isDevelopment;
 export const isDemoMode = () => CONFIG.DEMO_MODE;
-export const getApiBase = () => isProduction() ? CONFIG.PRODUCTION.API_URL : CONFIG.API_BASE;
-export const getAdminBase = () => isProduction() ? CONFIG.PRODUCTION.ADMIN_URL : CONFIG.ADMIN_BASE;
+export const getApiBase = () => CONFIG.API_BASE;
+export const getAdminBase = () => CONFIG.ADMIN_BASE;
 
 // Production-specific utilities
 export const getEndpoint = (endpoint: keyof typeof CONFIG.PRODUCTION.ENDPOINTS) => {
-  const base = getApiBase();
-  const path = CONFIG.PRODUCTION.ENDPOINTS[endpoint];
-  return `${base}${path}`;
+  return CONFIG.PRODUCTION.ENDPOINTS[endpoint];
 };
 
 export const getRefreshInterval = (type: keyof typeof CONFIG.DASHBOARD.REFRESH_INTERVALS) => {

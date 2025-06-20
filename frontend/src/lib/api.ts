@@ -1,4 +1,4 @@
-import { getApiBase, getAdminBase, isProduction } from '@/config/environment';
+import { getApiBase, getAdminBase } from '@/config/environment';
 
 export const API_BASE = getApiBase();
 export const ADMIN_BASE = getAdminBase();

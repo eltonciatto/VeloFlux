@@ -74,7 +74,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
       const queryParams = new URLSearchParams();
       if (filters?.time_range) queryParams.append('time_range', filters.time_range);
 
-      const response = await safeApiFetch(`/tenants/${tenantId}/metrics?${queryParams}`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/metrics?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -104,7 +104,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
       if (filters?.offset) queryParams.append('offset', filters.offset.toString());
       if (filters?.time_range) queryParams.append('time_range', filters.time_range);
 
-      const response = await safeApiFetch(`/tenants/${tenantId}/logs?${queryParams}`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/logs?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -127,7 +127,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
 
   const fetchRealTimeMetrics = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/tenants/${tenantId}/metrics/realtime`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/metrics/realtime`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -142,7 +142,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
 
   const getMetricsHistory = useCallback(async (metric: string, timeRange: string = '24h') => {
     try {
-      const response = await safeApiFetch(`/tenants/${tenantId}/metrics/history`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/metrics/history`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -171,7 +171,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
       queryParams.append('format', format);
       if (filters?.time_range) queryParams.append('time_range', filters.time_range);
 
-      const response = await safeApiFetch(`/tenants/${tenantId}/metrics/export?${queryParams}`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/metrics/export?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -211,7 +211,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
 
   const getAlerts = useCallback(async () => {
     try {
-      const response = await safeApiFetch(`/tenants/${tenantId}/alerts`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/alerts`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -226,7 +226,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
 
   const acknowledgeAlert = useCallback(async (alertId: string) => {
     try {
-      const response = await safeApiFetch(`/tenants/${tenantId}/alerts/${alertId}/acknowledge`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/alerts/${alertId}/acknowledge`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -253,7 +253,7 @@ export function useTenantMetrics(tenantId: string, token: string) {
 
   const createCustomAlert = useCallback(async (alertConfig: AlertConfig) => {
     try {
-      const response = await safeApiFetch(`/tenants/${tenantId}/alerts`, {
+      const response = await safeApiFetch(`/api/tenants/${tenantId}/alerts`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

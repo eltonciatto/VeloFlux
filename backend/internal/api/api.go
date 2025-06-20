@@ -162,12 +162,12 @@ func (a *API) setupRoutes() {
 	if a.tenantManager != nil && a.authenticator != nil {
 		a.logger.Info("Registering profile routes")
 		
-		// Authentication routes (public - sem autenticação)
-		a.router.HandleFunc("/auth/login", a.handleTenantLogin).Methods("POST")
-		a.router.HandleFunc("/auth/register", a.handleTenantRegister).Methods("POST")
+		// Authentication routes (public - sem autenticação) - MOVIDO PARA /api/auth
+		a.router.HandleFunc("/api/auth/login", a.handleTenantLogin).Methods("POST")
+		a.router.HandleFunc("/api/auth/register", a.handleTenantRegister).Methods("POST")
 		
 		// Token refresh (requer token válido)
-		a.router.HandleFunc("/auth/refresh", a.requireAuthToken(a.handleTenantRefresh)).Methods("POST")
+		a.router.HandleFunc("/api/auth/refresh", a.requireAuthToken(a.handleTenantRefresh)).Methods("POST")
 		
 		// User profile routes (with JWT authentication)
 		a.router.HandleFunc("/api/profile", a.requireAuthToken(a.handleGetProfile)).Methods("GET")
@@ -230,6 +230,9 @@ func (a *API) setupRoutes() {
 	apiRouter.HandleFunc("/cluster", a.handleClusterInfo).Methods("GET")
 	// Using handleGetConfig for status since handleGetStatus doesn't exist
 	apiRouter.HandleFunc("/status", a.handleGetConfig).Methods("GET")
+	// Add config and reload endpoints
+	apiRouter.HandleFunc("/config", a.handleGetConfig).Methods("GET")
+	apiRouter.HandleFunc("/reload", a.handleReload).Methods("POST")
 	
 	a.logger.Info("Core API routes registered successfully")
 

@@ -5,7 +5,7 @@ import { getEndpoint, getRefreshInterval } from '@/config/environment';
 export function useBackends() {
   return useQuery({
     queryKey: ['backends'],
-    queryFn: () => apiFetch('/api/backends'),
+    queryFn: () => apiFetch(getEndpoint('BACKENDS')),
     refetchInterval: getRefreshInterval('BACKENDS'),
   });
 }
@@ -13,7 +13,7 @@ export function useBackends() {
 export function useClusterInfo() {
   return useQuery({
     queryKey: ['cluster'],
-    queryFn: () => apiFetch('/api/cluster'),
+    queryFn: () => apiFetch(getEndpoint('CLUSTER')),
     refetchInterval: getRefreshInterval('HEALTH'),
   });
 }
@@ -21,7 +21,7 @@ export function useClusterInfo() {
 export function useConfig() {
   return useQuery({
     queryKey: ['config'],
-    queryFn: () => apiFetch('/api/config'),
+    queryFn: () => apiFetch(getEndpoint('CONFIG')),
   });
 }
 
@@ -89,7 +89,7 @@ export function useRealTimeMetrics() {
 
 export function useReloadConfig() {
   return useMutation({
-    mutationFn: () => apiFetch('/api/reload', { method: 'POST' }),
+    mutationFn: () => apiFetch(getEndpoint('RELOAD'), { method: 'POST' }),
   });
 }
 
@@ -103,7 +103,7 @@ export function useAddBackend() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: { pool: string; backend: BackendInput }) =>
-      apiFetch(`/api/pools/${data.pool}/backends`, {
+      apiFetch(`${getEndpoint('POOLS')}/${data.pool}/backends`, {
         method: 'POST',
         body: JSON.stringify(data.backend),
       }),
@@ -115,7 +115,7 @@ export function useDeleteBackend() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: { pool: string; address: string }) =>
-      apiFetch(`/api/backends/${data.pool}/${encodeURIComponent(data.address)}`, {
+      apiFetch(`${getEndpoint('BACKENDS')}/${data.pool}/${encodeURIComponent(data.address)}`, {
         method: 'DELETE',
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['backends'] }),
