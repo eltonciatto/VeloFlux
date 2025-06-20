@@ -40,7 +40,7 @@ export function useAdvancedMetrics(tenantId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   // WebSocket para dados em tempo real
-  const { lastMessage, isConnected } = useRealtimeWebSocket('ws://localhost:8080/api/ws/metrics');
+  const { lastMessage, isConnected } = useRealtimeWebSocket('/api/ws/metrics');
 
   // Buscar métricas históricas
   const fetchMetrics = useCallback(async () => {

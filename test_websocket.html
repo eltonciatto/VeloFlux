@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VeloFlux WebSocket Test</title>
+</head>
+<body>
+    <h1>VeloFlux WebSocket Test</h1>
+    <div>
+        <h2>Backends WebSocket:</h2>
+        <div id="backends-status">Connecting...</div>
+        <pre id="backends-data"></pre>
+    </div>
+    
+    <div>
+        <h2>Metrics WebSocket:</h2>
+        <div id="metrics-status">Connecting...</div>
+        <pre id="metrics-data"></pre>
+    </div>
+
+    <script>
+        // Test Backends WebSocket
+        const backendsWs = new WebSocket('ws://localhost:9090/api/ws/backends');
+        
+        backendsWs.onopen = function(event) {
+            document.getElementById('backends-status').textContent = 'Connected to backends WebSocket';
+            console.log('Backends WebSocket connected');
+        };
+        
+        backendsWs.onmessage = function(event) {
+            console.log('Backends data:', event.data);
+            document.getElementById('backends-data').textContent = event.data;
+        };
+        
+        backendsWs.onerror = function(error) {
+            document.getElementById('backends-status').textContent = 'Error: ' + error;
+            console.error('Backends WebSocket error:', error);
+        };
+        
+        backendsWs.onclose = function(event) {
+            document.getElementById('backends-status').textContent = 'Disconnected';
+            console.log('Backends WebSocket disconnected');
+        };
+
+        // Test Metrics WebSocket
+        const metricsWs = new WebSocket('ws://localhost:9090/api/ws/metrics');
+        
+        metricsWs.onopen = function(event) {
+            document.getElementById('metrics-status').textContent = 'Connected to metrics WebSocket';
+            console.log('Metrics WebSocket connected');
+        };
+        
+        metricsWs.onmessage = function(event) {
+            console.log('Metrics data:', event.data);
+            document.getElementById('metrics-data').textContent = event.data;
+        };
+        
+        metricsWs.onerror = function(error) {
+            document.getElementById('metrics-status').textContent = 'Error: ' + error;
+            console.error('Metrics WebSocket error:', error);
+        };
+        
+        metricsWs.onclose = function(event) {
+            document.getElementById('metrics-status').textContent = 'Disconnected';
+            console.log('Metrics WebSocket disconnected');
+        };
+    </script>
+</body>
+</html>

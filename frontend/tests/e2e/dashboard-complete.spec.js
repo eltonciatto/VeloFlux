@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test');
 
 // Configuration
 const FRONTEND_URL = 'http://localhost:3000';
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:9090';
 
 // Test data
 const TEST_USER = {

@@ -133,101 +133,127 @@ export function NetworkTopology3D() {
     if (!ctx) return;
 
     const draw = () => {
-      // Clear canvas
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      try {
+        // Clear canvas
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw connections
-      connections.forEach(connection => {
-        const fromNode = nodes.find(n => n.id === connection.from);
-        const toNode = nodes.find(n => n.id === connection.to);
-        
-        if (fromNode && toNode) {
-          const fromX = (fromNode.position.x + 3) * (canvas.width / 6);
-          const fromY = (fromNode.position.y + 1) * (canvas.height / 4);
-          const toX = (toNode.position.x + 3) * (canvas.width / 6);
-          const toY = (toNode.position.y + 1) * (canvas.height / 4);
-
-          // Connection line
-          ctx.beginPath();
-          ctx.moveTo(fromX, fromY);
-          ctx.lineTo(toX, toY);
-          
-          // Color based on status
-          switch (connection.status) {
-            case 'active':
-              ctx.strokeStyle = '#10B981';
-              break;
-            case 'slow':
-              ctx.strokeStyle = '#F59E0B';
-              break;
-            case 'error':
-              ctx.strokeStyle = '#EF4444';
-              break;
-          }
-          
-          ctx.lineWidth = Math.max(1, connection.traffic / 20);
-          ctx.stroke();
-
-          // Traffic animation (simplified)
-          if (isPlaying) {
-            const progress = (Date.now() / 1000) % 2;
-            const animX = fromX + (toX - fromX) * (progress / 2);
-            const animY = fromY + (toY - fromY) * (progress / 2);
+        // Draw connections
+        connections.forEach(connection => {
+          try {
+            const fromNode = nodes.find(n => n.id === connection.from);
+            const toNode = nodes.find(n => n.id === connection.to);
             
-            ctx.fillStyle = '#60A5FA';
+            if (fromNode && toNode) {
+              const fromX = (fromNode.position.x + 3) * (canvas.width / 6);
+              const fromY = (fromNode.position.y + 1) * (canvas.height / 4);
+              const toX = (toNode.position.x + 3) * (canvas.width / 6);
+              const toY = (toNode.position.y + 1) * (canvas.height / 4);
+
+              // Verificar se as coordenadas são válidas
+              if (!isFinite(fromX) || !isFinite(fromY) || !isFinite(toX) || !isFinite(toY)) {
+                return;
+              }
+
+              // Connection line
+              ctx.beginPath();
+              ctx.moveTo(fromX, fromY);
+              ctx.lineTo(toX, toY);
+              
+              // Color based on status
+              switch (connection.status) {
+                case 'active':
+                  ctx.strokeStyle = '#10B981';
+                  break;
+                case 'slow':
+                  ctx.strokeStyle = '#F59E0B';
+                  break;
+                case 'error':
+                  ctx.strokeStyle = '#EF4444';
+                  break;
+              }
+              
+              ctx.lineWidth = Math.max(1, connection.traffic / 20);
+              ctx.stroke();
+
+              // Traffic animation (simplified)
+              if (isPlaying) {
+                const progress = (Date.now() / 1000) % 2;
+                const animX = fromX + (toX - fromX) * (progress / 2);
+                const animY = fromY + (toY - fromY) * (progress / 2);
+                
+                if (isFinite(animX) && isFinite(animY)) {
+                  ctx.fillStyle = '#60A5FA';
+                  ctx.beginPath();
+                  ctx.arc(animX, animY, 3, 0, 2 * Math.PI);
+                  ctx.fill();
+                }
+              }
+            }
+          } catch (connError) {
+            console.warn('Error drawing connection:', connError);
+          }        });
+
+        // Draw nodes
+        nodes.forEach(node => {
+          try {
+            const x = (node.position.x + 3) * (canvas.width / 6);
+            const y = (node.position.y + 1) * (canvas.height / 4);
+            // Garantir que o radius seja sempre um número válido
+            const requests = node.metrics?.requests || 0;
+            const radius = Math.max(10, 20 + Math.max(0, requests / 100));
+
+            // Verificar se as coordenadas são válidas
+            if (!isFinite(x) || !isFinite(y) || !isFinite(radius)) {
+              console.warn('Invalid coordinates for node:', node.id, { x, y, radius });
+              return;
+            }
+
+            // Node circle
             ctx.beginPath();
-            ctx.arc(animX, animY, 3, 0, 2 * Math.PI);
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            
+            // Color based on status
+            switch (node.status) {
+              case 'healthy':
+                ctx.fillStyle = '#10B981';
+                break;
+              case 'warning':
+                ctx.fillStyle = '#F59E0B';
+                break;
+              case 'error':
+                ctx.fillStyle = '#EF4444';
+                break;
+              default:
+                ctx.fillStyle = '#6B7280';
+            }
+            
             ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Node label
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(node.label, x, y + radius + 15);
+
+            // Metrics overlay
+            if (viewMode === 'health') {
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+              ctx.fillRect(x - 30, y - 40, 60, 20);
+              ctx.fillStyle = '#FFFFFF';
+              ctx.font = '10px sans-serif';
+              ctx.fillText(`CPU: ${node.metrics.cpu}%`, x, y - 25);
+            }
+          } catch (nodeError) {
+            console.warn('Error drawing node:', nodeError);
           }
-        }
-      });
-
-      // Draw nodes
-      nodes.forEach(node => {
-        const x = (node.position.x + 3) * (canvas.width / 6);
-        const y = (node.position.y + 1) * (canvas.height / 4);
-        const radius = 20 + (node.metrics.requests / 100);
-
-        // Node circle
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        
-        // Color based on status
-        switch (node.status) {
-          case 'healthy':
-            ctx.fillStyle = '#10B981';
-            break;
-          case 'warning':
-            ctx.fillStyle = '#F59E0B';
-            break;
-          case 'error':
-            ctx.fillStyle = '#EF4444';
-            break;
-          default:
-            ctx.fillStyle = '#6B7280';
-        }
-        
-        ctx.fill();
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Node label
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(node.label, x, y + radius + 15);
-
-        // Metrics overlay
-        if (viewMode === 'health') {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-          ctx.fillRect(x - 30, y - 40, 60, 20);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '10px sans-serif';
-          ctx.fillText(`CPU: ${node.metrics.cpu}%`, x, y - 25);
-        }
-      });
+        });
+      } catch (drawError) {
+        console.error('Error in canvas draw function:', drawError);
+      }
     };
 
     const animate = () => {
@@ -245,22 +271,31 @@ export function NetworkTopology3D() {
 
     // Handle click events
     const handleClick = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const clickY = event.clientY - rect.top;
+      try {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
 
-      // Find clicked node
-      const clickedNode = nodes.find(node => {
-        const x = (node.position.x + 3) * (canvas.width / 6);
-        const y = (node.position.y + 1) * (canvas.height / 4);
-        const radius = 20 + (node.metrics.requests / 100);
-        
-        const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
-        return distance <= radius;
-      });
+        // Find clicked node
+        const clickedNode = nodes.find(node => {
+          const x = (node.position.x + 3) * (canvas.width / 6);
+          const y = (node.position.y + 1) * (canvas.height / 4);
+          const requests = node.metrics?.requests || 0;
+          const radius = Math.max(10, 20 + Math.max(0, requests / 100));
+          
+          if (!isFinite(x) || !isFinite(y) || !isFinite(radius)) {
+            return false;
+          }
+          
+          const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+          return distance <= radius;
+        });
 
-      if (clickedNode) {
-        setSelectedNode(clickedNode);
+        if (clickedNode) {
+          setSelectedNode(clickedNode);
+        }
+      } catch (clickError) {
+        console.warn('Error handling canvas click:', clickError);
       }
     };
 

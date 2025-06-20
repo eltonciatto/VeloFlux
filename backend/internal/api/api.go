@@ -20,6 +20,7 @@ import (
 	"github.com/eltonciatto/veloflux/internal/config"
 	"github.com/eltonciatto/veloflux/internal/orchestration"
 	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/eltonciatto/veloflux/internal/websocket"
 	
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -40,6 +41,7 @@ type API struct {
 	authenticator    *auth.Authenticator
 	oidcManager      *auth.OIDCManager
 	orchestrator     *orchestration.Orchestrator
+	wsHub            *websocket.Hub
 }
 
 // BackendRequest represents a request to add/update a backend
@@ -96,13 +98,28 @@ func New(cfg *config.Config, bal *balancer.Balancer, adaptiveBal *balancer.Adapt
 		authenticator:    authenticator,
 		oidcManager:      oidcManager,
 		orchestrator:     orchestrator,
+		wsHub:            websocket.NewHub(logger),
 	}
+
+	// Start WebSocket hub
+	go a.wsHub.Run()
 
 	return a
 }
 
 // Start begins the API server
 func (a *API) Start() error {
+	// Start WebSocket hub
+	if a.wsHub != nil {
+		go a.wsHub.Run()
+		a.logger.Info("WebSocket hub started")
+		
+		// Start background update services
+		go a.broadcastBackendUpdates()
+		go a.broadcastMetricsUpdates()
+		go a.broadcastStatusUpdates()
+	}
+	
 	// Register routes BEFORE creating the server
 	a.setupRoutes()
 
@@ -181,6 +198,13 @@ func (a *API) setupRoutes() {
 	}
 
 	apiRouter := a.router.PathPrefix("/api").Subrouter()
+
+	// WebSocket routes (sem autenticação para simplificar a conexão)
+	a.logger.Info("Registering WebSocket routes")
+	a.router.HandleFunc("/api/ws/backends", a.handleWebSocketBackends).Methods("GET")
+	a.router.HandleFunc("/api/ws/metrics", a.handleWebSocketMetrics).Methods("GET")
+	a.router.HandleFunc("/api/ws/status", a.handleWebSocketStatus).Methods("GET")
+	a.logger.Info("WebSocket routes registered successfully")
 
 	// Basic authentication middleware
 	authMiddleware := func(next http.Handler) http.Handler {
@@ -2296,4 +2320,199 @@ func (a *API) handleGetTenantBilling(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(billing)
+}
+
+// WebSocket handlers
+
+// handleWebSocketBackends handles WebSocket connections for backend updates
+func (a *API) handleWebSocketBackends(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("WebSocket connection request for backends", 
+		zap.String("remote_addr", r.RemoteAddr),
+		zap.String("user_agent", r.Header.Get("User-Agent")))
+	
+	// Serve WebSocket connection
+	a.wsHub.ServeWS(w, r)
+	
+	// Start broadcasting backend status updates
+	go a.broadcastBackendUpdates()
+}
+
+// handleWebSocketMetrics handles WebSocket connections for metrics updates
+func (a *API) handleWebSocketMetrics(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("WebSocket connection request for metrics", 
+		zap.String("remote_addr", r.RemoteAddr))
+	
+	// Serve WebSocket connection
+	a.wsHub.ServeWS(w, r)
+	
+	// Start broadcasting metrics updates
+	go a.broadcastMetricsUpdates()
+}
+
+// handleWebSocketStatus handles WebSocket connections for general status updates
+func (a *API) handleWebSocketStatus(w http.ResponseWriter, r *http.Request) {
+	a.logger.Info("WebSocket connection request for status", 
+		zap.String("remote_addr", r.RemoteAddr))
+	
+	// Serve WebSocket connection
+	a.wsHub.ServeWS(w, r)
+	
+	// Start broadcasting status updates
+	go a.broadcastStatusUpdates()
+}
+
+// broadcastBackendUpdates sends periodic backend status updates via WebSocket
+func (a *API) broadcastBackendUpdates() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	
+	for range ticker.C {
+		if a.wsHub.GetConnectedClients() == 0 {
+			return // Stop if no clients connected
+		}
+		
+		// Get current backends status
+		backends := a.getCurrentBackends()
+		
+		a.wsHub.Broadcast("backend_update", map[string]interface{}{
+			"type": "backend_status",
+			"backends": backends,
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	}
+}
+
+// broadcastMetricsUpdates sends periodic metrics updates via WebSocket
+func (a *API) broadcastMetricsUpdates() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	
+	for range ticker.C {
+		if a.wsHub.GetConnectedClients() == 0 {
+			return // Stop if no clients connected
+		}
+		
+		// Get current metrics
+		metrics := a.getCurrentMetrics()
+		
+		a.wsHub.Broadcast("metrics_update", map[string]interface{}{
+			"type": "metrics",
+			"data": metrics,
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	}
+}
+
+// broadcastStatusUpdates sends periodic system status updates via WebSocket
+func (a *API) broadcastStatusUpdates() {
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+	
+	for range ticker.C {
+		if a.wsHub.GetConnectedClients() == 0 {
+			return // Stop if no clients connected
+		}
+		
+		// Get current system status
+		status := a.getCurrentStatus()
+		
+		a.wsHub.Broadcast("status_update", map[string]interface{}{
+			"type": "system_status",
+			"data": status,
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	}
+}
+
+// getCurrentBackends returns current backend status
+func (a *API) getCurrentBackends() []map[string]interface{} {
+	backends := []map[string]interface{}{}
+	
+	// Get backends from balancer with runtime information
+	if a.balancer != nil {
+		allBackends := a.balancer.GetAllBackends()
+		for poolName, poolBackends := range allBackends {
+			for _, backend := range poolBackends {
+				status := "healthy"
+				if !backend.Healthy.Load() {
+					status = "unhealthy"
+				}
+				
+				backends = append(backends, map[string]interface{}{
+					"address": backend.Address,
+					"pool": poolName,
+					"weight": backend.Weight,
+					"status": status,
+					"connections": backend.Connections.Load(),
+					"last_used": time.Unix(0, backend.LastUsed.Load()).Format(time.RFC3339),
+					"region": backend.Region,
+					"healthy": backend.Healthy.Load(),
+				})
+			}
+		}
+	}
+	
+	return backends
+}
+
+// getCurrentMetrics returns current system metrics
+func (a *API) getCurrentMetrics() map[string]interface{} {
+	metrics := map[string]interface{}{
+		"requests_total": 0,
+		"requests_per_second": 0,
+		"avg_response_time": 0,
+		"error_rate": 0,
+		"active_connections": 0,
+		"healthy_backends": 0,
+		"total_backends": 0,
+	}
+	
+	// Add real metrics here if available
+	if a.balancer != nil {
+		allBackends := a.balancer.GetAllBackends()
+		totalConnections := int64(0)
+		healthyCount := 0
+		totalCount := 0
+		
+		for _, poolBackends := range allBackends {
+			for _, backend := range poolBackends {
+				totalConnections += backend.Connections.Load()
+				totalCount++
+				if backend.Healthy.Load() {
+					healthyCount++
+				}
+			}
+		}
+		
+		metrics["active_connections"] = totalConnections
+		metrics["healthy_backends"] = healthyCount
+		metrics["total_backends"] = totalCount
+		
+		if totalCount > 0 {
+			metrics["availability"] = float64(healthyCount) / float64(totalCount) * 100
+		}
+	}
+	
+	return metrics
+}
+
+// getCurrentStatus returns current system status
+func (a *API) getCurrentStatus() map[string]interface{} {
+	status := map[string]interface{}{
+		"status": "healthy",
+		"uptime": time.Now().Format(time.RFC3339),
+		"version": "1.1.0",
+		"websocket_clients": a.wsHub.GetConnectedClients(),
+	}
+	
+	// Add cluster status if available
+	if a.cluster != nil {
+		status["cluster_enabled"] = true
+		status["node_id"] = a.cluster.NodeID()
+		status["is_leader"] = a.cluster.IsLeader()
+	} else {
+		status["cluster_enabled"] = false
+	}
+	
+	return status
 }

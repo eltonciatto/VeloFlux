@@ -250,7 +250,7 @@ export function ProductionDashboard() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   
   // 🚀 Hooks avançados
-  const { connectionStatus, lastMessage } = useRealtimeWebSocket(process.env.REACT_APP_WS_URL || 'ws://localhost:8080/ws');
+  const { connectionStatus, lastMessage } = useRealtimeWebSocket('/api/ws/backends');
   const { metrics, loading: metricsLoading, error: metricsError } = useAdvancedMetrics();
   
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({

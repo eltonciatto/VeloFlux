@@ -565,3 +565,15 @@ func (b *Balancer) GetAlgorithm(poolName string) string {
 
 	return string(pool.Algorithm)
 }
+
+// GetAllBackends returns all backends with runtime information
+func (b *Balancer) GetAllBackends() map[string][]*Backend {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	
+	result := make(map[string][]*Backend)
+	for poolName, pool := range b.pools {
+		result[poolName] = pool.Backends
+	}
+	return result
+}

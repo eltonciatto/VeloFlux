@@ -126,7 +126,7 @@ module.exports = defineConfig({
     },
     {
       command: 'cd ../../backend && go run cmd/main.go',
-      url: 'http://localhost:8080/health',
+      url: 'http://localhost:9090/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000,
       env: {
