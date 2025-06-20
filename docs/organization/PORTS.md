@@ -3,7 +3,9 @@
 ## 🚀 Port Standard (NUNCA ALTERAR)
 
 | Port | Service | Description | Access URL |
-|------|---------|-------------|------------|
+# Execute commands in container
+docker-compose exec backend curl localhost:8080/api/health
+docker-compose exec frontend curl localhost/api/health----|---------|-------------|------------|
 | **80** | nginx (Load Balancer) | **ENTRADA PRINCIPAL** | **http://localhost** |
 | **443** | nginx (Load Balancer) | Main HTTPS entry point | https://localhost |
 | **3000** | Frontend | Web application (direct dev) | http://localhost:3000 |
@@ -60,10 +62,10 @@ docker-compose logs -f frontend
 curl http://localhost
 
 # Backend health check
-curl http://localhost:8080/health
+curl http://localhost:8080/api/health
 
 # Backend API directly
-curl http://localhost:9090/health
+curl http://localhost:9090/api/health
 
 # Frontend health check
 curl http://localhost:3000/health
@@ -128,7 +130,7 @@ docker-compose logs frontend
 docker-compose logs redis
 
 # Execute commands in container
-docker-compose exec backend curl localhost:8080/health
+docker-compose exec backend curl localhost:8080/api/health
 docker-compose exec frontend curl localhost/health
 ```
 
@@ -174,13 +176,13 @@ docker-compose up -d --build
 ## 📚 API Documentation
 
 ### Authentication Endpoints
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/refresh` - Token refresh
-- `POST /auth/logout` - User logout
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Token refresh
+- `POST /api/auth/logout` - User logout
 
 ### Main API Endpoints
-- `GET /health` - Service health check
+- `GET /api/health` - Service health check
 - `GET /api/profile` - User profile
 - `GET /api/tenants` - Tenant management
 

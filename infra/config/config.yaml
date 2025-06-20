@@ -54,7 +54,7 @@ auth:
     issuer_url: "https://accounts.google.com"
     client_id: "your-google-client-id"
     client_secret: "your-google-client-secret"
-    redirect_uri: "http://localhost/auth/callback"
+    redirect_uri: "http://localhost/api/auth/callback"
 
 # API Server Configuration - AUTENTICAÇÃO ATIVA
 api:
@@ -183,20 +183,20 @@ pools:
 
 # Routing Rules - Configuração Corrigida para API Consistente
 routes:
-  # Health Check do Sistema (sem prefixo /api)
+  # Health Check do Sistema 
   - host: "*"
     pool: "backend-api-pool"
-    path_prefix: "/health"
+    path_prefix: "/api/health"
     
-  # Métricas Prometheus (sem prefixo /api)
+  # Métricas Prometheus 
   - host: "*"
     pool: "backend-api-pool"
-    path_prefix: "/metrics"
+    path_prefix: "/api/metrics"
     
-  # Auth Routes - Sistema de autenticação (sem prefixo /api)
+  # Auth Routes - Sistema de autenticação 
   - host: "*"
     pool: "backend-api-pool"
-    path_prefix: "/auth"
+    path_prefix: "/api/auth"
     
   # API Routes - Backend Load Balancer (COM prefixo /api)
   - host: "*"

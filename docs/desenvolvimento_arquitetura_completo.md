@@ -622,7 +622,7 @@ jobs:
 
 ```bash
 # Verificar se serviços estão rodando
-curl http://localhost:8080/health
+curl http://localhost:8080/api/health
 curl http://localhost:2112/metrics
 
 # Verificar logs

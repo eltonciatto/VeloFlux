@@ -100,7 +100,7 @@ echo -e "\n${BLUE}3. Backend API Tests${NC}"
 echo "------------------"
 
 # Backend direct health
-check_http "http://localhost:9090/health" 200 "" "Backend health endpoint" && pass_test || fail_test
+check_http "http://localhost:9090/api/health" 200 "" "Backend health endpoint" && pass_test || fail_test
 
 # Backend metrics
 check_http "http://localhost:8080/metrics" 200 "" "Backend metrics endpoint" && pass_test || fail_test

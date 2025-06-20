@@ -15,7 +15,7 @@
 
 #### **Login**
 ```http
-POST /auth/login
+POST /api/auth/login
 Content-Type: application/json
 
 {
@@ -45,7 +45,7 @@ Content-Type: application/json
 
 #### **Registro**
 ```http
-POST /auth/register
+POST /api/auth/register
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 
 #### **Refresh Token**
 ```http
-POST /auth/refresh
+POST /api/auth/refresh
 Authorization: Bearer <refresh_token>
 ```
 

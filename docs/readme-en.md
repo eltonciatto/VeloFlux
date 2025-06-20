@@ -97,11 +97,10 @@ global:
 # Backend pools
 pools:
   - name: "web-servers"
-    algorithm: "round_robin"
-    health_check:
+    algorithm: "round_robin"    health_check:
       interval: "30s"
       timeout: "5s"
-      path: "/health"
+      path: "/api/health"
     
     backends:
       - address: "<YOUR_IP_ADDRESS>:8080"
@@ -286,7 +285,7 @@ k6 run scripts/load-test.js
 ### Authentication
 ```bash
 # Login
-curl -X POST "https://api.veloflux.io/auth/login" \
+curl -X POST "https://api.veloflux.io/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password"}'
 
@@ -311,7 +310,7 @@ curl -X PUT "https://api.veloflux.io/api/tenants/tenant-id" \
 ### Monitoring
 ```bash
 # Get metrics
-curl -X GET "https://api.veloflux.io/metrics"
+curl -X GET "https://api.veloflux.io/api/metrics"
 
 # Get tenant usage
 curl -X GET "https://api.veloflux.io/api/tenants/tenant-id/usage" \

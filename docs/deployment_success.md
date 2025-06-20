@@ -48,7 +48,7 @@ ssh root@<YOUR_IP_ADDRESS> "cd /tmp && tar xzf veloflux-saas-production-fixed.ta
 
 # Ou manualmente:
 systemctl status veloflux nginx docker
-curl http://localhost/health
+curl http://localhost/api/health
 ```
 
 ## 📦 Arquivos Disponíveis

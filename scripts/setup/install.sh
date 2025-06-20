@@ -185,7 +185,7 @@ backends:
     url: "http://127.0.0.1:3001"
     weight: 100
     health_check:
-      path: "/health"
+      path: "/api/health"
       interval: "30s"
 
 load_balancing:
@@ -257,7 +257,7 @@ server {
     }
     
     location /health {
-        proxy_pass http://127.0.0.1:8080/health;
+        proxy_pass http://127.0.0.1:8080/api/health;
         access_log off;
     }
 }
@@ -303,7 +303,7 @@ from datetime import datetime
 
 class DemoHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/health':
+        if self.path == '/api/health':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -422,7 +422,7 @@ show_info() {
     echo -e "${YELLOW}🌐 Access Points:${NC}"
     echo -e "   Main Application: ${GREEN}http://$server_ip/${NC}"
     echo -e "   Admin Panel:      ${GREEN}http://$server_ip/admin${NC}"
-    echo -e "   Health Check:     ${GREEN}http://$server_ip/health${NC}"
+    echo -e "   Health Check:     ${GREEN}http://$server_ip/api/health${NC}"
     echo
     echo -e "${YELLOW}🔧 Management Commands:${NC}"
     echo -e "   Check status:     ${GREEN}systemctl status veloflux${NC}"

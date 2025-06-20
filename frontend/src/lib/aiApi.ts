@@ -92,7 +92,7 @@ class AIApiClient {
    * Get comprehensive AI metrics
    */
   async getAIMetrics(): Promise<AIMetrics> {
-    const response = await apiFetch('/ai/metrics');
+    const response = await apiFetch('/api/ai/metrics');
     return response;
   }
 
@@ -148,7 +148,7 @@ class AIApiClient {
    * Get AI system health
    */
   async getAIHealth(): Promise<{ status: string; models: string[]; last_prediction: string }> {
-    const response = await apiFetch('/ai/health');
+    const response = await apiFetch('/api/ai/health');
     return response;
   }
 
@@ -167,7 +167,7 @@ class AIApiClient {
       optimization_score: number;
     }>;
   }> {
-    const response = await apiFetch('/ai/metrics/geo');
+    const response = await apiFetch('/api/ai/metrics/geo');
     return response;
   }
 

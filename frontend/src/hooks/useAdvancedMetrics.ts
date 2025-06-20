@@ -40,10 +40,7 @@ export function useAdvancedMetrics(tenantId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   // WebSocket para dados em tempo real
-  const { data: realtimeData, isConnected } = useRealtimeWebSocket({
-    url: 'ws://localhost:8080/api/v1/ws/metrics',
-    reconnect: true
-  });
+  const { lastMessage, isConnected } = useRealtimeWebSocket('ws://localhost:8080/api/ws/metrics');
 
   // Buscar métricas históricas
   const fetchMetrics = useCallback(async () => {
@@ -85,16 +82,21 @@ export function useAdvancedMetrics(tenantId?: string) {
 
   // Atualizar métricas real-time via WebSocket
   useEffect(() => {
-    if (realtimeData && metrics) {
-      setMetrics(prev => prev ? {
-        ...prev,
-        realtime: {
-          ...prev.realtime,
-          ...realtimeData
-        }
-      } : null);
+    if (lastMessage && metrics) {
+      try {
+        const realtimeUpdate = typeof lastMessage === 'string' ? JSON.parse(lastMessage) : lastMessage.data;
+        setMetrics(prev => prev ? {
+          ...prev,
+          realtime: {
+            ...prev.realtime,
+            ...realtimeUpdate
+          }
+        } : null);
+      } catch (error) {
+        console.error('Error parsing realtime data:', error);
+      }
     }
-  }, [realtimeData, metrics]);
+  }, [lastMessage, metrics]);
 
   // Carregar métricas inicial
   useEffect(() => {

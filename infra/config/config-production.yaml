@@ -93,12 +93,12 @@ routes:
   # Health Check do Sistema
   - host: "*"
     pool: "backend-api-pool"
-    path_prefix: "/health"
+    path_prefix: "/api/health"
     
   # Métricas Prometheus
   - host: "*"
     pool: "backend-api-pool"
-    path_prefix: "/metrics"
+    path_prefix: "/api/metrics"
     
   # Frontend React - Interface do usuário (rota padrão)
   - host: "*"

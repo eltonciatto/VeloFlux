@@ -175,7 +175,7 @@ export function useWebSocket({
 // Hook específico para métricas em tempo real
 export function useRealtimeMetrics() {
   const wsConfig = {
-    url: 'ws://localhost:8080/ws/metrics',
+    url: 'ws://localhost:8080/api/ws/metrics',
     debug: process.env.NODE_ENV === 'development'
   };
 
@@ -195,7 +195,7 @@ export function useRealtimeAI() {
 // Hook específico para status de backends
 export function useRealtimeBackends() {
   const wsConfig = {
-    url: 'ws://localhost:8080/ws/backends',
+    url: 'ws://localhost:8080/api/ws/backends',
     debug: process.env.NODE_ENV === 'development'
   };
 
@@ -205,7 +205,7 @@ export function useRealtimeBackends() {
 // Hook específico para saúde do sistema
 export function useRealtimeHealth() {
   const wsConfig = {
-    url: 'ws://localhost:8080/ws/health',
+    url: 'ws://localhost:8080/api/ws/health',
     debug: process.env.NODE_ENV === 'development'
   };
 

@@ -148,7 +148,7 @@ func TestHealthEndpoint(t *testing.T) {
 	ts := setupTestSuite(t)
 	defer ts.teardownTestSuite()
 
-	resp, body := ts.makeRequest(t, "GET", "/health", nil, "")
+	resp, body := ts.makeRequest(t, "GET", "/api/health", nil, "")
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Contains(t, string(body), "healthy")
@@ -169,7 +169,7 @@ func TestUserRegistration(t *testing.T) {
 		"plan":        "free",
 	}
 
-	resp, body := ts.makeRequest(t, "POST", "/auth/register", registerData, "")
+	resp, body := ts.makeRequest(t, "POST", "/api/auth/register", registerData, "")
 
 	// Verificar status
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
@@ -207,7 +207,7 @@ func TestUserLogin(t *testing.T) {
 		"plan":        "free",
 	}
 
-	_, _ = ts.makeRequest(t, "POST", "/auth/register", registerData, "")
+	_, _ = ts.makeRequest(t, "POST", "/api/auth/register", registerData, "")
 
 	// Agora testar login
 	loginData := map[string]interface{}{
@@ -215,7 +215,7 @@ func TestUserLogin(t *testing.T) {
 		"password": "password123",
 	}
 
-	resp, body := ts.makeRequest(t, "POST", "/auth/login", loginData, "")
+	resp, body := ts.makeRequest(t, "POST", "/api/auth/login", loginData, "")
 
 	// Verificar status
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -241,7 +241,7 @@ func TestInvalidLogin(t *testing.T) {
 		"password": "wrongpassword",
 	}
 
-	resp, body := ts.makeRequest(t, "POST", "/auth/login", loginData, "")
+	resp, body := ts.makeRequest(t, "POST", "/api/auth/login", loginData, "")
 
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
@@ -267,7 +267,7 @@ func TestTokenRefresh(t *testing.T) {
 		"plan":        "free",
 	}
 
-	regResp, regBody := ts.makeRequest(t, "POST", "/auth/register", registerData, "")
+	regResp, regBody := ts.makeRequest(t, "POST", "/api/auth/register", registerData, "")
 	require.Equal(t, http.StatusCreated, regResp.StatusCode)
 
 	var regData RegisterResponse
@@ -275,7 +275,7 @@ func TestTokenRefresh(t *testing.T) {
 	require.NoError(t, err)
 
 	// Testar refresh
-	resp, body := ts.makeRequest(t, "POST", "/auth/refresh", nil, regData.Token)
+	resp, body := ts.makeRequest(t, "POST", "/api/auth/refresh", nil, regData.Token)
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -440,7 +440,7 @@ func (ts *TestSuite) registerTestUser(t *testing.T, email string) string {
 		"plan":        "free",
 	}
 
-	resp, body := ts.makeRequest(t, "POST", "/auth/register", registerData, "")
+	resp, body := ts.makeRequest(t, "POST", "/api/auth/register", registerData, "")
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var regResp RegisterResponse
@@ -478,7 +478,7 @@ func TestIntegrationFlow(t *testing.T) {
 		"plan":        "free",
 	}
 
-	regResp, regBody := ts.makeRequest(t, "POST", "/auth/register", registerData, "")
+	regResp, regBody := ts.makeRequest(t, "POST", "/api/auth/register", registerData, "")
 	assert.Equal(t, http.StatusCreated, regResp.StatusCode)
 
 	var regData RegisterResponse
@@ -494,7 +494,7 @@ func TestIntegrationFlow(t *testing.T) {
 		"password": "password123",
 	}
 
-	loginResp, _ := ts.makeRequest(t, "POST", "/auth/login", loginData, "")
+	loginResp, _ := ts.makeRequest(t, "POST", "/api/auth/login", loginData, "")
 	assert.Equal(t, http.StatusOK, loginResp.StatusCode)
 
 	// 3. Listar tenants
@@ -535,7 +535,7 @@ func TestIntegrationFlow(t *testing.T) {
 	assert.Equal(t, http.StatusOK, invoicesResp.StatusCode)
 
 	// 9. Refresh token
-	refreshResp, _ := ts.makeRequest(t, "POST", "/auth/refresh", nil, token)
+	refreshResp, _ := ts.makeRequest(t, "POST", "/api/auth/refresh", nil, token)
 	assert.Equal(t, http.StatusOK, refreshResp.StatusCode)
 
 	fmt.Println("✅ Fluxo de integração completo executado com sucesso!")

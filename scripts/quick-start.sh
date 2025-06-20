@@ -111,7 +111,7 @@ else
     echo -e "${YELLOW}⚠️ Frontend não está rodando${NC}"
 fi
 
-if curl -s http://localhost:8080/health > /dev/null 2>&1; then
+if curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Backend rodando em http://localhost:8080${NC}"
     backend_running=true
 else
@@ -147,7 +147,7 @@ if [ "$frontend_running" = false ] || [ "$backend_running" = false ]; then
         exit 1
     fi
     
-    if ! curl -s http://localhost:8080/health > /dev/null 2>&1; then
+    if ! curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
         echo -e "${RED}❌ Backend ainda não está respondendo${NC}"
         exit 1
     fi
@@ -218,7 +218,7 @@ else
     # Basic validation
     echo -e "${BLUE}Testando endpoints básicos...${NC}"
     
-    if curl -s http://localhost:8080/health | grep -q "ok\|healthy\|success"; then
+    if curl -s http://localhost:8080/api/health | grep -q "ok\|healthy\|success"; then
         echo -e "${GREEN}✅ Health check: OK${NC}"
     else
         echo -e "${RED}❌ Health check: FALHOU${NC}"
@@ -239,7 +239,7 @@ echo -e "${CYAN}▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓�
 echo ""
 echo -e "${BLUE}🌐 Dashboard:${NC} http://localhost:3000"
 echo -e "${BLUE}🔧 API Backend:${NC} http://localhost:8080"
-echo -e "${BLUE}📊 Health Check:${NC} http://localhost:8080/health"
+echo -e "${BLUE}📊 Health Check:${NC} http://localhost:8080/api/health"
 echo -e "${BLUE}📋 Métricas:${NC} http://localhost:8080/api/metrics/system"
 echo ""
 echo -e "${BLUE}📁 Relatórios:${NC} reports/master-test-report-*.md"

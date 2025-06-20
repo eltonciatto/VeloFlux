@@ -45,7 +45,7 @@ auth:
   oidc_enabled: false
   oidc_issuer_url: "https://auth.example.com/realms/veloflux"
   oidc_client_id: "veloflux-admin"
-  oidc_redirect_uri: "https://admin.veloflux.example.com/auth/callback"
+  oidc_redirect_uri: "https://admin.veloflux.example.com/api/auth/callback"
   # SMTP Email Provider Configuration
   smtp_enabled: false
   smtp:
@@ -117,7 +117,7 @@ pools:
       - address: "backend-1:80"
         weight: 100
         health_check:
-          path: "/health"
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200
@@ -125,7 +125,7 @@ pools:
       - address: "backend-2:80"
         weight: 100
         health_check:
-          path: "/health"
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200

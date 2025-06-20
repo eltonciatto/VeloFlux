@@ -26,7 +26,7 @@ export const CONFIG = {
     ADMIN_URL: import.meta.env.VITE_PROD_ADMIN_URL || '/admin/api',
     
     // Production authentication endpoint
-    AUTH_ENDPOINT: '/auth/login',
+    AUTH_ENDPOINT: '/api/auth/login',
     
     // Real backend endpoints for production
     ENDPOINTS: {

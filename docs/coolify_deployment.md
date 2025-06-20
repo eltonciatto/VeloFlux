@@ -242,9 +242,8 @@ pools:
     sticky_sessions: true
     backends:
       - address: "${TENANT1_BACKEND1}"
-        weight: 100
-        health_check:
-          path: "/health"
+        weight: 100        health_check:
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200
@@ -252,7 +251,7 @@ pools:
       - address: "${TENANT1_BACKEND2}"
         weight: 100
         health_check:
-          path: "/health"
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200
@@ -262,9 +261,8 @@ pools:
     sticky_sessions: false
     backends:
       - address: "${TENANT2_BACKEND1}"
-        weight: 100
-        health_check:
-          path: "/health"
+        weight: 100        health_check:
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200
@@ -272,7 +270,7 @@ pools:
       - address: "${TENANT2_BACKEND2}"
         weight: 100
         health_check:
-          path: "/health"
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200

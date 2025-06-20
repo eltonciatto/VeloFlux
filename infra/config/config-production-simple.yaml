@@ -45,7 +45,7 @@ pools:
       - address: "backend-tenant1:80"
         weight: 100
         health_check:
-          path: "/health"
+          path: "/api/health"
           interval: "15s"
           timeout: "3s"
           expected_status: 200

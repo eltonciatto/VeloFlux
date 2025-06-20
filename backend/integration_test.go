@@ -80,7 +80,7 @@ func makeHTTPRequest(t *testing.T, method, url string, body map[string]interface
 func TestAPIHealth(t *testing.T) {
 	baseURL := "http://localhost:9090"
 
-	resp, body := makeHTTPRequest(t, "GET", baseURL+"/health", nil, "")
+	resp, body := makeHTTPRequest(t, "GET", baseURL+"/api/health", nil, "")
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Esperado status 200, obtido %d", resp.StatusCode)
@@ -107,7 +107,7 @@ func TestAPIRegister(t *testing.T) {
 		"plan":        "free",
 	}
 
-	resp, body := makeHTTPRequest(t, "POST", baseURL+"/auth/register", registerData, "")
+	resp, body := makeHTTPRequest(t, "POST", baseURL+"/api/auth/register", registerData, "")
 
 	if resp.StatusCode != http.StatusCreated {
 		t.Errorf("Esperado status 201, obtido %d. Resposta: %s", resp.StatusCode, string(body))
@@ -149,7 +149,7 @@ func TestAPILogin(t *testing.T) {
 		"plan":        "free",
 	}
 
-	makeHTTPRequest(t, "POST", baseURL+"/auth/register", registerData, "")
+	makeHTTPRequest(t, "POST", baseURL+"/api/auth/register", registerData, "")
 
 	// Agora fazer login
 	loginData := map[string]interface{}{
@@ -157,7 +157,7 @@ func TestAPILogin(t *testing.T) {
 		"password": "password123",
 	}
 
-	resp, body := makeHTTPRequest(t, "POST", baseURL+"/auth/login", loginData, "")
+	resp, body := makeHTTPRequest(t, "POST", baseURL+"/api/auth/login", loginData, "")
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Esperado status 200, obtido %d. Resposta: %s", resp.StatusCode, string(body))
@@ -320,7 +320,7 @@ func TestAPIIntegrationFlow(t *testing.T) {
 	fmt.Println("🧪 Iniciando teste de fluxo de integração completo...")
 
 	// 1. Verificar health
-	resp, _ := makeHTTPRequest(t, "GET", baseURL+"/health", nil, "")
+	resp, _ := makeHTTPRequest(t, "GET", baseURL+"/api/health", nil, "")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Backend não está saudável")
 	}
@@ -337,7 +337,7 @@ func TestAPIIntegrationFlow(t *testing.T) {
 		"plan":        "free",
 	}
 
-	resp, body := makeHTTPRequest(t, "POST", baseURL+"/auth/register", registerData, "")
+	resp, body := makeHTTPRequest(t, "POST", baseURL+"/api/auth/register", registerData, "")
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("Falha no registro: %d - %s", resp.StatusCode, string(body))
 	}
@@ -357,14 +357,14 @@ func TestAPIIntegrationFlow(t *testing.T) {
 		"password": "password123",
 	}
 
-	resp, _ = makeHTTPRequest(t, "POST", baseURL+"/auth/login", loginData, "")
+	resp, _ = makeHTTPRequest(t, "POST", baseURL+"/api/auth/login", loginData, "")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Falha no login")
 	}
 	fmt.Println("   ✅ Login passou")
 
 	// 4. Refresh token
-	resp, _ = makeHTTPRequest(t, "POST", baseURL+"/auth/refresh", nil, token)
+	resp, _ = makeHTTPRequest(t, "POST", baseURL+"/api/auth/refresh", nil, token)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Falha no refresh")
 	}

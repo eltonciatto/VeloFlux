@@ -40,7 +40,7 @@ auth:
     enabled: false
     issuer_url: "https://accounts.google.com"
     client_id: ""
-    redirect_uri: "http://localhost/auth/callback"
+    redirect_uri: "http://localhost/api/auth/callback"
 
 # Clustering Configuration
 cluster:
