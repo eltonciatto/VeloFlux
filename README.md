@@ -1,4 +1,4 @@
-# 🚀 VeloFlux - Container-Na### 📖 **Documentação Completa**
+# 🚀 VeloFlux - Container-Native Ai 📖 **Documentação Completa**
 > **Toda documentação do projeto está centralizada em [`/docs`](./docs/INDEX.md)**
 
 ### 🎯 **Documentação Principal**
