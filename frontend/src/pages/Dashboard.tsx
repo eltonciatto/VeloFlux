@@ -68,7 +68,10 @@ import {
   ChevronDown,
   Cpu,
   HardDrive,
-  Wifi
+  Wifi,
+  Home,
+  Eye,
+  BarChart
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -148,95 +151,65 @@ const Dashboard: React.FC = () => {
       status: 'attention',
       description: 'Verificar alertas ativos',
       lastRun: 'Just now'
-    },
-    {
-      id: 'security_scan',
-      label: 'Security Scan',
-      icon: Shield,
-      status: 'ready',
-      description: 'Executar varredura de segurança',
-      lastRun: '30 min ago'
-    },
-    {
-      id: 'performance_test',
-      label: 'Performance Test',
-      icon: Gauge,
-      status: 'ready',
-      description: 'Teste de performance',
-      lastRun: '2 hours ago'
     }
   ]);
 
-  // Production data hook with error handling
-  const { 
-    metrics, 
-    alerts,
-    loading: dataLoading,
-    error: dataError 
-  } = useProductionData();
+  const { isLoading: dataLoading } = useProductionData();
 
-  // Mouse tracking for parallax effects
+  // Mouse tracking for 3D effects
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        mouseX.set(e.clientX - centerX);
-        mouseY.set(e.clientY - centerY);
+        mouseX.set((e.clientX - centerX) / 10);
+        mouseY.set((e.clientY - centerY) / 10);
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
-  // Animate stats on load
+  // Simulated data loading
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200);
-    
-    // Simulate real-time data updates
-    const interval = setInterval(() => {
-      setRealtimeStats(prev => ({
-        activeConnections: Math.floor(Math.random() * 1000) + 500,
-        requestsPerSecond: Math.floor(Math.random() * 5000) + 2000,
-        cpuUsage: Math.floor(Math.random() * 30) + 20,
-        memoryUsage: Math.floor(Math.random() * 40) + 30,
-        networkThroughput: Math.floor(Math.random() * 500) + 200,
-        activeBackends: Math.floor(Math.random() * 5) + 8
-      }));
-    }, 2000);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2500);
 
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
+  // Real-time stats simulation
   useEffect(() => {
-    if (alerts && alerts.length > 0) {
-      setSystemHealth('warning');
-      setActiveAlerts(alerts);
-    } else {
-      setSystemHealth('healthy');
-      setActiveAlerts([]);
-    }
-  }, [alerts]);
+    const interval = setInterval(() => {
+      setRealtimeStats(prev => ({
+        ...prev,
+        activeConnections: prev.activeConnections + Math.floor(Math.random() * 20) - 10,
+        requestsPerSecond: prev.requestsPerSecond + Math.floor(Math.random() * 100) - 50,
+        cpuUsage: Math.max(0, Math.min(100, prev.cpuUsage + Math.floor(Math.random() * 6) - 3)),
+        memoryUsage: Math.max(0, Math.min(100, prev.memoryUsage + Math.floor(Math.random() * 4) - 2)),
+        responseTime: Math.max(10, prev.responseTime + Math.floor(Math.random() * 10) - 5),
+        networkThroughput: prev.networkThroughput + Math.floor(Math.random() * 50) - 25
+      }));
+    }, 5000);
 
-  // Safe component wrapper
-  const SafeComponent = ({ children }: { children: React.ReactNode }) => {
-    try {
-      return <>{children}</>;
-    } catch (error) {
-      console.error('Component error:', error);
-      return (
-        <div className="p-4 text-center text-gray-500">
-          <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-          <p>Erro ao carregar componente</p>
-        </div>
-      );
-    }
-  };
+    return () => clearInterval(interval);
+  }, []);
+
+  // System health monitoring
+  useEffect(() => {
+    const healthScore = (
+      (100 - realtimeStats.cpuUsage) * 0.3 +
+      (100 - realtimeStats.memoryUsage) * 0.3 +
+      (realtimeStats.uptime) * 0.4
+    );
+
+    if (healthScore > 85) setSystemHealth('healthy');
+    else if (healthScore > 70) setSystemHealth('warning');
+    else setSystemHealth('critical');
+  }, [realtimeStats]);
 
   const tabsData = [
     {
@@ -349,415 +322,12 @@ const Dashboard: React.FC = () => {
     };
     
     return (
-      <motion.div
-        className={`w-3 h-3 rounded-full ${colors[status as keyof typeof colors]}`}
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-    );
-  };
-
-  // Trend indicator component
-  const TrendIndicator = ({ trend, value }: { trend: string; value: number }) => {
-    const isPositive = trend === 'increasing' || trend === 'stable';
-    return (
-      <div className="flex items-center gap-1">
-        {trend === 'increasing' && <TrendingUp className="w-3 h-3 text-green-400" />}
-        {trend === 'decreasing' && <TrendingDown className="w-3 h-3 text-red-400" />}
-        {trend === 'stable' && <div className="w-3 h-0.5 bg-blue-400" />}
-        <span className={`text-xs ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-          {value > 0 ? '+' : ''}{value}%
-        </span>
+      <div className="flex items-center space-x-2">
+        <div className={`w-2 h-2 rounded-full ${colors[status as keyof typeof colors]} animate-pulse`} />
+        <span className="text-xs text-gray-400 capitalize">{status}</span>
       </div>
     );
   };
-
-  // Enhanced stat card component
-  const EnhancedStatCard = ({ 
-    title, 
-    value, 
-    unit, 
-    icon: Icon, 
-    trend, 
-    trendValue, 
-    color = 'blue',
-    description,
-    onClick 
-  }: any) => (
-    <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative overflow-hidden cursor-pointer"
-    >
-      <Card className="p-4 h-full bg-gradient-to-br from-gray-900/50 to-gray-800/30 border-gray-700/50 backdrop-blur-xl hover:border-gray-600/70 transition-all duration-300">
-        <div className="flex items-center justify-between mb-3">
-          <div className={`p-2 rounded-lg bg-${color}-500/20 border border-${color}-400/30`}>
-            <Icon className={`w-5 h-5 text-${color}-400`} />
-          </div>
-          <TrendIndicator trend={trend} value={trendValue} />
-        </div>
-        
-        <div className="space-y-1">
-          <div className="flex items-baseline gap-1">
-            <motion.span 
-              className="text-2xl font-bold text-white"
-              key={value}
-              initial={{ scale: 1.2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </motion.span>
-            {unit && <span className="text-sm text-gray-400">{unit}</span>}
-          </div>
-          
-          <p className="text-sm font-medium text-gray-300">{title}</p>
-          
-          {description && (
-            <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
-          )}
-        </div>
-
-        {/* Decorative gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-r from-${color}-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300`} />
-      </Card>
-    </motion.div>
-  );
-
-  // Quick action button component
-  const QuickActionButton = ({ action }: { action: any }) => {
-    const statusColors = {
-      ready: 'border-gray-600 text-gray-300',
-      active: 'border-green-500 text-green-400 bg-green-500/10',
-      attention: 'border-yellow-500 text-yellow-400 bg-yellow-500/10'
-    };
-
-    return (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`p-3 rounded-lg border ${statusColors[action.status]} backdrop-blur-sm transition-all duration-200 hover:bg-white/5 flex flex-col items-center text-center`}
-      >
-        <action.icon className="w-5 h-5 mx-auto mb-1" />
-        <span className="text-xs font-medium block">{action.label}</span>
-        <span className="text-xs text-gray-500 mt-1">{action.description}</span>
-      </motion.button>
-    );
-  };
-
-  return (
-    <div 
-      ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white relative overflow-hidden"
-    >
-      {/* Enhanced background effects */}
-      <div className="absolute inset-0 opacity-30">
-        <StarField />
-      </div>
-      <div className="absolute inset-0 opacity-20">
-        <FloatingParticles />
-      </div>
-
-      {/* Header with enhanced design */}
-      <motion.header 
-        className="sticky top-0 z-40 backdrop-blur-xl bg-gray-900/80 border-b border-gray-700/50"
-        style={{ rotateX, rotateY }}
-      >
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <motion.div 
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1">
-                    <StatusIndicator status={systemHealth} />
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    VeloFlux Enterprise
-                  </h1>
-                  <p className="text-sm text-gray-400">
-                    Dashboard Aprimorado • Sistema de Load Balancing Enterprise
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* System status overview */}
-              <motion.div 
-                className="flex items-center gap-6 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-medium">{realtimeStats.cpuUsage}%</span>
-                </div>
-                <Separator orientation="vertical" className="h-4" />
-                <div className="flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-green-400" />
-                  <span className="text-sm font-medium">{realtimeStats.memoryUsage}%</span>
-                </div>
-                <Separator orientation="vertical" className="h-4" />
-                <div className="flex items-center gap-2">
-                  <Wifi className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm font-medium">{realtimeStats.networkThroughput} MB/s</span>
-                </div>
-              </motion.div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 hover:bg-gray-700"
-                >
-                  <Bell className="w-4 h-4" />
-                  {activeAlerts.length > 0 && (
-                    <Badge className="ml-1 bg-red-500 text-white text-xs">
-                      {activeAlerts.length}
-                    </Badge>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Main content */}
-      <main className="p-6 space-y-6">
-        {/* Quick stats overview */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
-            <EnhancedStatCard
-              title="Conexões Ativas"
-              value={realtimeStats.activeConnections}
-              icon={Users}
-              trend="increasing"
-              trendValue={12}
-              color="blue"
-              description="Conexões simultâneas ativas"
-            />
-            <EnhancedStatCard
-              title="Req/Segundo"
-              value={realtimeStats.requestsPerSecond}
-              icon={Activity}
-              trend="stable"
-              trendValue={3}
-              color="green"
-              description="Requisições processadas por segundo"
-            />
-            <EnhancedStatCard
-              title="Tempo Resposta"
-              value={realtimeStats.responseTime}
-              unit="ms"
-              icon={Clock}
-              trend="decreasing"
-              trendValue={-8}
-              color="purple"
-              description="Tempo médio de resposta"
-            />
-            <EnhancedStatCard
-              title="Taxa de Erro"
-              value={realtimeStats.errorRate.toFixed(1)}
-              unit="%"
-              icon={AlertTriangle}
-              trend="decreasing"
-              trendValue={-15}
-              color="red"
-              description="Taxa de erro nas requisições"
-            />
-            <EnhancedStatCard
-              title="Cache Hit"
-              value={realtimeStats.cacheHitRate.toFixed(1)}
-              unit="%"
-              icon={Zap}
-              trend="increasing"
-              trendValue={5}
-              color="yellow"
-              description="Taxa de acerto do cache"
-            />
-            <EnhancedStatCard
-              title="Uptime"
-              value={realtimeStats.uptime.toFixed(2)}
-              unit="%"
-              icon={CheckCircle}
-              trend="stable"
-              trendValue={0}
-              color="emerald"
-              description="Tempo de atividade do sistema"
-            />
-          </div>
-        </motion.section>
-
-        {/* Quick actions */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <Card className="p-4 bg-gradient-to-r from-gray-900/50 to-gray-800/30 border-gray-700/50 backdrop-blur-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Ações Rápidas</h3>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {quickActions.map((action) => (
-                <QuickActionButton key={action.id} action={action} />
-              ))}
-            </div>
-          </Card>
-        </motion.section>
-
-        {/* Enhanced tabs */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-        >
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
-              {tabsData.map((tab) => (
-                <TabsTrigger 
-                  key={tab.id}
-                  value={tab.id}
-                  className="relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/20 data-[state=active]:to-purple-600/20 data-[state=active]:text-white"
-                >
-                  <div className="flex items-center gap-2">
-                    <tab.icon className="w-4 h-4" />
-                    <span className="font-medium">{tab.label}</span>
-                    {tab.badge && (
-                      <Badge variant="secondary" className="text-xs bg-gray-700 text-gray-300">
-                        {tab.badge}
-                      </Badge>
-                    )}
-                  </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* Tab content with enhanced error handling */}
-            <div className="min-h-[600px]">
-              <DashboardErrorBoundary>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {tabsData.map((tab) => (
-                      <TabsContent key={tab.id} value={tab.id} className="space-y-6">
-                        {tab.component}
-                      </TabsContent>
-                    ))}
-                  </motion.div>
-                </AnimatePresence>
-              </DashboardErrorBoundary>
-            </div>
-          </Tabs>
-        </motion.section>
-      </main>
-
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full"
-            />
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="ml-4 text-lg font-medium text-blue-400"
-            >
-              Carregando Dashboard Aprimorado...
-            </motion.p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-export default Dashboard;
-      component: <AIConfiguration />
-    },
-    {
-      id: 'ai-hub',
-      label: 'Hub IA Premium',
-      icon: Zap,
-      gradient: 'from-purple-500 via-indigo-500 to-blue-600',
-      description: 'Centro neural de IA Premium',
-      component: <AIHub />
-    },
-    {
-      id: 'billing',
-      label: t('dashboard.tabs.billing'),
-      icon: CreditCard,
-      gradient: 'from-green-500 via-emerald-500 to-teal-600',
-      description: 'Sistema de cobrança moderno',
-      component: <ModernBillingPanel />
-    },
-    {
-      id: 'security',
-      label: t('dashboard.tabs.security'),
-      icon: Lock,
-      gradient: 'from-red-500 via-pink-500 to-rose-600',
-      description: 'Segurança avançada',
-      component: <SecuritySettings />
-    },
-    {
-      id: 'export',
-      label: t('dashboard.tabs.export'),
-      icon: Download,
-      gradient: 'from-gray-500 via-slate-500 to-zinc-600',
-      description: 'Exportação e relatórios',
-      component: <BillingExport />
-    },
-    {
-      id: 'orchestration',
-      label: t('dashboard.tabs.orchestration'),
-      icon: GitMerge,
-      gradient: 'from-blue-500 via-indigo-500 to-purple-600',
-      description: 'Orquestração inteligente',
-      component: <OrchestrationSettings />
-    },
-    {
-      id: 'config',
-      label: t('dashboard.tabs.config'),
-      icon: Settings,
-      gradient: 'from-gray-500 via-slate-500 to-stone-600',
-      description: 'Configurações do sistema',
-      component: <ConfigManager />
-    }
-  ];
 
   if (isLoading || dataLoading) {
     return (
@@ -851,253 +421,195 @@ export default Dashboard;
                   style={{ rotateX, rotateY }}
                 >
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
-                    <Activity className="w-8 h-8 text-white" />
+                    <Zap className="w-8 h-8 text-white" />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  </div>
                 </motion.div>
+                
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                  <motion.h1 
+                    className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     VeloFlux Dashboard
-                  </h1>
-                  <p className="text-blue-200/80 mt-1 text-lg">
-                    Centro de Comando Neural Avançado
-                  </p>
+                  </motion.h1>
+                  <motion.div 
+                    className="flex items-center space-x-4 mt-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <StatusIndicator status={systemHealth} />
+                    <span className="text-sm text-gray-400">
+                      {realtimeStats.activeConnections.toLocaleString()} conexões ativas
+                    </span>
+                    <span className="text-sm text-gray-400">
+                      {realtimeStats.requestsPerSecond.toLocaleString()} req/s
+                    </span>
+                  </motion.div>
                 </div>
               </div>
-              
-              {/* Real-time Stats Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { icon: Network, label: 'Conexões', value: realtimeStats.activeConnections, color: 'from-blue-500 to-cyan-500' },
-                  { icon: Zap, label: 'RPS', value: `${realtimeStats.requestsPerSecond}`, color: 'from-yellow-500 to-orange-500' },
-                  { icon: Cpu, label: 'CPU', value: `${realtimeStats.cpuUsage}%`, color: 'from-green-500 to-emerald-500' },
-                  { icon: Globe, label: 'Backends', value: realtimeStats.activeBackends, color: 'from-purple-500 to-pink-500' },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
-                        <stat.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-white/60 text-sm">{stat.label}</p>
-                        <p className="text-white font-bold text-lg">{stat.value}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              
-              {/* System Status & Actions */}
-              <div className="flex items-center gap-4">
-                <motion.div
-                  className="flex items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Badge 
-                    variant={systemHealth === 'healthy' ? 'default' : systemHealth === 'warning' ? 'secondary' : 'destructive'}
-                    className="px-4 py-2 text-sm font-medium bg-white/10 backdrop-blur-md border border-white/20"
-                  >
-                    {systemHealth === 'healthy' && <CheckCircle className="w-4 h-4 mr-2 text-green-400" />}
-                    {systemHealth === 'warning' && <AlertTriangle className="w-4 h-4 mr-2 text-yellow-400" />}
-                    {systemHealth === 'critical' && <AlertTriangle className="w-4 h-4 mr-2 text-red-400" />}
-                    <span className="text-white">{t(`dashboard.health.${systemHealth}`)}</span>
-                  </Badge>
-                </motion.div>
-                
-                {activeAlerts.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center"
-                  >
-                    <Badge className="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-200">
-                      <Bell className="w-4 h-4 mr-2" />
-                      {activeAlerts.length} alertas
-                    </Badge>
-                  </motion.div>
-                )}
-                
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="sm" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20">
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Atualizar
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
 
-          {/* Enhanced Tabs Navigation */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="relative mb-8">
-              <motion.div
-                className="overflow-x-auto scrollbar-hide"
+              {/* Quick Stats Cards */}
+              <motion.div 
+                className="grid grid-cols-2 lg:grid-cols-4 gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                transition={{ delay: 0.6 }}
               >
-                <TabsList className="grid w-full h-auto p-2 bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl min-w-max">
-                  {tabsData.map((tab, index) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    
-                    return (
-                      <motion.div
-                        key={tab.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <TabsTrigger
-                          value={tab.id}
-                          className={`
-                            relative group min-w-0 px-6 py-4 text-sm font-medium transition-all duration-500 rounded-xl overflow-hidden
-                            ${isActive 
-                              ? 'bg-white/20 backdrop-blur-md text-white shadow-2xl border border-white/30 scale-105' 
-                              : 'bg-transparent text-white/60 hover:bg-white/10 hover:text-white/90 border border-transparent hover:border-white/20'
-                            }
-                          `}
-                        >
-                          {/* Background gradient for active tab */}
-                          {isActive && (
-                            <motion.div
-                              className={`absolute inset-0 bg-gradient-to-r ${tab.gradient} opacity-20 rounded-xl`}
-                              layoutId="activeTab"
-                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            />
-                          )}
-                          
-                          <div className="relative flex items-center gap-3 z-10">
-                            <motion.div
-                              animate={{ 
-                                scale: isActive ? 1.1 : 1,
-                                rotate: isActive ? 5 : 0
-                              }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Icon className={`w-5 h-5 transition-all duration-300 ${
-                                isActive ? 'text-white drop-shadow-lg' : 'text-white/70 group-hover:text-white/90'
-                              }`} />
-                            </motion.div>
-                            
-                            <div className="flex flex-col items-start">
-                              <span className={`font-semibold whitespace-nowrap transition-all duration-300 ${
-                                isActive ? 'text-white' : 'text-white/70 group-hover:text-white/90'
-                              }`}>
-                                {tab.label}
-                              </span>
-                              
-                              {tab.description && (
-                                <span className={`text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                                  isActive ? 'text-white/80' : 'text-white/50'
-                                }`}>
-                                  {tab.description}
-                                </span>
-                              )}
-                            </div>
-                            
-                            {/* Enhanced alert indicators with animations */}
-                            {tab.id === 'health' && activeAlerts.length > 0 && (
-                              <motion.div 
-                                className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full"
-                                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              />
-                            )}
-                            {tab.id === 'metrics' && systemHealth === 'critical' && (
-                              <motion.div 
-                                className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full"
-                                animate={{ scale: [1, 1.5, 1] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              />
-                            )}
-                            {(tab.id === 'ai-insights' || tab.id === 'ai-hub') && (
-                              <motion.div 
-                                className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
-                                animate={{ 
-                                  rotate: 360,
-                                  scale: [1, 1.2, 1]
-                                }}
-                                transition={{ 
-                                  rotate: { duration: 3, repeat: Infinity, ease: "linear" },
-                                  scale: { duration: 2, repeat: Infinity }
-                                }}
-                              />
-                            )}
-                          </div>
-                          
-                          {/* Hover effect glow */}
-                          <motion.div
-                            className={`absolute inset-0 bg-gradient-to-r ${tab.gradient} opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300`}
-                          />
-                        </TabsTrigger>
-                      </motion.div>
-                    );
-                  })}
-                </TabsList>
+                {[
+                  { label: 'CPU', value: `${realtimeStats.cpuUsage}%`, color: 'text-blue-400', trend: performanceTrends.cpuTrend },
+                  { label: 'Memória', value: `${realtimeStats.memoryUsage}%`, color: 'text-green-400', trend: performanceTrends.memoryTrend },
+                  { label: 'Latência', value: `${realtimeStats.responseTime}ms`, color: 'text-yellow-400', trend: performanceTrends.responseTrend },
+                  { label: 'Uptime', value: `${realtimeStats.uptime}%`, color: 'text-purple-400', trend: performanceTrends.uptimeTrend }
+                ].map((stat, index) => (
+                  <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 p-4">
+                    <div className="text-center">
+                      <div className={`text-lg font-bold ${stat.color}`}>{stat.value}</div>
+                      <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+                      <div className="flex items-center justify-center mt-2">
+                        {stat.trend.direction === 'increasing' && <TrendingUp className="w-3 h-3 text-green-400" />}
+                        {stat.trend.direction === 'decreasing' && <TrendingUp className="w-3 h-3 text-red-400 rotate-180" />}
+                        {stat.trend.direction === 'stable' && <div className="w-3 h-0.5 bg-gray-400" />}
+                        <span className="text-xs text-gray-400 ml-1">
+                          {stat.trend.change !== 0 && (stat.trend.change > 0 ? '+' : '')}{stat.trend.change}%
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </motion.div>
             </div>
 
-            {/* Enhanced Tab Content with 3D Effects */}
-            <AnimatePresence mode="wait">
-              {tabsData.map((tab) => (
-                <TabsContent key={tab.id} value={tab.id} className="mt-0">
-                  <motion.div
-                    initial={{ opacity: 0, y: 50, rotateX: 10 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, y: -50, rotateX: -10 }}
-                    transition={{ 
-                      duration: 0.5,
-                      type: "spring",
-                      bounce: 0.1
-                    }}
-                    className="relative"
+            {/* Quick Actions */}
+            <motion.div 
+              className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              {quickActions.map((action, index) => (
+                <motion.div
+                  key={action.id}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    variant="ghost"
+                    className={`w-full h-auto p-4 text-left flex flex-col items-start space-y-2 border border-white/10 hover:border-white/20 transition-all duration-300 ${
+                      action.status === 'active' ? 'bg-blue-500/20 border-blue-500/40' :
+                      action.status === 'attention' ? 'bg-yellow-500/20 border-yellow-500/40' :
+                      'bg-white/5 hover:bg-white/10'
+                    }`}
                   >
-                    {/* Content Background with Glassmorphism */}
-                    <div className="bg-black/20 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
-                      {/* Tab Header with Gradient */}
-                      <motion.div 
-                        className="mb-6 pb-4 border-b border-white/10"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${tab.gradient} flex items-center justify-center shadow-lg`}>
-                            <tab.icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h2 className="text-2xl font-bold text-white">{tab.label}</h2>
-                            {tab.description && (
-                              <p className="text-white/60 mt-1">{tab.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                      
-                      {/* Tab Content */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                      >
-                        {tab.component}
-                      </motion.div>
+                    <div className="flex items-center space-x-3 w-full">
+                      <action.icon className={`w-5 h-5 ${
+                        action.status === 'active' ? 'text-blue-400' :
+                        action.status === 'attention' ? 'text-yellow-400' :
+                        'text-gray-400'
+                      }`} />
+                      <div className="flex-1">
+                        <div className="font-medium text-white text-sm">{action.label}</div>
+                        <div className="text-xs text-gray-400">{action.description}</div>
+                      </div>
+                      {action.status === 'active' && (
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                      )}
+                      {action.status === 'attention' && (
+                        <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                      )}
                     </div>
-                  </motion.div>
-                </TabsContent>
+                    <div className="text-xs text-gray-500 w-full">
+                      Last: {action.lastRun}
+                    </div>
+                  </Button>
+                </motion.div>
               ))}
-            </AnimatePresence>
-          </Tabs>
+            </motion.div>
+          </motion.div>
+
+          {/* Enhanced Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+          >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-2xl">
+                {tabsData.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className={`relative flex flex-col items-center space-y-1 p-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white/20 data-[state=active]:text-white ${
+                      activeTab === tab.id ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <tab.icon className="w-5 h-5" />
+                      <span className="font-medium text-sm hidden sm:block">{tab.label}</span>
+                    </div>
+                    {tab.badge && (
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs bg-gradient-to-r ${tab.gradient} text-white border-0 px-2 py-0.5`}
+                      >
+                        {tab.badge}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-gray-400 hidden lg:block text-center">
+                      {tab.description}
+                    </span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {/* Tab Content */}
+              <AnimatePresence mode="wait">
+                {tabsData.map((tab) => (
+                  <TabsContent key={tab.id} value={tab.id} className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {tab.component}
+                    </motion.div>
+                  </TabsContent>
+                ))}
+              </AnimatePresence>
+            </Tabs>
+          </motion.div>
         </div>
+
+        {/* Loading overlay */}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-gray-900/90 backdrop-blur-sm z-50 flex items-center justify-center"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full"
+              />
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="ml-4 text-lg font-medium text-blue-400"
+              >
+                Carregando Dashboard Aprimorado...
+              </motion.p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardErrorBoundary>
   );
