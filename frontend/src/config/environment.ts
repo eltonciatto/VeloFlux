@@ -44,7 +44,7 @@ export const CONFIG = {
       
       // Real-time data
       REAL_TIME_METRICS: '/api/metrics/realtime',
-      WEBSOCKET: import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? 'ws://localhost:8080/api/ws' : '/api/ws'),
+      WEBSOCKET: import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? 'ws://localhost:9090/api/ws' : '/api/ws'),
       
       // System Information
       SYSTEM_INFO: '/api/system/info',
