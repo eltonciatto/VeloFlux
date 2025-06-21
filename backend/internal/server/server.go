@@ -94,21 +94,21 @@ func New(cfg *config.Config, logger *zap.Logger) (*Server, error) {
 	if geoManager != nil {
 		bal.SetGeoManager(geoManager)
 	}
-	
+
 	// Create adaptive balancer if AI is enabled
 	var adaptiveBalancer *balancer.AdaptiveBalancer
 	if cfg.Global.AI.Enabled {
 		adaptiveConfig := &balancer.AdaptiveConfig{
-			AIEnabled:           cfg.Global.AI.Enabled,
-			AdaptationInterval:  30 * time.Second,
-			MinConfidenceLevel:  0.7,
-			FallbackAlgorithm:   "round_robin",
-			ApplicationAware:    true,
-			PredictiveScaling:   true,
-			LearningRate:        0.01,
-			ExplorationRate:     0.1,
+			AIEnabled:          cfg.Global.AI.Enabled,
+			AdaptationInterval: 30 * time.Second,
+			MinConfidenceLevel: 0.7,
+			FallbackAlgorithm:  "round_robin",
+			ApplicationAware:   true,
+			PredictiveScaling:  true,
+			LearningRate:       0.01,
+			ExplorationRate:    0.1,
 		}
-		
+
 		var err error
 		adaptiveBalancer, err = balancer.NewAdaptiveBalancer(cfg, adaptiveConfig, logger)
 		if err != nil {
@@ -306,7 +306,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	// Stop API server
 	if s.apiServer != nil {
-		if err := s.apiServer.Stop(ctx); err != nil {
+		if err := s.apiServer.Stop(); err != nil {
 			s.logger.Error("Error shutting down API server", zap.Error(err))
 		}
 	}
