@@ -83,6 +83,14 @@ type ClusterResponse struct {
 	Enabled   bool                     `json:"enabled"`
 }
 
+// Context key types to avoid collisions
+type contextKey string
+
+const (
+	userClaimsKey contextKey = "user_claims"
+	tenantIDKey   contextKey = "tenant_id"
+)
+
 // New creates a new API server
 func New(cfg *config.Config, bal *balancer.Balancer, adaptiveBal *balancer.AdaptiveBalancer, cl *clustering.Cluster,
 	tenantManager *tenant.Manager, billingManager *billing.BillingManager,
@@ -388,7 +396,7 @@ func (a *API) requireAuthToken(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Add claims to request context
-		ctx := context.WithValue(r.Context(), "user_claims", claims)
+		ctx := context.WithValue(r.Context(), userClaimsKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -431,7 +439,7 @@ func (a *API) requireTenantAccess(next http.HandlerFunc) http.HandlerFunc {
 		tenantID := vars["tenant_id"]
 
 		// Get user from context (set by requireAuthToken)
-		userClaims, ok := r.Context().Value("user_claims").(*auth.Claims)
+		userClaims, ok := r.Context().Value(userClaimsKey).(*auth.Claims)
 		if !ok {
 			writeError(w, "User not found in context", http.StatusInternalServerError)
 			return
