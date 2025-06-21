@@ -345,17 +345,17 @@ func (api *BillingAPI) handleGetWebhooks(w http.ResponseWriter, r *http.Request)
 	// Mock webhook data - in production, get from database
 	webhooks := []map[string]interface{}{
 		{
-			"id":            "wh_001",
-			"name":          "Stripe Payment Webhook",
-			"url":           "https://api.example.com/webhooks/stripe",
-			"events":        []string{"invoice.created", "payment.completed", "subscription.updated"},
-			"enabled":       true,
-			"status":        "active",
-			"created_at":    "2024-01-01T00:00:00Z",
+			"id":             "wh_001",
+			"name":           "Stripe Payment Webhook",
+			"url":            "https://api.example.com/webhooks/stripe",
+			"events":         []string{"invoice.created", "payment.completed", "subscription.updated"},
+			"enabled":        true,
+			"status":         "active",
+			"created_at":     "2024-01-01T00:00:00Z",
 			"last_triggered": "2024-01-15T10:30:00Z",
 			"retry_config": map[string]interface{}{
-				"max_retries":        3,
-				"retry_delay":       1000,
+				"max_retries":         3,
+				"retry_delay":         1000,
 				"exponential_backoff": true,
 			},
 		},
@@ -449,15 +449,15 @@ func (api *BillingAPI) handleGetTransactions(w http.ResponseWriter, r *http.Requ
 func (api *BillingAPI) handleGetUsageAlerts(w http.ResponseWriter, r *http.Request) {
 	alerts := []map[string]interface{}{
 		{
-			"id":           "alert_001",
-			"name":         "High Bandwidth Usage",
-			"metric":       "bandwidth_gb",
-			"limit":        1000,
+			"id":            "alert_001",
+			"name":          "High Bandwidth Usage",
+			"metric":        "bandwidth_gb",
+			"limit":         1000,
 			"current_usage": 850.5,
-			"threshold":    80,
-			"triggered":    true,
-			"created_at":   time.Now().Add(-7 * 24 * time.Hour).Format(time.RFC3339),
-			"last_checked": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			"threshold":     80,
+			"triggered":     true,
+			"created_at":    time.Now().Add(-7 * 24 * time.Hour).Format(time.RFC3339),
+			"last_checked":  time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
 		},
 	}
 
@@ -537,7 +537,105 @@ func (api *BillingAPI) handleDownloadInvoice(w http.ResponseWriter, r *http.Requ
 	// In production, generate and return actual PDF
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=invoice_%s.pdf", invoiceID))
-	
+
 	// Mock PDF content
 	w.Write([]byte("Mock PDF content for invoice " + invoiceID))
+}
+
+// Handler implementations for billing API
+
+func (api *BillingAPI) handleGetSubscriptions(w http.ResponseWriter, r *http.Request) {
+	// Implementação simplificada para evitar erros de compilação
+	subscriptions := []map[string]interface{}{
+		{"id": "sub_123", "status": "active", "plan": "pro"},
+	}
+	api.writeJSON(w, subscriptions)
+}
+
+func (api *BillingAPI) handleCreateSubscription(w http.ResponseWriter, r *http.Request) {
+	var req map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	subscription := map[string]interface{}{
+		"id":     "sub_new_123",
+		"status": "active",
+		"plan":   req["plan"],
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	api.writeJSON(w, subscription)
+}
+
+func (api *BillingAPI) handleGetSubscription(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	subscription := map[string]interface{}{
+		"id":     id,
+		"status": "active",
+		"plan":   "pro",
+	}
+
+	api.writeJSON(w, subscription)
+}
+
+func (api *BillingAPI) handleUpdateSubscription(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	var req map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.writeError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	subscription := map[string]interface{}{
+		"id":     id,
+		"status": "active",
+		"plan":   req["plan"],
+	}
+
+	api.writeJSON(w, subscription)
+}
+
+func (api *BillingAPI) handleDeleteSubscription(w http.ResponseWriter, r *http.Request) {
+	// Implementação simplificada
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (api *BillingAPI) handleGetInvoices(w http.ResponseWriter, r *http.Request) {
+	invoices := []map[string]interface{}{
+		{"id": "inv_123", "amount": 1000, "status": "paid"},
+	}
+	api.writeJSON(w, invoices)
+}
+
+func (api *BillingAPI) handleGetInvoice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	invoice := map[string]interface{}{
+		"id":     id,
+		"amount": 1000,
+		"status": "paid",
+	}
+
+	api.writeJSON(w, invoice)
+}
+
+// Utility methods
+func (api *BillingAPI) writeJSON(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		api.logger.Error("Failed to encode JSON", zap.Error(err))
+	}
+}
+
+func (api *BillingAPI) writeError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
