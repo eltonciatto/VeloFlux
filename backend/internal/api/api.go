@@ -1442,7 +1442,7 @@ func (a *API) handleListSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 // extractUserFromToken é um helper method
 func (a *API) extractUserFromToken(r *http.Request) (*auth.Claims, error) {
-	claims, ok := r.Context().Value("user_claims").(*auth.Claims)
+	claims, ok := r.Context().Value(userClaimsKey).(*auth.Claims)
 	if !ok {
 		return nil, fmt.Errorf("user claims not found")
 	}

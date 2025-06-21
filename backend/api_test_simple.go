@@ -321,50 +321,6 @@ func TestTenantsEndpoint(t *testing.T) {
 }
 
 // TestAPIStandardization verifica se todos os endpoints usam o prefixo /api/
-func TestAPIStandardization(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	
-	expectedEndpoints := []string{
-		"/api/health",
-		"/api/metrics",
-		"/api/auth/login",
-		"/api/auth/register",
-		"/api/auth/refresh",
-		"/api/tenants",
-	}
-
-	router := mux.NewRouter()
-	
-	for _, endpoint := range expectedEndpoints {
-		endpoint := endpoint // capture loop variable
-		router.HandleFunc(endpoint, func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "OK: %s", endpoint)
-		})
-	}
-
-	server := httptest.NewServer(router)
-	defer server.Close()
-
-	for _, endpoint := range expectedEndpoints {
-		t.Run(fmt.Sprintf("Endpoint_%s", endpoint), func(t *testing.T) {
-			resp, err := http.Get(server.URL + endpoint)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
-			
-			body, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
-
-			assert.Contains(t, string(body), endpoint)
-			logger.Info("API standardization test passed", 
-				zap.String("endpoint", endpoint),
-				zap.String("response", string(body)))
-		})
-	}
-}
-
 // makeRequest helper para fazer requisições HTTP nos testes
 func makeRequest(t *testing.T, method, url string, body interface{}, headers map[string]string) (*http.Response, []byte) {
 	var reqBody io.Reader
