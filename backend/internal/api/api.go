@@ -1054,17 +1054,14 @@ func (a *API) broadcastBackendUpdates() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if a.wsHub != nil {
-				data := map[string]interface{}{
-					"type":      "backend_update",
-					"timestamp": time.Now(),
-					"backends":  a.balancer.GetPools(),
-				}
-				a.wsHub.Broadcast("backend_update", data)
+	for range ticker.C {
+		if a.wsHub != nil {
+			data := map[string]interface{}{
+				"type":      "backend_update",
+				"timestamp": time.Now(),
+				"backends":  a.balancer.GetPools(),
 			}
+			a.wsHub.Broadcast("backend_update", data)
 		}
 	}
 }
@@ -1073,19 +1070,16 @@ func (a *API) broadcastMetricsUpdates() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if a.wsHub != nil {
-				data := map[string]interface{}{
-					"type":      "metrics_update",
-					"timestamp": time.Now(),
-					"cpu":       rand.Float64() * 100,
-					"memory":    rand.Float64() * 100,
-					"requests":  rand.Intn(1000),
-				}
-				a.wsHub.Broadcast("metrics_update", data)
+	for range ticker.C {
+		if a.wsHub != nil {
+			data := map[string]interface{}{
+				"type":      "metrics_update",
+				"timestamp": time.Now(),
+				"cpu":       rand.Float64() * 100,
+				"memory":    rand.Float64() * 100,
+				"requests":  rand.Intn(1000),
 			}
+			a.wsHub.Broadcast("metrics_update", data)
 		}
 	}
 }
@@ -1094,18 +1088,15 @@ func (a *API) broadcastStatusUpdates() {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if a.wsHub != nil {
-				data := map[string]interface{}{
-					"type":      "status_update",
-					"timestamp": time.Now(),
-					"status":    "healthy",
-					"uptime":    time.Since(time.Now().Add(-time.Hour)).String(),
-				}
-				a.wsHub.Broadcast("status_update", data)
+	for range ticker.C {
+		if a.wsHub != nil {
+			data := map[string]interface{}{
+				"type":      "status_update",
+				"timestamp": time.Now(),
+				"status":    "healthy",
+				"uptime":    time.Since(time.Now().Add(-time.Hour)).String(),
 			}
+			a.wsHub.Broadcast("status_update", data)
 		}
 	}
 }
@@ -1114,18 +1105,15 @@ func (a *API) broadcastBillingUpdates() {
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if a.wsHub != nil {
-				data := map[string]interface{}{
-					"type":      "billing_update",
-					"timestamp": time.Now(),
-					"usage":     rand.Float64() * 1000,
-					"cost":      rand.Float64() * 100,
-				}
-				a.wsHub.Broadcast("billing_update", data)
+	for range ticker.C {
+		if a.wsHub != nil {
+			data := map[string]interface{}{
+				"type":      "billing_update",
+				"timestamp": time.Now(),
+				"usage":     rand.Float64() * 1000,
+				"cost":      rand.Float64() * 100,
 			}
+			a.wsHub.Broadcast("billing_update", data)
 		}
 	}
 }

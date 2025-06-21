@@ -2,6 +2,7 @@ package api
 
 import (
 	"time"
+
 	"github.com/eltonciatto/veloflux/internal/tenant"
 )
 
@@ -23,20 +24,20 @@ type LoginResponse struct {
 
 // RegisterRequest represents a tenant registration request
 type RegisterRequest struct {
-	Email       string           `json:"email" validate:"required,email"`
-	Password    string           `json:"password" validate:"required,min=6"`
-	FirstName   string           `json:"first_name" validate:"required"`
-	LastName    string           `json:"last_name" validate:"required"`
-	TenantName  string           `json:"tenant_name" validate:"required"`
-	Plan        tenant.PlanType  `json:"plan,omitempty"`
+	Email      string          `json:"email" validate:"required,email"`
+	Password   string          `json:"password" validate:"required,min=6"`
+	FirstName  string          `json:"first_name" validate:"required"`
+	LastName   string          `json:"last_name" validate:"required"`
+	TenantName string          `json:"tenant_name" validate:"required"`
+	Plan       tenant.PlanType `json:"plan,omitempty"`
 }
 
 // CreateTenantRequest represents a request to create a new tenant
 type CreateTenantRequest struct {
-	Name         string           `json:"name" validate:"required"`
-	Plan         tenant.PlanType  `json:"plan" validate:"required"`
-	OwnerEmail   string           `json:"owner_email" validate:"required,email"`
-	OwnerName    string           `json:"owner_name" validate:"required"`
+	Name       string          `json:"name" validate:"required"`
+	Plan       tenant.PlanType `json:"plan" validate:"required"`
+	OwnerEmail string          `json:"owner_email" validate:"required,email"`
+	OwnerName  string          `json:"owner_name" validate:"required"`
 }
 
 // UpdateTenantRequest represents a request to update tenant information
@@ -48,8 +49,8 @@ type UpdateTenantRequest struct {
 
 // SubscriptionRequest represents a request to create/update a subscription
 type SubscriptionRequest struct {
-	Plan       tenant.PlanType `json:"plan" validate:"required"`
-	BillingCycle string        `json:"billing_cycle,omitempty"` // monthly, yearly
+	Plan         tenant.PlanType `json:"plan" validate:"required"`
+	BillingCycle string          `json:"billing_cycle,omitempty"` // monthly, yearly
 }
 
 // ErrorResponse represents an API error response

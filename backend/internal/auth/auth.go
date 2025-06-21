@@ -4,14 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/eltonciatto/veloflux/internal/tenant"
-	"github.com/golang-jwt/jwt/v5"
-	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/eltonciatto/veloflux/internal/tenant"
+	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
+)
+
+// Context key types to avoid collisions
+type contextKey string
+
+const (
+	claimsContextKey   contextKey = "claims"
+	tenantIDContextKey contextKey = "tenant_id"
 )
 
 // Config for authentication
@@ -166,7 +175,7 @@ func (a *Authenticator) AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Store claims in request context
-		ctx := context.WithValue(r.Context(), "claims", claims)
+		ctx := context.WithValue(r.Context(), claimsContextKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -215,7 +224,7 @@ func (a *Authenticator) TenantMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Store tenant ID in context
-		ctx := context.WithValue(r.Context(), "tenant_id", pathTenantID)
+		ctx := context.WithValue(r.Context(), tenantIDContextKey, pathTenantID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

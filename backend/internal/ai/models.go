@@ -41,7 +41,8 @@ func NewNeuralNetworkModel(logger *zap.Logger) *NeuralNetworkModel {
 
 // initializeWeights inicializa pesos aleatoriamente
 func (nn *NeuralNetworkModel) initializeWeights() {
-	rand.Seed(time.Now().UnixNano())
+	// Note: rand.Seed is deprecated in Go 1.20+, using global rand is fine
+	// for non-cryptographic purposes
 
 	// Inicializar pesos entre camadas
 	nn.weights = make([][]float64, len(nn.layers)-1)

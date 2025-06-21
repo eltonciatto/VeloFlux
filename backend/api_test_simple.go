@@ -19,16 +19,16 @@ import (
 // TestHealthEndpoint testa o endpoint de health
 func TestHealthEndpoint(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	// Criar um router simples para teste
 	router := mux.NewRouter()
 	router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"status": "healthy",
+			"status":    "healthy",
 			"timestamp": time.Now().UTC().Format(time.RFC3339),
-			"service": "veloflux-api",
+			"service":   "veloflux-api",
 		})
 	}).Methods("GET")
 
@@ -59,16 +59,16 @@ func TestHealthEndpoint(t *testing.T) {
 // TestMetricsEndpoint testa o endpoint de métricas
 func TestMetricsEndpoint(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	router := mux.NewRouter()
 	router.HandleFunc("/api/metrics", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"requests_total": 100,
+			"requests_total":     100,
 			"active_connections": 5,
-			"avg_response_time": 150,
-			"error_rate": 0.02,
+			"avg_response_time":  150,
+			"error_rate":         0.02,
 		})
 	}).Methods("GET")
 
@@ -97,9 +97,9 @@ func TestMetricsEndpoint(t *testing.T) {
 // TestAuthEndpoints testa os endpoints de autenticação
 func TestAuthEndpoints(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	router := mux.NewRouter()
-	
+
 	// Register endpoint
 	router.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
 		var req map[string]interface{}
@@ -275,7 +275,7 @@ func TestAuthEndpoints(t *testing.T) {
 // TestTenantsEndpoint testa os endpoints de tenants
 func TestTenantsEndpoint(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
-	
+
 	router := mux.NewRouter()
 	router.HandleFunc("/api/tenants", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -321,37 +321,6 @@ func TestTenantsEndpoint(t *testing.T) {
 }
 
 // TestAPIStandardization verifica se todos os endpoints usam o prefixo /api/
-// makeRequest helper para fazer requisições HTTP nos testes
-func makeRequest(t *testing.T, method, url string, body interface{}, headers map[string]string) (*http.Response, []byte) {
-	var reqBody io.Reader
-	if body != nil {
-		jsonData, err := json.Marshal(body)
-		require.NoError(t, err)
-		reqBody = bytes.NewBuffer(jsonData)
-	}
-
-	req, err := http.NewRequest(method, url, reqBody)
-	require.NoError(t, err)
-
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	require.NoError(t, err)
-
-	responseBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	resp.Body.Close()
-
-	return resp, responseBody
-}
-
 func TestMain(m *testing.M) {
 	// Setup de teste se necessário
 	exitCode := m.Run()
