@@ -463,7 +463,7 @@ func (a *API) requireTenantAccess(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Add tenant ID to context for handlers
-		ctx := context.WithValue(r.Context(), "tenant_id", tenantID)
+		ctx := context.WithValue(r.Context(), tenantIDKey, tenantID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
