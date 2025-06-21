@@ -184,7 +184,7 @@ func (a *Authenticator) AuthMiddleware(next http.Handler) http.Handler {
 func (a *Authenticator) TenantMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get claims from context
-		claims, ok := r.Context().Value("claims").(*Claims)
+		claims, ok := r.Context().Value(claimsContextKey).(*Claims)
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -234,7 +234,7 @@ func (a *Authenticator) RoleMiddleware(requiredRoles ...tenant.Role) func(http.H
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Get claims from context
-			claims, ok := r.Context().Value("claims").(*Claims)
+			claims, ok := r.Context().Value(claimsContextKey).(*Claims)
 			if !ok {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -265,7 +265,7 @@ func (a *Authenticator) RoleMiddleware(requiredRoles ...tenant.Role) func(http.H
 
 // GetUserFromContext extracts the user info from the context
 func GetUserFromContext(ctx context.Context) (*tenant.UserInfo, error) {
-	claims, ok := ctx.Value("claims").(*Claims)
+	claims, ok := ctx.Value(claimsContextKey).(*Claims)
 	if !ok {
 		return nil, errors.New("no claims in context")
 	}
@@ -282,7 +282,7 @@ func GetUserFromContext(ctx context.Context) (*tenant.UserInfo, error) {
 
 // GetTenantIDFromContext extracts the tenant ID from the context
 func GetTenantIDFromContext(ctx context.Context) (string, error) {
-	tenantID, ok := ctx.Value("tenant_id").(string)
+	tenantID, ok := ctx.Value(tenantIDContextKey).(string)
 	if !ok || tenantID == "" {
 		return "", errors.New("no tenant ID in context")
 	}
