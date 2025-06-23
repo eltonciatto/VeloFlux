@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
+import { useAdvancedAnalytics, AnomalyPoint } from '@/hooks/useAdvancedAnalytics';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
 import CustomDashboard from './CustomDashboard';
 import MetricWidget from './MetricWidget';
@@ -51,6 +51,13 @@ interface KPI {
   label?: string;
 }
 
+interface ExtendedAnomaly extends AnomalyPoint {
+  id: string;
+  metric: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
 interface Insight {
   id: string;
   type: string;
@@ -58,6 +65,7 @@ interface Insight {
   description: string;
   confidence: number;
   impact: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'medium' | 'high';
   timestamp: string;
 }
 
@@ -100,12 +108,12 @@ const AdvancedAnalytics: React.FC = () => {
   const kpisData = getKPIs();
   const kpis = Object.entries(kpisData).map(([key, value]) => ({
     id: key,
-    name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     value: value,
     unit: key.includes('percentage') || key.includes('rate') ? '%' : 
           key.includes('time') || key.includes('latency') ? 'ms' : 
           key.includes('size') || key.includes('memory') ? 'MB' : '',
-    trend: Math.random() > 0.5 ? 'up' : 'down',
+    trend: Math.random() > 0.5 ? 'up' : 'down' as 'up' | 'down' | 'stable',
     change: (Math.random() - 0.5) * 20
   }));
 
@@ -435,25 +443,46 @@ const AdvancedAnalytics: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">{t('analytics.ai_insights')}</h3>
-              {insights.map((insight, index) => renderInsightsCard(insight, index))}
+              {insights.map((analyticsInsight, index) => {
+                const insight: Insight = {
+                  id: analyticsInsight.id,
+                  type: analyticsInsight.type,
+                  title: analyticsInsight.title,
+                  description: analyticsInsight.description,
+                  confidence: analyticsInsight.confidence,
+                  impact: analyticsInsight.impact,
+                  priority: analyticsInsight.impact, // Using impact as priority
+                  timestamp: analyticsInsight.created_at,
+                };
+                return renderInsightsCard(insight, index);
+              })}
             </div>
             
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">{t('analytics.anomaly_detection')}</h3>
               {anomalies.length > 0 ? (
-                anomalies.map((anomaly, index) => (
-                  <Card key={anomaly.id} className="border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-white">{anomaly.metric}</p>
-                          <p className="text-sm text-muted-foreground">{anomaly.description}</p>
+                anomalies.map((anomaly, index) => {
+                  const extendedAnomaly: ExtendedAnomaly = {
+                    ...anomaly,
+                    id: `anomaly-${index}`,
+                    metric: `Metric ${index + 1}`,
+                    description: `Anomaly detected at ${anomaly.timestamp}`,
+                    severity: anomaly.deviation > 2 ? 'high' : anomaly.deviation > 1 ? 'medium' : 'low'
+                  };
+                  return (
+                    <Card key={extendedAnomaly.id} className="border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white">{extendedAnomaly.metric}</p>
+                            <p className="text-sm text-muted-foreground">{extendedAnomaly.description}</p>
+                          </div>
+                          <Badge variant="destructive">{extendedAnomaly.severity}</Badge>
                         </div>
-                        <Badge variant="destructive">{anomaly.severity}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <Card className="border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl">
                   <CardContent className="p-6 text-center">

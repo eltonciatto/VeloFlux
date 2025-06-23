@@ -423,14 +423,16 @@ export const useCustomDashboard = (): CustomDashboardHook => {
         throw new Error('Invalid dashboard format');
       }
       
+      const dashboard = data.dashboard as DashboardLayout;
+      
       const importedDashboard: DashboardLayout = {
-        ...data.dashboard,
+        ...dashboard,
         id: `dashboard_${Date.now()}`,
-        name: `${data.dashboard.name} (Imported)`,
+        name: `${dashboard.name} (Imported)`,
         user_id: user?.user_id || 'anonymous',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        widgets: ((data.dashboard as Record<string, unknown>).widgets as Record<string, unknown>[]).map((widget: Record<string, unknown>) => ({
+        widgets: dashboard.widgets.map((widget: WidgetConfig) => ({
           ...widget,
           id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }))

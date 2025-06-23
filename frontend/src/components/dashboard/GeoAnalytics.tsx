@@ -232,7 +232,7 @@ const GeoAnalytics: React.FC = () => {
             </SelectContent>
           </Select>
 
-          <Select value={timeRange} onValueChange={(value: string) => setTimeRange(value)}>
+          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
             <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
               <SelectValue />
             </SelectTrigger>
@@ -303,7 +303,7 @@ const GeoAnalytics: React.FC = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs value={viewMode} onValueChange={(value: string) => setViewMode(value)}>
+      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as typeof viewMode)}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-700">
           <TabsTrigger value="traffic" className="data-[state=active]:bg-slate-700">
             <BarChart3 className="h-4 w-4 mr-2" />

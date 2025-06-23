@@ -194,7 +194,7 @@ export const BulkOperations: React.FC = () => {
     
     const newOperation: BulkOperation = {
       id: `op-${Date.now()}`,
-      type: operationType as 'update' | 'delete' | 'create' | 'migrate',
+      type: operationType as 'suspend' | 'activate' | 'delete' | 'plan_change' | 'config_update' | 'export',
       status: 'running',
       progress: 0,
       tenantCount: selectedTenants.size,
@@ -232,7 +232,7 @@ export const BulkOperations: React.FC = () => {
             <div>
               <Label htmlFor="new-plan">Novo Plano</Label>
               <Select 
-                value={operationParams.newPlan || ''} 
+                value={(operationParams.newPlan as string) || ''} 
                 onValueChange={(value) => setOperationParams(prev => ({ ...prev, newPlan: value }))}
               >
                 <SelectTrigger>
@@ -250,7 +250,7 @@ export const BulkOperations: React.FC = () => {
               <Label htmlFor="effective-date">Data de Vigência</Label>
               <Input 
                 type="date" 
-                value={operationParams.effectiveDate || ''}
+                value={(operationParams.effectiveDate as string) || ''}
                 onChange={(e) => setOperationParams(prev => ({ ...prev, effectiveDate: e.target.value }))}
               />
             </div>
@@ -264,7 +264,7 @@ export const BulkOperations: React.FC = () => {
               <Label htmlFor="config-key">Chave de Configuração</Label>
               <Input 
                 placeholder="Ex: max_users, api_rate_limit"
-                value={operationParams.configKey || ''}
+                value={(operationParams.configKey as string) || ''}
                 onChange={(e) => setOperationParams(prev => ({ ...prev, configKey: e.target.value }))}
               />
             </div>
@@ -272,7 +272,7 @@ export const BulkOperations: React.FC = () => {
               <Label htmlFor="config-value">Novo Valor</Label>
               <Input 
                 placeholder="Novo valor da configuração"
-                value={operationParams.configValue || ''}
+                value={(operationParams.configValue as string) || ''}
                 onChange={(e) => setOperationParams(prev => ({ ...prev, configValue: e.target.value }))}
               />
             </div>
@@ -287,7 +287,7 @@ export const BulkOperations: React.FC = () => {
               <Label htmlFor="reason">Motivo</Label>
               <Textarea 
                 placeholder="Descreva o motivo para esta operação..."
-                value={operationParams.reason || ''}
+                value={(operationParams.reason as string) || ''}
                 onChange={(e) => setOperationParams(prev => ({ ...prev, reason: e.target.value }))}
               />
             </div>

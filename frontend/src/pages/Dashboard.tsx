@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
     }
   ]);
 
-  const { isLoading: dataLoading } = useProductionData();
+  const { loading: dataLoading } = useProductionData();
 
   // Mouse tracking for 3D effects
   useEffect(() => {

@@ -68,6 +68,7 @@ interface TierCardProps {
   currentTier?: {
     id: string;
     name: string;
+    price?: number;
   };
   usage?: {
     requestCount: number;
@@ -81,8 +82,8 @@ interface TierCardProps {
 
 function TierCard({ tier, currentTier, usage, onSelectTier, isLoading }: TierCardProps) {
   const isCurrentTier = currentTier?.id === tier.id;
-  const isUpgrade = currentTier && tier.price > currentTier.price;
-  const isDowngrade = currentTier && tier.price < currentTier.price;
+  const isUpgrade = currentTier && tier.price && currentTier.price && tier.price > currentTier.price;
+  const isDowngrade = currentTier && tier.price && currentTier.price && tier.price < currentTier.price;
 
   // Calculate usage percentages for current tier
   const usagePercentages = usage ? {

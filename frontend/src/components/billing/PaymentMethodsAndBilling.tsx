@@ -37,16 +37,10 @@ import {
   Shield
 } from 'lucide-react';
 import { useBillingAccount, useUpdatePaymentMethod, useUpdateBillingAddress } from '@/hooks/useBilling';
+import { PaymentMethod, BillingAddress } from '@/lib/billingApi';
 
 interface PaymentMethodFormProps {
-  method?: {
-    id: string;
-    type: string;
-    last4?: string;
-    brand?: string;
-    expiryMonth?: number;
-    expiryYear?: number;
-  };
+  method?: PaymentMethod;
   onSubmit: (method: PaymentMethod) => void;
   onCancel: () => void;
 }
@@ -63,14 +57,17 @@ function PaymentMethodForm({ method, onSubmit, onCancel }: PaymentMethodFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      type: formData.type,
-      cardNumber: formData.cardNumber,
+    const paymentMethod: PaymentMethod = {
+      id: method?.id || '',
+      type: formData.type as PaymentMethod['type'],
+      last4: formData.cardNumber.slice(-4),
+      brand: 'visa', // Default brand
       expiryMonth: parseInt(formData.expiryMonth as string),
       expiryYear: parseInt(formData.expiryYear as string),
-      cvv: formData.cvv,
-      holderName: formData.holderName,
-    });
+      isDefault: method?.isDefault || false,
+      isValid: true,
+    };
+    onSubmit(paymentMethod);
   };
 
   const currentYear = new Date().getFullYear();
@@ -218,7 +215,7 @@ function PaymentMethodForm({ method, onSubmit, onCancel }: PaymentMethodFormProp
   );
 }
 
-interface BillingAddress {
+interface LocalBillingAddress {
   name: string;
   line1: string;
   line2?: string;
@@ -229,8 +226,8 @@ interface BillingAddress {
 }
 
 interface BillingAddressFormProps {
-  address?: BillingAddress;
-  onSubmit: (address: BillingAddress) => void;
+  address?: LocalBillingAddress;
+  onSubmit: (address: LocalBillingAddress) => void;
   onCancel: () => void;
 }
 
@@ -397,6 +394,22 @@ export default function PaymentMethodsAndBilling() {
     }
   };
 
+  const handleAddressFormSubmit = async (localAddress: LocalBillingAddress) => {
+    const billingAddress: BillingAddress = {
+      id: account?.billingAddress?.id || '',
+      name: localAddress.name,
+      address1: localAddress.line1,
+      address2: localAddress.line2,
+      line1: localAddress.line1,
+      line2: localAddress.line2,
+      city: localAddress.city,
+      state: localAddress.state,
+      postalCode: localAddress.postalCode,
+      country: localAddress.country,
+    };
+    await handleUpdateAddress(billingAddress);
+  };
+
   const getCardBrandIcon = (brand: string) => {
     // In a real app, you'd return the appropriate brand icon
     return <CreditCard className="h-4 w-4" />;
@@ -556,7 +569,7 @@ export default function PaymentMethodsAndBilling() {
                   postalCode: account.billingAddress?.postalCode || '',
                   country: account.billingAddress?.country || '',
                 }}
-                onSubmit={handleUpdateAddress}
+                onSubmit={handleAddressFormSubmit}
                 onCancel={() => setShowAddressForm(false)}
               />
             </DialogContent>

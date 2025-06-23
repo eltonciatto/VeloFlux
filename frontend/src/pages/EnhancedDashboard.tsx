@@ -135,7 +135,7 @@ const EnhancedDashboard: React.FC = () => {
   });
 
   // Quick actions state
-  const [quickActions, setQuickActions] = useState([
+  const [quickActions, setQuickActions] = useState<QuickAction[]>([
     { id: 'restart', label: 'Restart Services', icon: RefreshCw, status: 'ready' },
     { id: 'backup', label: 'Create Backup', icon: Download, status: 'ready' },
     { id: 'scale', label: 'Auto Scale', icon: TrendingUp, status: 'active' },
@@ -292,7 +292,7 @@ interface StatCardProps {
   unit?: string;
   icon: React.ElementType;
   trend?: 'up' | 'down' | 'stable';
-  trendValue?: string;
+  trendValue?: number;
   color?: string;
   description?: string;
   onClick?: () => void;
@@ -351,6 +351,7 @@ interface StatCardProps {
     </motion.div>
   );
 interface QuickAction {
+  id: string;
   icon: React.ElementType;
   label: string;
   status: 'ready' | 'active' | 'attention';
@@ -494,7 +495,7 @@ interface QuickAction {
               title="Conexões Ativas"
               value={realtimeStats.activeConnections}
               icon={Users}
-              trend="increasing"
+              trend="up"
               trendValue={12}
               color="blue"
               description="Conexões simultâneas ativas"
@@ -513,7 +514,7 @@ interface QuickAction {
               value={realtimeStats.responseTime}
               unit="ms"
               icon={Clock}
-              trend="decreasing"
+              trend="down"
               trendValue={8}
               color="purple"
               description="Tempo médio de resposta"
@@ -523,7 +524,7 @@ interface QuickAction {
               value={realtimeStats.errorRate.toFixed(1)}
               unit="%"
               icon={AlertTriangle}
-              trend="decreasing"
+              trend="down"
               trendValue={15}
               color="red"
               description="Taxa de erro nas requisições"
@@ -533,7 +534,7 @@ interface QuickAction {
               value={realtimeStats.cacheHitRate.toFixed(1)}
               unit="%"
               icon={Zap}
-              trend="increasing"
+              trend="up"
               trendValue={5}
               color="yellow"
               description="Taxa de acerto do cache"

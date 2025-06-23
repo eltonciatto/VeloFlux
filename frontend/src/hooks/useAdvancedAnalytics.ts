@@ -52,7 +52,7 @@ interface AnalyticsInsight {
   created_at: string;
 }
 
-interface AnomalyPoint {
+export interface AnomalyPoint {
   index: number;
   timestamp: string;
   value: number;

@@ -567,26 +567,42 @@ class BillingApiClient {
    * Map invoice data for frontend compatibility
    */
   private mapInvoiceForCompatibility(invoice: InvoiceData): Invoice {
+    const billingAddr = invoice.billing_address as Record<string, unknown> | undefined;
+    
     return {
       ...invoice,
+      // Required fields
+      id: invoice.id,
+      amount_due: invoice.amount_due || invoice.amount || 0,
+      currency: 'USD', // Default currency
+      status: 'pending' as const, // Default status
+      period_start: invoice.period_start || new Date().toISOString(),
+      period_end: invoice.period_end || new Date().toISOString(),
+      created_at: new Date().toISOString(),
       // Map backend fields to frontend compatibility fields
       amount: invoice.amount_due || invoice.amount || 0,
       period: {
-        start: invoice.period_start,
-        end: invoice.period_end,
+        start: invoice.period_start || new Date().toISOString(),
+        end: invoice.period_end || new Date().toISOString(),
       },
-      dueDate: invoice.due_date || invoice.period_end,
+      dueDate: invoice.due_date || invoice.period_end || new Date().toISOString(),
       taxRate: invoice.tax_rate || 0,
       credits: invoice.credits || 0,
-      billingAddress: invoice.billing_address ? {
-        ...invoice.billing_address,
-        name: invoice.billing_address.name || '',
-        line1: invoice.billing_address.address1 || invoice.billing_address.line1 || '',
-        line2: invoice.billing_address.address2 || invoice.billing_address.line2 || '',
+      billingAddress: billingAddr ? {
+        id: (billingAddr.id as string) || 'default',
+        name: billingAddr.name as string || '',
+        line1: (billingAddr.address1 as string) || (billingAddr.line1 as string) || '',
+        line2: (billingAddr.address2 as string) || (billingAddr.line2 as string) || '',
+        address1: (billingAddr.address1 as string) || (billingAddr.line1 as string) || '',
+        address2: (billingAddr.address2 as string) || (billingAddr.line2 as string) || '',
+        city: (billingAddr.city as string) || '',
+        state: (billingAddr.state as string) || '',
+        postalCode: (billingAddr.postalCode as string) || (billingAddr.postal_code as string) || '',
+        country: (billingAddr.country as string) || '',
       } : undefined,
       paymentMethod: typeof invoice.paymentMethod === 'string' 
         ? { id: 'default', type: 'credit_card', isDefault: true, isValid: true } 
-        : invoice.paymentMethod,
+        : (invoice.paymentMethod as PaymentMethod),
     };
   }
 

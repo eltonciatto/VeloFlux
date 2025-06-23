@@ -322,8 +322,8 @@ export const HealthMonitor = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={
-                      alert.severity === 'critical' ? 'bg-red-500/20 text-red-300' :
-                      alert.severity === 'warning' ? 'bg-yellow-500/20 text-yellow-300' :
+                      alert.severity === 'high' ? 'bg-red-500/20 text-red-300' :
+                      alert.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-300' :
                       'bg-blue-500/20 text-blue-300'
                     }>
                       {alert.severity || 'warning'}

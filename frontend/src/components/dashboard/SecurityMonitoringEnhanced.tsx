@@ -325,7 +325,7 @@ export function SecurityMonitoringPanel() {
             </SelectContent>
           </Select>
 
-          <Select value={timeRange} onValueChange={(value: string) => setTimeRange(value)}>
+          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as typeof timeRange)}>
             <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
               <SelectValue />
             </SelectTrigger>

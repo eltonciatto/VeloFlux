@@ -59,7 +59,21 @@ function AlertForm({ alert, onSubmit, onCancel }: AlertFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const usageAlert: UsageAlert = {
+      id: alert?.id || crypto.randomUUID(),
+      metric: formData.type as keyof import('@/lib/billingApi').UsageMetrics,
+      type: formData.type,
+      threshold: formData.threshold,
+      currentUsage: 0,
+      limit: formData.limit,
+      triggered: false,
+      enabled: formData.enabled,
+      email: formData.email,
+      sms: formData.sms,
+      webhook: formData.webhook,
+      timestamp: new Date().toISOString(),
+    };
+    onSubmit(usageAlert);
   };
 
   return (

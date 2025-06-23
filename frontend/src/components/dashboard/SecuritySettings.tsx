@@ -87,8 +87,9 @@ const SecuritySettings = () => {
           [child]: value
         };
       } else {
+        const currentParentValue = (updatedConfig as Record<string, unknown>)[parent];
         (updatedConfig as Record<string, unknown>)[parent] = {
-          ...(updatedConfig as Record<string, unknown>)[parent],
+          ...(typeof currentParentValue === 'object' && currentParentValue !== null ? currentParentValue : {}),
           [child]: value
         };
       }

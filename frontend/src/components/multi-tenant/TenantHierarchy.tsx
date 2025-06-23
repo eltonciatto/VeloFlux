@@ -268,7 +268,7 @@ export const TenantHierarchy: React.FC = () => {
             <PlusIcon className="w-4 h-4 mr-2" />
             Adicionar Tenant
           </Button>
-          <Select value={viewMode} onValueChange={(value: string) => setViewMode(value)}>
+          <Select value={viewMode} onValueChange={(value: 'tree' | 'list') => setViewMode(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>

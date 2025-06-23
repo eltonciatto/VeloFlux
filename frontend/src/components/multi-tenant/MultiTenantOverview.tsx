@@ -194,7 +194,7 @@ const MultiTenantOverview: React.FC = () => {
     }).format(amount);
   };
 
-  const handleBulkAction = async (action: string) => {
+  const handleBulkAction = async (action: 'activate' | 'suspend' | 'maintenance' | 'delete' | 'upgrade' | 'downgrade') => {
     if (selectedTenants.length === 0) {
       toast({
         title: t('multi_tenant.error'),
@@ -590,7 +590,7 @@ const MultiTenantOverview: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleBulkAction('archive')}
+                        onClick={() => handleBulkAction('delete')}
                       >
                         <Archive className="h-4 w-4 mr-2" />
                         {t('multi_tenant.archive')}

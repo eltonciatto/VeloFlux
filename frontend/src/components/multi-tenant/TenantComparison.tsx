@@ -73,10 +73,10 @@ const mockTenants: TenantMetrics[] = [
 const comparisonMetrics: ComparisonMetric[] = [
   { label: 'Usuários', key: 'users', format: (v) => v.toLocaleString() },
   { label: 'Receita', key: 'revenue', format: (v) => `$${v.toLocaleString()}` },
-  { label: 'Crescimento', key: 'growth', format: (v) => `${v > 0 ? '+' : ''}${v}%`, trend: true },
+  { label: 'Crescimento', key: 'growth', format: (v) => `${Number(v) > 0 ? '+' : ''}${v}%`, trend: true },
   { label: 'Saúde', key: 'healthScore', format: (v) => `${v}%` },
   { label: 'Uptime', key: 'uptime', format: (v) => `${v}%` },
-  { label: 'Requisições', key: 'requests', format: (v) => `${(v / 1000000).toFixed(1)}M` },
+  { label: 'Requisições', key: 'requests', format: (v) => `${(Number(v) / 1000000).toFixed(1)}M` },
   { label: 'Tempo Resp.', key: 'responseTime', format: (v) => `${v}ms` },
   { label: 'Satisfação', key: 'satisfaction', format: (v) => `${v}/5.0` }
 ];
@@ -125,7 +125,7 @@ export const TenantComparison: React.FC = () => {
         </div>
         
         <div className="flex gap-4">
-          <Select value={comparisonMode} onValueChange={(value: string) => setComparisonMode(value)}>
+          <Select value={comparisonMode} onValueChange={(value: 'side-by-side' | 'overlay') => setComparisonMode(value)}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>

@@ -36,8 +36,13 @@ import {
   useRetrainModel
 } from '@/hooks/useAIMetrics';
 import { useRealtimeAI } from '@/hooks/useRealtimeWebSocket';
-import { formatConfidence, formatAccuracy, getConfidenceColor, getAccuracyColor } from '@/lib/aiApi';
+import { formatConfidence, formatAccuracy, getConfidenceColor, getAccuracyColor, AIMetrics } from '@/lib/aiApi';
 import AIGeoInsights from './AIGeoInsights';
+
+interface AIAlertData {
+  severity: string;
+  message: string;
+}
 
 interface AIInsightsProps {
   className?: string;
@@ -73,23 +78,29 @@ export function AIInsights({ className }: AIInsightsProps) {
   useEffect(() => {
     if (lastMessage) {
       switch (lastMessage.type) {
-        case 'ai_metrics_update':
-          setRealtimeMetrics(lastMessage.data);
+        case 'ai_metrics_update': {
+          setRealtimeMetrics(lastMessage.data as AIMetrics);
           break;
-        case 'ai_alert':
+        }
+        case 'ai_alert': {
+          const alertData = lastMessage.data as AIAlertData;
           setRealtimeAlerts(prev => [
             {
               id: `alert_${lastMessage.timestamp}`,
-              type: lastMessage.data.severity,
-              message: lastMessage.data.message,
+              type: (alertData.severity === 'error' || alertData.severity === 'warning' || alertData.severity === 'info') 
+                ? alertData.severity as 'error' | 'warning' | 'info'
+                : 'info',
+              message: alertData.message,
               timestamp: lastMessage.timestamp
             },
             ...prev.slice(0, 4) // Keep only 5 most recent alerts
           ]);
           break;
-        case 'model_status_change':
+        }
+        case 'model_status_change': {
           // Handle model status changes
           break;
+        }
       }
     }
   }, [lastMessage]);
@@ -372,25 +383,32 @@ export function AIInsights({ className }: AIInsightsProps) {
           <CardContent>
             <div className="space-y-4">
               {Object.entries(models).map(([modelName, modelData]) => {
-                const model = modelData as { accuracy?: number; status?: string; last_trained?: string };
+                const model = modelData as { 
+                  accuracy?: number; 
+                  status?: string; 
+                  last_trained?: string;
+                  training_status?: string;
+                  type?: string;
+                  version?: string;
+                };
                 return (
                   <div key={modelName} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{modelName.replace('_', ' ').toUpperCase()}</span>
                         <Badge variant={model.training_status === 'ready' ? 'default' : 'secondary'}>
-                          {model.training_status}
+                          {model.training_status || model.status || 'unknown'}
                         </Badge>
                       </div>
                       <span className={`text-sm ${getAccuracyColor(model.accuracy)}`}>
                         {formatAccuracy(model.accuracy)}
                       </span>
                     </div>
-                    <Progress value={model.accuracy * 100} className="h-2" />
+                    <Progress value={(model.accuracy || 0) * 100} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Type: {model.type}</span>
-                      <span>Version: {model.version}</span>
-                      <span>Last trained: {new Date(model.last_trained).toLocaleTimeString()}</span>
+                      <span>Type: {model.type || 'N/A'}</span>
+                      <span>Version: {model.version || 'N/A'}</span>
+                      <span>Last trained: {model.last_trained ? new Date(model.last_trained).toLocaleTimeString() : 'N/A'}</span>
                     </div>
                   </div>
                 );

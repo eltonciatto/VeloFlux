@@ -21,11 +21,6 @@ interface TouchGesturesProps {
   className?: string;
 }
 
-interface TouchEvent extends Event {
-  touches: TouchList;
-  changedTouches: TouchList;
-}
-
 const TouchGestures: React.FC<TouchGesturesProps> = ({
   children,
   onSwipeLeft,
@@ -48,13 +43,13 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
   const initialAngleRef = useRef(0);
   const currentAngleRef = useRef(0);
 
-  const calculateAngle = (touch1: Touch, touch2: Touch) => {
+  const calculateAngle = (touch1: React.Touch, touch2: React.Touch) => {
     const deltaX = touch2.clientX - touch1.clientX;
     const deltaY = touch2.clientY - touch1.clientY;
     return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
   };
 
-  const handleDragEnd = (event: TouchEvent | MouseEvent) => {
+  const handleDragEnd = (event: React.TouchEvent | React.MouseEvent) => {
     if (!enableSwipe) return;
 
     const touches = 'touches' in event ? event.changedTouches : null;
@@ -93,7 +88,7 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
     }
   };
 
-  const handlePinch = (event: TouchEvent, scale: number) => {
+  const handlePinch = (event: React.TouchEvent, scale: number) => {
     if (!enablePinch) return;
     onPinchZoom?.(scale);
   };
@@ -103,7 +98,10 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
 
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
-    const currentAngle = calculateAngle(touch1, touch2);
+    const currentAngle = calculateAngle(
+      { clientX: touch1.clientX, clientY: touch1.clientY } as React.Touch,
+      { clientX: touch2.clientX, clientY: touch2.clientY } as React.Touch
+    );
 
     if (initialAngleRef.current === 0) {
       initialAngleRef.current = currentAngle;
