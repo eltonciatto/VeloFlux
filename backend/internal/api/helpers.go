@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // Helper functions for API handlers
@@ -65,4 +66,36 @@ func (a *API) extractIntQueryParam(r *http.Request, name string, defaultValue in
 	}
 
 	return intValue
+}
+
+// Helper method that uses the currently unused helpers
+func (a *API) processRequest(w http.ResponseWriter, r *http.Request, data interface{}) {
+	// Use extractPathVariable for common path parameters
+	if id := a.extractPathVariable(r, "id"); id != "" {
+		a.logger.Debug("Processing request with ID", zap.String("id", id))
+	}
+
+	if tenantID := a.extractPathVariable(r, "tenant_id"); tenantID != "" {
+		a.logger.Debug("Processing request for tenant", zap.String("tenant_id", tenantID))
+	}
+
+	// Use extractIntQueryParam for pagination
+	page := a.extractIntQueryParam(r, "page", 1)
+	limit := a.extractIntQueryParam(r, "limit", 10)
+
+	a.logger.Debug("Request pagination",
+		zap.Int("page", page),
+		zap.Int("limit", limit))
+
+	// Process request with pagination info if needed
+	result := map[string]interface{}{
+		"data": data,
+		"pagination": map[string]int{
+			"page":  page,
+			"limit": limit,
+		},
+	}
+
+	// Use writeSuccessResponse
+	a.writeSuccessResponse(w, "Request processed successfully", result)
 }

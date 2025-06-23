@@ -55,6 +55,15 @@ func (api *BillingAPI) setupRoutes() {
 	api.router.HandleFunc("/invoices/{id}", api.handleGetInvoice).Methods("GET")
 	api.router.HandleFunc("/invoices/{id}/download", api.handleDownloadInvoice).Methods("GET")
 
+	// Tenant-specific billing routes
+	api.router.HandleFunc("/tenant/{tenant_id}/billing", api.handleGetBilling).Methods("GET")
+	api.router.HandleFunc("/tenant/{tenant_id}/checkout", api.handleCreateCheckout).Methods("POST")
+	api.router.HandleFunc("/tenant/{tenant_id}/usage", api.handleGetUsage).Methods("GET")
+	api.router.HandleFunc("/tenant/{tenant_id}/export", api.handleExportBilling).Methods("GET")
+
+	// Plans endpoint
+	api.router.HandleFunc("/plans", api.handleGetPlans).Methods("GET")
+
 	// Webhook routes
 	api.router.HandleFunc("/webhooks", api.handleWebhook).Methods("POST")
 	api.router.HandleFunc("/webhooks", api.handleGetWebhooks).Methods("GET")

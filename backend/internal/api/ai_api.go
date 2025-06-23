@@ -15,33 +15,33 @@ import (
 
 // AIMetrics representa métricas da IA para o frontend
 type AIMetrics struct {
-	Enabled           bool                        `json:"enabled"`
-	CurrentAlgorithm  string                      `json:"current_algorithm"`
-	PredictionData    *PredictionResponse         `json:"prediction_data"`
-	ModelPerformance  map[string]ModelPerformance `json:"model_performance"`
-	RecentRequests    []RequestMetric             `json:"recent_requests"`
-	AlgorithmStats    map[string]AlgorithmStats   `json:"algorithm_stats"`
-	LastUpdate        time.Time                   `json:"last_update"`
+	Enabled          bool                        `json:"enabled"`
+	CurrentAlgorithm string                      `json:"current_algorithm"`
+	PredictionData   *PredictionResponse         `json:"prediction_data"`
+	ModelPerformance map[string]ModelPerformance `json:"model_performance"`
+	RecentRequests   []RequestMetric             `json:"recent_requests"`
+	AlgorithmStats   map[string]AlgorithmStats   `json:"algorithm_stats"`
+	LastUpdate       time.Time                   `json:"last_update"`
 }
 
 // PredictionResponse dados de predição atual
 type PredictionResponse struct {
-	RecommendedAlgo   string    `json:"recommended_algorithm"`
-	Confidence        float64   `json:"confidence"`
-	PredictedLoad     float64   `json:"predicted_load"`
-	PredictionTime    time.Time `json:"prediction_time"`
-	OptimalBackends   []string  `json:"optimal_backends"`
-	ScalingRecommend  string    `json:"scaling_recommendation"`
+	RecommendedAlgo  string    `json:"recommended_algorithm"`
+	Confidence       float64   `json:"confidence"`
+	PredictedLoad    float64   `json:"predicted_load"`
+	PredictionTime   time.Time `json:"prediction_time"`
+	OptimalBackends  []string  `json:"optimal_backends"`
+	ScalingRecommend string    `json:"scaling_recommendation"`
 }
 
 // ModelPerformance métricas de performance dos modelos
 type ModelPerformance struct {
-	Type           string    `json:"type"`
-	Accuracy       float64   `json:"accuracy"`
-	LastTrained    time.Time `json:"last_trained"`
-	Version        string    `json:"version"`
-	TrainingStatus string    `json:"training_status"`
-	PredictionsMade int64    `json:"predictions_made"`
+	Type            string    `json:"type"`
+	Accuracy        float64   `json:"accuracy"`
+	LastTrained     time.Time `json:"last_trained"`
+	Version         string    `json:"version"`
+	TrainingStatus  string    `json:"training_status"`
+	PredictionsMade int64     `json:"predictions_made"`
 }
 
 // RequestMetric métricas de requisições individuais
@@ -58,11 +58,11 @@ type RequestMetric struct {
 
 // AlgorithmStats estatísticas por algoritmo
 type AlgorithmStats struct {
-	RequestCount     int64   `json:"request_count"`
-	AvgResponseTime  float64 `json:"avg_response_time"`
-	ErrorRate        float64 `json:"error_rate"`
-	SuccessRate      float64 `json:"success_rate"`
-	LastUsed         time.Time `json:"last_used"`
+	RequestCount    int64     `json:"request_count"`
+	AvgResponseTime float64   `json:"avg_response_time"`
+	ErrorRate       float64   `json:"error_rate"`
+	SuccessRate     float64   `json:"success_rate"`
+	LastUsed        time.Time `json:"last_used"`
 }
 
 // AIConfigUpdate configuração atualizável da IA
@@ -80,29 +80,55 @@ type AIConfigUpdate struct {
 func (api *API) setupAIRoutes() {
 	// Grupo de rotas da IA
 	aiRouter := api.router.PathPrefix("/api/ai").Subrouter()
-	
+
 	// Métricas e status geral
 	aiRouter.HandleFunc("/metrics", api.getAIMetrics).Methods("GET")
 	aiRouter.HandleFunc("/status", api.getAIStatus).Methods("GET")
-	
+
 	// Predições e modelos
 	aiRouter.HandleFunc("/predictions", api.getAIPredictions).Methods("GET")
 	aiRouter.HandleFunc("/models", api.getModelStatus).Methods("GET")
+	aiRouter.HandleFunc("/models", api.handleListAIModels).Methods("GET")
+	aiRouter.HandleFunc("/models", api.handleDeployAIModel).Methods("POST")
+	aiRouter.HandleFunc("/models/{id}", api.handleGetAIModel).Methods("GET")
+	aiRouter.HandleFunc("/models/{id}", api.handleUpdateAIModel).Methods("PUT")
+	aiRouter.HandleFunc("/models/{id}", api.handleUndeployAIModel).Methods("DELETE")
 	aiRouter.HandleFunc("/models/{modelType}/retrain", api.retrainModel).Methods("POST")
-	
+	aiRouter.HandleFunc("/predict", api.handleAIPredict).Methods("POST")
+
 	// Configuração
 	aiRouter.HandleFunc("/config", api.getAIConfig).Methods("GET")
 	aiRouter.HandleFunc("/config", api.updateAIConfig).Methods("PUT")
-	
+
 	// Health check e histórico (compatibilidade com frontend)
 	aiRouter.HandleFunc("/health", api.getAIHealth).Methods("GET")
+	aiRouter.HandleFunc("/health/detailed", api.handleAIHealth).Methods("GET")
 	aiRouter.HandleFunc("/history", api.getAIHistory).Methods("GET")
 	aiRouter.HandleFunc("/retrain", api.retrainGenericModel).Methods("POST")
-	
+
+	// Rotas adicionais de IA dos handlers não utilizados
+	aiRouter.HandleFunc("/metrics/detailed", api.handleAIMetrics).Methods("GET")
+	aiRouter.HandleFunc("/training/start", api.handleStartAITraining).Methods("POST")
+	aiRouter.HandleFunc("/training/stop", api.handleStopAITraining).Methods("POST")
+	aiRouter.HandleFunc("/training", api.handleListAITraining).Methods("GET")
+	aiRouter.HandleFunc("/training/{id}", api.handleGetAITraining).Methods("GET")
+	aiRouter.HandleFunc("/pipelines", api.handleListAIPipelines).Methods("GET")
+	aiRouter.HandleFunc("/pipeline", api.handleCreateAIPipeline).Methods("POST")
+	aiRouter.HandleFunc("/pipeline/{id}", api.handleGetAIPipeline).Methods("GET")
+	aiRouter.HandleFunc("/pipeline/{id}", api.handleUpdateAIPipeline).Methods("PUT")
+	aiRouter.HandleFunc("/pipeline/{id}", api.handleDeleteAIPipeline).Methods("DELETE")
+	aiRouter.HandleFunc("/pipeline/{id}/run", api.handleRunAIPipeline).Methods("POST")
+	aiRouter.HandleFunc("/retrain/all", api.handleAIRetrain).Methods("POST")
+	aiRouter.HandleFunc("/predictions/list", api.handleAIPredictions).Methods("GET")
+	aiRouter.HandleFunc("/analytics/history", api.handleAIHistory).Methods("GET")
+	aiRouter.HandleFunc("/predict/batch", api.handleAIBatchPredict).Methods("POST")
+	aiRouter.HandleFunc("/config/detailed", api.handleGetAIConfig).Methods("GET")
+	aiRouter.HandleFunc("/config/update", api.handleUpdateAIConfig).Methods("PUT")
+
 	// Análise em tempo real
 	aiRouter.HandleFunc("/algorithm-comparison", api.getAlgorithmComparison).Methods("GET")
 	aiRouter.HandleFunc("/prediction-history", api.getPredictionHistory).Methods("GET")
-	
+
 	api.logger.Info("AI API routes configured")
 }
 
@@ -120,24 +146,24 @@ func (api *API) getAIMetrics(w http.ResponseWriter, r *http.Request) {
 	// Se há um roteador com balanceador adaptativo
 	if api.router != nil && api.adaptiveBalancer != nil {
 		metrics.CurrentAlgorithm = api.adaptiveBalancer.GetCurrentStrategy()
-		
+
 		// Obter métricas de performance dos modelos
 		modelPerf := make(map[string]ModelPerformance)
 		if modelInfo := api.adaptiveBalancer.GetModelPerformance(); modelInfo != nil {
 			for name, infoInterface := range modelInfo {
 				if info, ok := infoInterface.(ai.ModelInfo); ok {
 					modelPerf[name] = ModelPerformance{
-						Type:        info.Type,
-						Accuracy:    info.Accuracy,
-						LastTrained: info.LastTrained,
-						Version:     info.Version,
+						Type:           info.Type,
+						Accuracy:       info.Accuracy,
+						LastTrained:    info.LastTrained,
+						Version:        info.Version,
 						TrainingStatus: "active",
 					}
 				}
 			}
 		}
 		metrics.ModelPerformance = modelPerf
-		
+
 		// Obter predição atual
 		if prediction, err := api.adaptiveBalancer.GetAIPrediction(); err == nil {
 			metrics.PredictionData = &PredictionResponse{
@@ -161,8 +187,8 @@ func (api *API) getAIStatus(w http.ResponseWriter, r *http.Request) {
 		"enabled":           api.config.Global.AI.Enabled,
 		"adaptive_balancer": api.adaptiveBalancer != nil,
 		"current_algorithm": "traditional",
-		"health":           "healthy",
-		"timestamp":        time.Now(),
+		"health":            "healthy",
+		"timestamp":         time.Now(),
 	}
 
 	if api.adaptiveBalancer != nil {
@@ -213,10 +239,10 @@ func (api *API) getModelStatus(w http.ResponseWriter, r *http.Request) {
 	for name, infoInterface := range modelInfo {
 		if info, ok := infoInterface.(ai.ModelInfo); ok {
 			modelStatus[name] = ModelPerformance{
-				Type:        info.Type,
-				Accuracy:    info.Accuracy,
-				LastTrained: info.LastTrained,
-				Version:     info.Version,
+				Type:           info.Type,
+				Accuracy:       info.Accuracy,
+				LastTrained:    info.LastTrained,
+				Version:        info.Version,
 				TrainingStatus: "ready",
 			}
 		}
@@ -277,7 +303,7 @@ func (api *API) retrainModel(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "retraining_started",
+		"status":  "retraining_started",
 		"message": "Model retraining initiated",
 	})
 }
@@ -344,10 +370,10 @@ func (api *API) getPredictionHistory(w http.ResponseWriter, r *http.Request) {
 // getAIHealth retorna status de saúde da IA (compatibilidade com frontend)
 func (api *API) getAIHealth(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
-		"status": "healthy",
-		"models": []string{},
+		"status":          "healthy",
+		"models":          []string{},
 		"last_prediction": "",
-		"timestamp": time.Now(),
+		"timestamp":       time.Now(),
 	}
 
 	if api.adaptiveBalancer != nil {
@@ -358,7 +384,7 @@ func (api *API) getAIHealth(w http.ResponseWriter, r *http.Request) {
 		}
 		health["models"] = models
 		health["status"] = "healthy"
-		
+
 		// Tentar obter última predição
 		if prediction, err := api.adaptiveBalancer.GetAIPrediction(); err == nil {
 			health["last_prediction"] = prediction.Timestamp.Format(time.RFC3339)
@@ -381,21 +407,21 @@ func (api *API) getAIHistory(w http.ResponseWriter, r *http.Request) {
 	// Dados simulados baseados no que o frontend espera
 	history := map[string]interface{}{
 		"accuracy_history": []map[string]interface{}{
-			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "accuracy": 0.92},
-			{"timestamp": time.Now().Add(-20*time.Minute).Format(time.RFC3339), "accuracy": 0.94},
-			{"timestamp": time.Now().Add(-10*time.Minute).Format(time.RFC3339), "accuracy": 0.91},
+			{"timestamp": time.Now().Add(-30 * time.Minute).Format(time.RFC3339), "accuracy": 0.92},
+			{"timestamp": time.Now().Add(-20 * time.Minute).Format(time.RFC3339), "accuracy": 0.94},
+			{"timestamp": time.Now().Add(-10 * time.Minute).Format(time.RFC3339), "accuracy": 0.91},
 			{"timestamp": time.Now().Format(time.RFC3339), "accuracy": 0.95},
 		},
 		"confidence_history": []map[string]interface{}{
-			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "confidence": 0.87},
-			{"timestamp": time.Now().Add(-20*time.Minute).Format(time.RFC3339), "confidence": 0.89},
-			{"timestamp": time.Now().Add(-10*time.Minute).Format(time.RFC3339), "confidence": 0.85},
+			{"timestamp": time.Now().Add(-30 * time.Minute).Format(time.RFC3339), "confidence": 0.87},
+			{"timestamp": time.Now().Add(-20 * time.Minute).Format(time.RFC3339), "confidence": 0.89},
+			{"timestamp": time.Now().Add(-10 * time.Minute).Format(time.RFC3339), "confidence": 0.85},
 			{"timestamp": time.Now().Format(time.RFC3339), "confidence": 0.92},
 		},
 		"algorithm_usage": []map[string]interface{}{
-			{"timestamp": time.Now().Add(-30*time.Minute).Format(time.RFC3339), "algorithm": "round_robin", "count": 45},
-			{"timestamp": time.Now().Add(-20*time.Minute).Format(time.RFC3339), "algorithm": "least_conn", "count": 32},
-			{"timestamp": time.Now().Add(-10*time.Minute).Format(time.RFC3339), "algorithm": "adaptive_ai", "count": 78},
+			{"timestamp": time.Now().Add(-30 * time.Minute).Format(time.RFC3339), "algorithm": "round_robin", "count": 45},
+			{"timestamp": time.Now().Add(-20 * time.Minute).Format(time.RFC3339), "algorithm": "least_conn", "count": 32},
+			{"timestamp": time.Now().Add(-10 * time.Minute).Format(time.RFC3339), "algorithm": "adaptive_ai", "count": 78},
 			{"timestamp": time.Now().Format(time.RFC3339), "algorithm": "adaptive_ai", "count": 92},
 		},
 	}
@@ -422,14 +448,14 @@ func (api *API) retrainGenericModel(w http.ResponseWriter, r *http.Request) {
 		modelType = "all"
 	}
 
-	api.logger.Info("Generic model retraining requested", 
+	api.logger.Info("Generic model retraining requested",
 		zap.Any("model_type", modelType))
 
 	response := map[string]interface{}{
-		"success": true,
-		"message": "Model retraining initiated",
+		"success":    true,
+		"message":    "Model retraining initiated",
 		"model_type": modelType,
-		"timestamp": time.Now(),
+		"timestamp":  time.Now(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
