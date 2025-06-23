@@ -27,11 +27,18 @@ interface Command {
   keywords: string[];
 }
 
+interface Tab {
+  id: string;
+  title: string;
+  path?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate?: (path: string) => void;
-  tabs?: any[];
+  tabs?: Tab[];
 }
 
 export function CommandPalette({ isOpen, onClose, onNavigate, tabs }: CommandPaletteProps) {

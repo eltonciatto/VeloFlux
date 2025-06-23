@@ -14,7 +14,7 @@ interface WebSocketConfig {
 
 interface WebSocketMessage {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -22,7 +22,7 @@ interface UseWebSocketReturn {
   isConnected: boolean;
   isConnecting: boolean;
   error: string | null;
-  send: (message: any) => void;
+  send: (message: unknown) => void;
   lastMessage: WebSocketMessage | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
 }
@@ -45,7 +45,7 @@ export function useWebSocket({
   const reconnectTimeoutId = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
 
-  const log = useCallback((message: string, data?: any) => {
+  const log = useCallback((message: string, data?: unknown) => {
     if (debug) {
       console.log(`[WebSocket] ${message}`, data);
     }
@@ -138,7 +138,7 @@ export function useWebSocket({
     log('Disconnected manually');
   }, [log]);
 
-  const send = useCallback((message: any) => {
+  const send = useCallback((message: unknown) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       try {
         const jsonMessage = JSON.stringify(message);

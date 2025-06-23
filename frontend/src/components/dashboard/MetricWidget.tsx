@@ -57,7 +57,30 @@ interface WidgetConfig {
   refresh_interval: number;
   size: 'small' | 'medium' | 'large';
   position: { x: number; y: number; w: number; h: number };
-  config: Record<string, any>;
+  config: {
+    unit?: string;
+    threshold?: number;
+    color?: string;
+    chartType?: 'line' | 'bar' | 'area';
+    showLegend?: boolean;
+    [key: string]: unknown;
+  };
+}
+
+interface GaugeData {
+  value: number;
+  max: number;
+  min: number;
+  unit: string;
+  thresholds?: {
+    warning?: number;
+    critical?: number;
+  };
+}
+
+interface TableData {
+  headers: string[];
+  rows: string[][];
 }
 
 interface MetricWidgetProps {
@@ -97,7 +120,7 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
   const { t } = useTranslation();
   const { toast } = useToast();
   
-  const [data, setData] = useState<MetricData | ChartData | any>(null);
+  const [data, setData] = useState<MetricData | ChartData | GaugeData | TableData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -115,7 +138,7 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
       let mockData;
       
       switch (widget.type) {
-        case 'metric':
+        case 'metric': {
           const value = Math.floor(Math.random() * 1000) + 100;
           const previousValue = Math.floor(Math.random() * 1000) + 100;
           const changePercent = ((value - previousValue) / previousValue) * 100;
@@ -130,8 +153,9 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             timestamp: new Date().toISOString()
           };
           break;
+        }
           
-        case 'chart':
+        case 'chart': {
           const points = 12;
           const labels = Array.from({ length: points }, (_, i) => {
             const date = new Date();
@@ -150,8 +174,9 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             ]
           };
           break;
+        }
           
-        case 'gauge':
+        case 'gauge': {
           mockData = {
             value: Math.floor(Math.random() * 100),
             max: 100,
@@ -163,8 +188,9 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             }
           };
           break;
+        }
           
-        case 'table':
+        case 'table': {
           mockData = {
             headers: ['Metric', 'Value', 'Status', 'Last Update'],
             rows: Array.from({ length: 5 }, (_, i) => [
@@ -175,6 +201,7 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             ])
           };
           break;
+        }
           
         default:
           mockData = { value: 0 };
@@ -271,7 +298,7 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
     }
 
     switch (widget.type) {
-      case 'metric':
+      case 'metric': {
         const metricData = data as MetricData;
         return (
           <div className="space-y-2">
@@ -302,8 +329,9 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             )}
           </div>
         );
+      }
 
-      case 'chart':
+      case 'chart': {
         const chartData = data as ChartData;
         const chartPoints = chartData?.labels?.map((label, index) => ({
           name: label,
@@ -333,9 +361,10 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             </ResponsiveContainer>
           </div>
         );
+      }
 
-      case 'gauge':
-        const gaugeData = data as any;
+      case 'gauge': {
+        const gaugeData = data as GaugeData;
         const percentage = ((gaugeData?.value || 0) / (gaugeData?.max || 100)) * 100;
         const getGaugeColor = () => {
           if (percentage >= (gaugeData?.thresholds?.critical || 90)) return 'text-red-500';
@@ -362,9 +391,10 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'table':
-        const tableData = data as any;
+      case 'table': {
+        const tableData = data as TableData;
         return (
           <div className="space-y-2">
             <div className="grid grid-cols-4 gap-2 text-xs font-medium text-muted-foreground border-b pb-2">
@@ -383,6 +413,7 @@ const MetricWidget: React.FC<MetricWidgetProps> = ({
             </div>
           </div>
         );
+      }
 
       default:
         return (

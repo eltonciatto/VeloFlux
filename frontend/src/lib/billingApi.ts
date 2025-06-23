@@ -2,6 +2,25 @@
 // 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
 // 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 
+interface InvoiceData {
+  id: string;
+  amount_due?: number;
+  amount?: number;
+  period_start?: string;
+  period_end?: string;
+  due_date?: string;
+  tax_rate?: number;
+  credits?: number;
+  billing_address?: {
+    name?: string;
+    address1?: string;
+    address2?: string;
+    line1?: string;
+    line2?: string;
+  };
+  paymentMethod?: string | object;
+}
+
 export interface UsageMetrics {
   requestCount: number;
   dataTransferMB: number;
@@ -537,7 +556,7 @@ class BillingApiClient {
    */
   async getInvoice(invoiceId: string): Promise<Invoice> {
     const invoicesData = await this.apiCall('/api/billing/invoices');
-    const invoice = invoicesData.items?.find((inv: any) => inv.id === invoiceId);
+    const invoice = invoicesData.items?.find((inv: InvoiceData) => inv.id === invoiceId);
     if (!invoice) {
       throw new Error('Invoice not found');
     }
@@ -547,7 +566,7 @@ class BillingApiClient {
   /**
    * Map invoice data for frontend compatibility
    */
-  private mapInvoiceForCompatibility(invoice: any): Invoice {
+  private mapInvoiceForCompatibility(invoice: InvoiceData): Invoice {
     return {
       ...invoice,
       // Map backend fields to frontend compatibility fields
@@ -661,7 +680,7 @@ class BillingApiClient {
   /**
    * Get cost projections (placeholder)
    */
-  async getCostProjections(): Promise<any> {
+  async getCostProjections(): Promise<Record<string, unknown>> {
     // Mock data - would need backend implementation
     return {};
   }

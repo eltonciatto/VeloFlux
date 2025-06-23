@@ -75,7 +75,7 @@ const SecuritySettings = () => {
   }, [tenantId, token, refreshAll]);
 
   // Handle WAF config changes
-  const handleWAFConfigChange = (field: string, value: any) => {
+  const handleWAFConfigChange = (field: string, value: unknown) => {
     if (!wafConfig) return;
     
     const updatedConfig = { ...wafConfig };
@@ -87,32 +87,32 @@ const SecuritySettings = () => {
           [child]: value
         };
       } else {
-        (updatedConfig as any)[parent] = {
-          ...(updatedConfig as any)[parent],
+        (updatedConfig as Record<string, unknown>)[parent] = {
+          ...(updatedConfig as Record<string, unknown>)[parent],
           [child]: value
         };
       }
     } else {
-      (updatedConfig as any)[field] = value;
+      (updatedConfig as Record<string, unknown>)[field] = value;
     }
     
     saveWAFConfig(updatedConfig);
   };
 
   // Handle Rate Limit config changes
-  const handleRateLimitConfigChange = (field: string, value: any) => {
+  const handleRateLimitConfigChange = (field: string, value: unknown) => {
     if (!rateLimitConfig) return;
     
     const updatedConfig = { ...rateLimitConfig };
     if (field.includes('.')) {
       const parts = field.split('.');
-      let current: any = updatedConfig;
+      let current: Record<string, unknown> = updatedConfig;
       for (let i = 0; i < parts.length - 1; i++) {
-        current = current[parts[i]];
+        current = current[parts[i]] as Record<string, unknown>;
       }
       current[parts[parts.length - 1]] = value;
     } else {
-      (updatedConfig as any)[field] = value;
+      (updatedConfig as Record<string, unknown>)[field] = value;
     }
     
     saveRateLimitConfig(updatedConfig);

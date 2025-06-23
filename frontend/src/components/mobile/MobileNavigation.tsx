@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useMobileDetection from '../../hooks/useMobileDetection';
@@ -33,7 +33,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const [currentTab, setCurrentTab] = useState(0);
 
   // Navigation items for bottom navigation
-  const bottomNavItems: NavigationItem[] = [
+  const bottomNavItems: NavigationItem[] = useMemo(() => [
     {
       id: 'dashboard',
       label: t('navigation.dashboard'),
@@ -59,7 +59,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
       icon: '☰',
       path: '/menu'
     }
-  ];
+  ], [t, notificationCount]);
 
   // Navigation items for drawer menu
   const drawerNavItems: NavigationItem[] = [
@@ -206,7 +206,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
     if (tabIndex !== -1) {
       setCurrentTab(tabIndex);
     }
-  }, [location.pathname]);
+  }, [location.pathname, bottomNavItems]);
 
   const handleNavigation = (path: string) => {
     if (path === '/menu') {

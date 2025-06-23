@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,11 +39,7 @@ const ModernBillingPanel = () => {
   const [processingUpgrade, setProcessingUpgrade] = useState(false);
 
   // Carregar dados de billing
-  useEffect(() => {
-    loadBillingData();
-  }, []);
-
-  const loadBillingData = async () => {
+  const loadBillingData = useCallback(async () => {
     setLoading(true);
     try {
       // Carregar assinaturas, faturas e planos em paralelo
@@ -72,7 +68,11 @@ const ModernBillingPanel = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, toast]);
+
+  useEffect(() => {
+    loadBillingData();
+  }, [loadBillingData]);
 
   // Criar nova assinatura
   const createSubscription = async (planType) => {

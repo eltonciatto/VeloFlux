@@ -129,7 +129,7 @@ export function useUpdateAIConfig() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (config: Partial<any>) => aiApiClient.updateAIConfig(config),
+    mutationFn: (config: Partial<AIConfig>) => aiApiClient.updateAIConfig(config),
     onSuccess: () => {
       // Invalidate config to refetch updated values
       queryClient.invalidateQueries({ queryKey: [AI_QUERY_KEYS.config] });
@@ -175,7 +175,7 @@ export function useAIPerformanceMetrics() {
   
   const calculateAverageAccuracy = () => {
     if (!models) return 0;
-    const modelValues = Object.values(models) as any[];
+    const modelValues = Object.values(models);
     if (modelValues.length === 0) return 0;
     const sum = modelValues.reduce((acc, model) => acc + (model.accuracy || 0), 0);
     return sum / modelValues.length;

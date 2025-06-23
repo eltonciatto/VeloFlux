@@ -10,7 +10,7 @@ interface MetricData {
   value: number;
   unit: string;
   color: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface NetworkNode {

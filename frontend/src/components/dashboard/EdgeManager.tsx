@@ -471,7 +471,7 @@ const EdgeManager: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+      <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value)}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-700">
           <TabsTrigger value="nodes" className="data-[state=active]:bg-slate-700">
             <Server className="h-4 w-4 mr-2" />
@@ -561,7 +561,7 @@ const EdgeManager: React.FC = () => {
 
                 <div>
                   <Label htmlFor="node-type" className="text-white">Tipo</Label>
-                  <Select value={newNode.type} onValueChange={(value: any) => setNewNode(prev => ({ ...prev, type: value }))}>
+                  <Select value={newNode.type} onValueChange={(value: string) => setNewNode(prev => ({ ...prev, type: value }))}>
                     <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                       <SelectValue />
                     </SelectTrigger>

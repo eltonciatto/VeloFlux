@@ -46,7 +46,7 @@ interface Notification {
   read: boolean;
   archived: boolean;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   actions?: NotificationAction[];
 }
 

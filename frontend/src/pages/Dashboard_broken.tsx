@@ -163,7 +163,7 @@ export const Dashboard = () => {
       label: t('dashboard.tabs.security'),
       icon: Shield,
       gradient: 'from-red-500 to-rose-500',
-      component: (props: any) => <WAFConfig tenantId={selectedTenantId} {...props} />
+      component: (props: Record<string, unknown>) => <WAFConfig tenantId={selectedTenantId} {...props} />
     },
     {
       id: 'security-advanced',
@@ -198,7 +198,7 @@ export const Dashboard = () => {
       label: t('dashboard.tabs.rateLimit'),
       icon: Gauge,
       gradient: 'from-violet-500 to-purple-500',
-      component: (props: any) => <RateLimitConfig tenantId={selectedTenantId} {...props} />
+      component: (props: Record<string, unknown>) => <RateLimitConfig tenantId={selectedTenantId} {...props} />
     },
     {
       id: 'ai-config',

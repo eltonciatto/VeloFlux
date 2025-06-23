@@ -1,7 +1,7 @@
 // 🚀 Performance Monitor - Monitoramento em Tempo Real
 // Métricas de performance do dashboard para produção
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,17 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+interface ExtendedPerformance extends Performance {
+  memory?: PerformanceMemory;
+}
 
 interface PerformanceMetrics {
   loadTime: number;
@@ -71,12 +82,7 @@ export function PerformanceMonitor() {
   // Performance Observer for monitoring
   const observerRef = useRef<PerformanceObserver | null>(null);
 
-  useEffect(() => {
-    startMonitoring();
-    return () => stopMonitoring();
-  }, []);
-
-  const startMonitoring = () => {
+  const startMonitoring = useCallback(() => {
     setIsMonitoring(true);
     startTime.current = performance.now();
 
@@ -94,11 +100,13 @@ export function PerformanceMonitor() {
 
     // Monitor memory usage
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      setMetrics(prev => ({
-        ...prev,
-        memoryUsage: memory.usedJSHeapSize / (1024 * 1024) // Convert to MB
-      }));
+      const memory = (performance as ExtendedPerformance).memory;
+      if (memory) {
+        setMetrics(prev => ({
+          ...prev,
+          memoryUsage: memory.usedJSHeapSize / (1024 * 1024) // Convert to MB
+        }));
+      }
     }
 
     // Monitor frame rate
@@ -119,7 +127,12 @@ export function PerformanceMonitor() {
         cancelAnimationFrame(frameId.current);
       }
     };
-  };
+  }, []);
+
+  useEffect(() => {
+    startMonitoring();
+    return () => stopMonitoring();
+  }, [startMonitoring]);
 
   const stopMonitoring = () => {
     setIsMonitoring(false);
@@ -199,11 +212,13 @@ export function PerformanceMonitor() {
   const updateMetrics = () => {
     // Update memory usage
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      setMetrics(prev => ({
-        ...prev,
-        memoryUsage: memory.usedJSHeapSize / (1024 * 1024)
-      }));
+      const memory = (performance as ExtendedPerformance).memory;
+      if (memory) {
+        setMetrics(prev => ({
+          ...prev,
+          memoryUsage: memory.usedJSHeapSize / (1024 * 1024)
+        }));
+      }
     }
 
     // Calculate cache hit rate (simplified)

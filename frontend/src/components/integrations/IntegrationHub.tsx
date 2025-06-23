@@ -42,7 +42,7 @@ interface Integration {
   isEnabled: boolean;
   icon: React.ReactNode;
   config?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
   metrics?: {
     eventsToday: number;

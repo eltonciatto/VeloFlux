@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -18,15 +18,12 @@ import { useTranslation } from 'react-i18next';
  * @dev-only This component should never appear in production builds
  */
 const TranslationTest = () => {
-  // Double-check: Don't render in production
-  if (import.meta.env.PROD) {
-    return null;
-  }
+  // Always call hooks at the top level
   const { t, i18n } = useTranslation();
   const [testResults, setTestResults] = useState<string[]>([]);
-
+  
   // TODAS AS CHAVES DE TRADUÇÃO USADAS NO SISTEMA
-  const allTranslationKeys = [
+  const allTranslationKeys = useMemo(() => [
     // Hero/ImmersiveHero
     'hero.title', 'hero.subtitle', 'hero.description', 'hero.badge', 'hero.getStarted', 'hero.viewDemo',
     'hero.descriptionHighlight', 'hero.buttons.aiDashboard', 'hero.buttons.github', 'hero.buttons.documentation',
@@ -209,7 +206,7 @@ const TranslationTest = () => {
 
     // Common
     'common.loading', 'common.error', 'common.success', 'common.cancel', 'common.save', 'common.delete', 'common.edit', 'common.confirm', 'common.close'
-  ];
+  ], []);
 
   useEffect(() => {
     const results: string[] = [];
@@ -272,6 +269,11 @@ const TranslationTest = () => {
 
     setTestResults(results);
   }, [t, i18n.language, allTranslationKeys]);
+
+  // Double-check: Don't render in production
+  if (import.meta.env.PROD) {
+    return null;
+  }
 
   return (
     <div className="fixed top-4 right-4 bg-black/95 text-white p-4 rounded-lg w-[600px] max-h-[80vh] overflow-y-auto z-50 text-xs font-mono border border-cyan-500/30">

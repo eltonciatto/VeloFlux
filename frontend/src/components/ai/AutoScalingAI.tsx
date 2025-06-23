@@ -540,7 +540,7 @@ const AutoScalingAI: React.FC = () => {
                     <YAxis />
                     <Tooltip 
                       labelFormatter={(value) => new Date(value).toLocaleString()}
-                      formatter={(value: any) => [`$${value.toFixed(2)}`, 'Custo/Hora']}
+                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Custo/Hora']}
                     />
                     <Area 
                       type="monotone" 

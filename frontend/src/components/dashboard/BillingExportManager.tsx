@@ -123,7 +123,7 @@ export function BillingExportManager({
             <label className="text-sm font-medium text-slate-300">Format</label>
             <select 
               value={selectedFormat}
-              onChange={(e) => setSelectedFormat(e.target.value as any)}
+              onChange={(e) => setSelectedFormat(e.target.value as 'json' | 'csv' | 'xml')}
               className="w-full mt-1 bg-slate-800 border-slate-600 text-white rounded-md px-3 py-2"
             >
               <option value="json">JSON</option>

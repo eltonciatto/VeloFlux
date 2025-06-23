@@ -24,7 +24,7 @@ interface TenantMetrics {
 interface ComparisonMetric {
   label: string;
   key: keyof TenantMetrics;
-  format: (value: any) => string;
+  format: (value: string | number) => string;
   trend?: boolean;
 }
 
@@ -125,7 +125,7 @@ export const TenantComparison: React.FC = () => {
         </div>
         
         <div className="flex gap-4">
-          <Select value={comparisonMode} onValueChange={(value: any) => setComparisonMode(value)}>
+          <Select value={comparisonMode} onValueChange={(value: string) => setComparisonMode(value)}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>

@@ -8,6 +8,7 @@ interface SoundContextType {
 
 const SoundContext = createContext<SoundContextType | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSounds = () => {
   const context = useContext(SoundContext);
   if (!context) {
@@ -25,7 +26,7 @@ export const SoundProvider: React.FC<SoundProviderProps> = ({ children }) => {
 
   const createBeep = (frequency: number, duration: number, volume: number = 0.1) => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     }
     
     const audioContext = audioContextRef.current;

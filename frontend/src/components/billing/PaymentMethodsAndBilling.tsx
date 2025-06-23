@@ -47,7 +47,7 @@ interface PaymentMethodFormProps {
     expiryMonth?: number;
     expiryYear?: number;
   };
-  onSubmit: (method: any) => void;
+  onSubmit: (method: PaymentMethod) => void;
   onCancel: () => void;
 }
 
@@ -218,17 +218,19 @@ function PaymentMethodForm({ method, onSubmit, onCancel }: PaymentMethodFormProp
   );
 }
 
+interface BillingAddress {
+  name: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 interface BillingAddressFormProps {
-  address?: {
-    name: string;
-    line1: string;
-    line2?: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
-  onSubmit: (address: any) => void;
+  address?: BillingAddress;
+  onSubmit: (address: BillingAddress) => void;
   onCancel: () => void;
 }
 
@@ -373,9 +375,9 @@ export default function PaymentMethodsAndBilling() {
 
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [editingMethod, setEditingMethod] = useState<any>(null);
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
 
-  const handleAddPaymentMethod = async (methodData: any) => {
+  const handleAddPaymentMethod = async (methodData: PaymentMethod) => {
     try {
       await updatePaymentMethod.mutateAsync(methodData);
       setShowPaymentForm(false);
@@ -385,7 +387,7 @@ export default function PaymentMethodsAndBilling() {
     }
   };
 
-  const handleUpdateAddress = async (addressData: any) => {
+  const handleUpdateAddress = async (addressData: BillingAddress) => {
     try {
       await updateBillingAddress.mutateAsync(addressData);
       setShowAddressForm(false);

@@ -106,7 +106,7 @@ export function SecurityMonitoringPanel() {
         const newEvent: SecurityEvent = {
           id: Date.now().toString(),
           type: Math.random() > 0.5 ? 'blocked' : 'suspicious',
-          severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as any,
+          severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
           source: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
           target: ['/api/admin', '/api/users', '/api/billing', '/api/login'][Math.floor(Math.random() * 4)],
           description: ['SQL injection attempt', 'XSS attempt blocked', 'Rate limit exceeded', 'Suspicious user agent'][Math.floor(Math.random() * 4)],

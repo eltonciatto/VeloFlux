@@ -248,7 +248,7 @@ const PredictiveAnalytics: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): 'destructive' | 'default' | 'secondary' | 'outline' => {
     switch (priority) {
       case 'critical': return 'destructive';
       case 'high': return 'default';
@@ -362,7 +362,7 @@ const PredictiveAnalytics: React.FC = () => {
                         <YAxis />
                         <Tooltip 
                           labelFormatter={(value) => new Date(value).toLocaleString()}
-                          formatter={(value: any) => [value.toFixed(2), 'Valor']}
+                          formatter={(value: number) => [value.toFixed(2), 'Valor']}
                         />
                         <Line 
                           type="monotone" 
@@ -460,7 +460,7 @@ const PredictiveAnalytics: React.FC = () => {
                       {getTypeIcon(rec.type)}
                       <CardTitle className="text-lg">{rec.title}</CardTitle>
                     </div>
-                    <Badge variant={getPriorityColor(rec.priority) as any}>
+                    <Badge variant={getPriorityColor(rec.priority)}>
                       {rec.priority}
                     </Badge>
                   </div>

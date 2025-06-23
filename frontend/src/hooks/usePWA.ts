@@ -26,10 +26,8 @@ interface UsePWAResult extends PWAState {
   checkForUpdates: () => Promise<boolean>;
 }
 
-declare global {
-  interface Navigator {
-    standalone?: boolean;
-  }
+interface NavigatorStandalone {
+  standalone?: boolean;
 }
 
 export const usePWA = (): UsePWAResult => {
@@ -46,7 +44,7 @@ export const usePWA = (): UsePWAResult => {
   const checkStandalone = useCallback(() => {
     const isStandalone = 
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone ||
+      (window.navigator as NavigatorStandalone).standalone ||
       document.referrer.includes('android-app://');
     
     return isStandalone;
@@ -58,7 +56,7 @@ export const usePWA = (): UsePWAResult => {
     if (checkStandalone()) return true;
     
     // Check for iOS Safari bookmark
-    if ((window.navigator as any).standalone) return true;
+    if ((window.navigator as NavigatorStandalone).standalone) return true;
     
     // Check for Android Chrome
     if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;

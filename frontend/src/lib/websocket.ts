@@ -3,13 +3,13 @@
 
 export interface WebSocketEvent {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 
 export interface WebSocketSubscription {
   channel: string;
-  callback: (data: any) => void;
+  callback: (data: unknown) => void;
   id: string;
 }
 
@@ -73,7 +73,7 @@ export class WebSocketManager {
     this.subscriptions.clear();
   }
 
-  subscribe(channel: string, callback: (data: any) => void): () => void {
+  subscribe(channel: string, callback: (data: unknown) => void): () => void {
     const subscription: WebSocketSubscription = {
       channel,
       callback,
@@ -134,7 +134,7 @@ export class WebSocketManager {
     }
   }
 
-  private send(data: any): void {
+  private send(data: unknown): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     } else {
@@ -192,7 +192,7 @@ export function useWebSocket() {
     wsManager.disconnect();
   };
 
-  const subscribe = (channel: string, callback: (data: any) => void) => {
+  const subscribe = (channel: string, callback: (data: unknown) => void) => {
     return wsManager.subscribe(channel, callback);
   };
 

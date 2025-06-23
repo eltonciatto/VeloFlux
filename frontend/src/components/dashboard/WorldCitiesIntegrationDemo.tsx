@@ -240,7 +240,7 @@ const WorldCitiesIntegrationDemo: React.FC = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+      <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value)}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-800 border-slate-700">
           <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
             <BarChart3 className="h-4 w-4 mr-2" />

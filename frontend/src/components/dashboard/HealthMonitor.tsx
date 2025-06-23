@@ -18,6 +18,17 @@ interface HealthData {
   statusCode: number;
 }
 
+interface Alert {
+  title?: string;
+  message?: string;
+  severity?: 'high' | 'medium' | 'low';
+  timestamp?: string;
+}
+
+interface Props {
+  isCompact?: boolean;
+}
+
 export const HealthMonitor = () => {
   const { data: healthData, isLoading: healthLoading } = useSystemHealth();
   const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
@@ -300,7 +311,7 @@ export const HealthMonitor = () => {
               </div>
             </div>
             <div className="p-6 space-y-4">
-              {alerts.slice(0, 5).map((alert: any, index: number) => (
+              {alerts.slice(0, 5).map((alert: Alert, index: number) => (
                 <div key={index} className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
                   <div className="flex items-center gap-3">
                     <AlertTriangle className="w-4 h-4 text-red-400" />

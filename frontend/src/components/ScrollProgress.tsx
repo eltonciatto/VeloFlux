@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
@@ -14,7 +14,7 @@ const ScrollProgress: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
 
-  const sections = [
+  const sections = useMemo(() => [
     { id: 'hero', label: t('scrollProgress.sections.hero') },
     { id: 'features', label: t('scrollProgress.sections.features') },
     { id: 'ai-showcase', label: t('scrollProgress.sections.aiShowcase') },
@@ -23,7 +23,7 @@ const ScrollProgress: React.FC = () => {
     { id: 'quickstart', label: t('scrollProgress.sections.quickstart') },
     { id: 'performance', label: t('scrollProgress.sections.performance') },
     { id: 'conclusion', label: t('scrollProgress.sections.conclusion') }
-  ];
+  ], [t]);
 
   const handleScroll = useCallback(() => {
     const scrolled = window.scrollY;
@@ -50,7 +50,7 @@ const ScrollProgress: React.FC = () => {
     if (currentSection !== -1) {
       setActiveSection(currentSection);
     }
-  }, []);
+  }, [sections]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);

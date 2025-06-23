@@ -74,11 +74,19 @@ import {
   BarChart
 } from 'lucide-react';
 
+interface Alert {
+  id: string;
+  type: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timestamp: string;
+}
+
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth, setSystemHealth] = useState<'healthy' | 'warning' | 'critical'>('healthy');
-  const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
+  const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

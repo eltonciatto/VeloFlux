@@ -54,7 +54,7 @@ interface Anomaly {
   resolved: boolean;
   source: string;
   metadata?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -241,8 +241,8 @@ const AnomalyDetection: React.FC = () => {
           const newAnomaly: Anomaly = {
             id: `anom-${Date.now()}`,
             timestamp: timestamp.toISOString(),
-            type: ['traffic', 'latency', 'error_rate', 'resource'][Math.floor(Math.random() * 4)] as any,
-            severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as any,
+            type: ['traffic', 'latency', 'error_rate', 'resource'][Math.floor(Math.random() * 4)] as 'traffic' | 'latency' | 'error_rate' | 'resource',
+            severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
             confidence: 0.8 + Math.random() * 0.2,
             value: Math.random() * 100 + 100,
             baseline: 40,
@@ -262,7 +262,7 @@ const AnomalyDetection: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string): 'destructive' | 'default' | 'secondary' | 'outline' => {
     switch (severity) {
       case 'critical': return 'destructive';
       case 'high': return 'default';
@@ -418,7 +418,7 @@ const AnomalyDetection: React.FC = () => {
                   <YAxis />
                   <Tooltip 
                     labelFormatter={(value) => new Date(value).toLocaleString()}
-                    formatter={(value: any, name) => [
+                    formatter={(value: number | string, name: string) => [
                       typeof value === 'number' ? value.toFixed(2) : value, 
                       name === 'value' ? 'Valor' : name === 'baseline' ? 'Baseline' : 'Confiança'
                     ]}
@@ -437,7 +437,7 @@ const AnomalyDetection: React.FC = () => {
                     stroke="#3b82f6" 
                     strokeWidth={2}
                     name="Valor Atual"
-                    dot={(props: any) => {
+                    dot={(props: { cx?: number; cy?: number; payload?: { isAnomaly?: boolean } }) => {
                       if (props.payload?.isAnomaly) {
                         return <circle cx={props.cx} cy={props.cy} r={4} fill="#ef4444" />;
                       }
@@ -505,7 +505,7 @@ const AnomalyDetection: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Badge variant={getSeverityColor(anomaly.severity) as any}>
+                      <Badge variant={getSeverityColor(anomaly.severity)}>
                         {anomaly.severity}
                       </Badge>
                       {anomaly.resolved ? (

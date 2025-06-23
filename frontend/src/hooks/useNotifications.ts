@@ -3,6 +3,10 @@ import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
 
 // Types
+interface ExtendedWindow extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 interface Notification {
   id: string;
   type: 'alert' | 'info' | 'warning' | 'error' | 'success';
@@ -13,7 +17,7 @@ interface Notification {
   read: boolean;
   archived: boolean;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   actions?: NotificationAction[];
 }
 
@@ -126,53 +130,6 @@ export const useNotifications = (): UseNotificationsHook => {
   const wsRef = useRef<WebSocket | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load data from localStorage
-  useEffect(() => {
-    try {
-      // Load notifications
-      const storedNotifications = localStorage.getItem(STORAGE_KEY);
-      if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications));
-      } else {
-        // Generate some initial mock notifications
-        const mockNotifications = generateMockNotifications();
-        setNotifications(mockNotifications);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockNotifications));
-      }
-      
-      // Load settings
-      const storedSettings = localStorage.getItem(SETTINGS_KEY);
-      if (storedSettings) {
-        setSettings({ ...defaultSettings, ...JSON.parse(storedSettings) });
-      }
-    } catch (err) {
-      console.error('Error loading notifications:', err);
-      setError('Failed to load notifications');
-    }
-  }, []);
-
-  // Save notifications to localStorage
-  const saveNotifications = useCallback((updatedNotifications: Notification[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotifications));
-      setNotifications(updatedNotifications);
-    } catch (err) {
-      console.error('Error saving notifications:', err);
-      setError('Failed to save notifications');
-    }
-  }, []);
-
-  // Save settings to localStorage
-  const saveSettings = useCallback((updatedSettings: NotificationSettings) => {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings));
-      setSettings(updatedSettings);
-    } catch (err) {
-      console.error('Error saving settings:', err);
-      setError('Failed to save settings');
-    }
-  }, []);
-
   // Generate mock notifications for demo
   const generateMockNotifications = useCallback((): Notification[] => {
     const types = ['alert', 'info', 'warning', 'error', 'success'] as const;
@@ -199,20 +156,20 @@ export const useNotifications = (): UseNotificationsHook => {
         category: 'billing' as const,
         priority: 'medium' as const,
         title: 'Billing Update',
-        message: 'Your monthly invoice is now available'
+        message: 'Monthly invoice has been generated'
       },
       {
         type: 'success' as const,
         category: 'performance' as const,
         priority: 'low' as const,
-        title: 'Performance Improvement',
-        message: 'Response time has improved by 15% this week'
+        title: 'Performance Improved',
+        message: 'System optimization completed successfully'
       },
       {
         type: 'alert' as const,
         category: 'integration' as const,
         priority: 'medium' as const,
-        title: 'Integration Status',
+        title: 'Integration Alert',
         message: 'API rate limit approaching threshold'
       }
     ];
@@ -239,6 +196,53 @@ export const useNotifications = (): UseNotificationsHook => {
         }
       };
     });
+  }, []);
+
+  // Load data from localStorage
+  useEffect(() => {
+    try {
+      // Load notifications
+      const storedNotifications = localStorage.getItem(STORAGE_KEY);
+      if (storedNotifications) {
+        setNotifications(JSON.parse(storedNotifications));
+      } else {
+        // Generate some initial mock notifications
+        const mockNotifications = generateMockNotifications();
+        setNotifications(mockNotifications);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockNotifications));
+      }
+      
+      // Load settings
+      const storedSettings = localStorage.getItem(SETTINGS_KEY);
+      if (storedSettings) {
+        setSettings({ ...defaultSettings, ...JSON.parse(storedSettings) });
+      }
+    } catch (err) {
+      console.error('Error loading notifications:', err);
+      setError('Failed to load notifications');
+    }
+  }, [generateMockNotifications]);
+
+  // Save notifications to localStorage
+  const saveNotifications = useCallback((updatedNotifications: Notification[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotifications));
+      setNotifications(updatedNotifications);
+    } catch (err) {
+      console.error('Error saving notifications:', err);
+      setError('Failed to save notifications');
+    }
+  }, []);
+
+  // Save settings to localStorage
+  const saveSettings = useCallback((updatedSettings: NotificationSettings) => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings));
+      setSettings(updatedSettings);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError('Failed to save settings');
+    }
   }, []);
 
   // Computed values
@@ -276,6 +280,7 @@ export const useNotifications = (): UseNotificationsHook => {
     if (settings.sound) {
       playNotificationSound(notificationData.priority);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notifications, settings, saveNotifications, toast]);
 
   const markAsRead = useCallback(async (id: string): Promise<void> => {
@@ -456,7 +461,7 @@ export const useNotifications = (): UseNotificationsHook => {
 
   const playNotificationSound = useCallback((priority: string) => {
     // Simple beep sound based on priority
-    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const context = new (window.AudioContext || (window as ExtendedWindow).webkitAudioContext)();
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
 

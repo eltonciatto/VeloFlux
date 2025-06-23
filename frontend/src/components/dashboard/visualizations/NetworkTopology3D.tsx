@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ export function NetworkTopology3D() {
   const [viewMode, setViewMode] = useState<'topology' | 'traffic' | 'health'>('topology');
   
   // Mock data - em produção viria da API
-  const nodes: NetworkNode[] = [
+  const nodes: NetworkNode[] = useMemo(() => [
     {
       id: 'lb-1',
       label: 'Load Balancer',
@@ -109,9 +109,9 @@ export function NetworkTopology3D() {
       connections: [],
       metrics: { cpu: 12, memory: 45, network: 89, requests: 1500 }
     }
-  ];
+  ], []);
 
-  const connections: NetworkConnection[] = [
+  const connections: NetworkConnection[] = useMemo(() => [
     { from: 'lb-1', to: 'backend-1', traffic: 85, latency: 12, status: 'active' },
     { from: 'lb-1', to: 'backend-2', traffic: 72, latency: 23, status: 'slow' },
     { from: 'lb-1', to: 'backend-3', traffic: 91, latency: 8, status: 'active' },
@@ -122,7 +122,7 @@ export function NetworkTopology3D() {
     { from: 'backend-2', to: 'cache-1', traffic: 65, latency: 4, status: 'active' },
     { from: 'backend-3', to: 'cache-1', traffic: 82, latency: 2, status: 'active' },
     { from: 'db-1', to: 'db-2', traffic: 25, latency: 35, status: 'active' }
-  ];
+  ], []);
 
   // Simulação de canvas 3D (em produção usaria Three.js ou WebGL)
   useEffect(() => {
@@ -332,7 +332,7 @@ export function NetworkTopology3D() {
               </Button>
               <select
                 value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as any)}
+                onChange={(e) => setViewMode(e.target.value as 'topology' | 'traffic' | 'health')}
                 className="bg-slate-800 border-slate-600 text-white rounded px-3 py-1 text-sm"
               >
                 <option value="topology">Topology</option>

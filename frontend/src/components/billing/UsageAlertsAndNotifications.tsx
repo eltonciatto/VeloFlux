@@ -41,17 +41,8 @@ import { formatCurrency, formatUsage, UsageAlert, BillingNotification } from '@/
 import { useUsageAlerts, useUpdateUsageAlert, useBillingNotifications, useMarkNotificationRead } from '@/hooks/useBilling';
 
 interface AlertFormProps {
-  alert?: {
-    id: string;
-    type: string;
-    limit: number;
-    threshold: number;
-    enabled: boolean;
-    email: boolean;
-    sms: boolean;
-    webhook: boolean;
-  };
-  onSubmit: (alert: any) => void;
+  alert?: UsageAlert;
+  onSubmit: (alert: UsageAlert) => void;
   onCancel: () => void;
 }
 
@@ -178,7 +169,7 @@ function AlertForm({ alert, onSubmit, onCancel }: AlertFormProps) {
 
 interface AlertCardProps {
   alert: UsageAlert;
-  onEdit: (alert: any) => void;
+  onEdit: (alert: UsageAlert) => void;
   onDelete: (alertId: string) => void;
 }
 
@@ -352,10 +343,10 @@ export default function UsageAlertsAndNotifications() {
   const updateAlert = useUpdateUsageAlert();
   const markAsRead = useMarkNotificationRead();
   
-  const [editingAlert, setEditingAlert] = useState<any>(null);
+  const [editingAlert, setEditingAlert] = useState<UsageAlert | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const handleCreateAlert = async (alertData: any) => {
+  const handleCreateAlert = async (alertData: UsageAlert) => {
     try {
       await updateAlert.mutateAsync(alertData);
       setShowCreateForm(false);
@@ -365,7 +356,7 @@ export default function UsageAlertsAndNotifications() {
     }
   };
 
-  const handleUpdateAlert = async (alertData: any) => {
+  const handleUpdateAlert = async (alertData: UsageAlert) => {
     try {
       await updateAlert.mutateAsync({ ...alertData, id: editingAlert.id });
       setEditingAlert(null);

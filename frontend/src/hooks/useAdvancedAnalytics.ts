@@ -48,8 +48,24 @@ interface AnalyticsInsight {
   confidence: number;
   impact: 'low' | 'medium' | 'high';
   suggested_actions: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
+}
+
+interface AnomalyPoint {
+  index: number;
+  timestamp: string;
+  value: number;
+  deviation: number;
+  isAnomaly: boolean;
+}
+
+interface ReportParameters {
+  title?: string;
+  period?: string;
+  includeCharts?: boolean;
+  format?: 'summary' | 'detailed';
+  sections?: string[];
 }
 
 interface ComparisonData {
@@ -65,7 +81,7 @@ interface AdvancedAnalyticsHook {
   insights: AnalyticsInsight[];
   alerts: AlertRule[];
   forecasts: TimeSeriesData[];
-  anomalies: any[];
+  anomalies: AnomalyPoint[];
   
   // State
   isLoading: boolean;
@@ -91,7 +107,7 @@ interface AdvancedAnalyticsHook {
   
   // Comparison and analysis
   compareTimePeriods: (metricName: string, currentPeriod: string, previousPeriod: string) => Promise<ComparisonData>;
-  detectAnomalies: (data: TimeSeriesData[], sensitivity: number) => Promise<any[]>;
+  detectAnomalies: (data: TimeSeriesData[], sensitivity: number) => Promise<AnomalyPoint[]>;
   calculateCorrelation: (metric1: string, metric2: string) => Promise<number>;
   
   // Forecasting
@@ -105,7 +121,7 @@ interface AdvancedAnalyticsHook {
   
   // Export and reporting
   exportData: (format: 'csv' | 'json' | 'pdf') => Promise<Blob>;
-  generateReport: (template: string, parameters: Record<string, any>) => Promise<string>;
+  generateReport: (template: string, parameters: ReportParameters) => Promise<string>;
   
   // Real-time updates
   subscribeToMetric: (metricName: string, callback: (data: AnalyticsMetric) => void) => () => void;
@@ -116,13 +132,14 @@ interface AdvancedAnalyticsHook {
 export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { subscribe, connect, disconnect } = useWebSocket();
   
   const [metrics, setMetrics] = useState<AnalyticsMetric[]>([]);
   const [timeSeries, setTimeSeries] = useState<Record<string, TimeSeriesData[]>>({});
   const [insights, setInsights] = useState<AnalyticsInsight[]>([]);
   const [alerts, setAlerts] = useState<AlertRule[]>([]);
   const [forecasts, setForecasts] = useState<TimeSeriesData[]>([]);
-  const [anomalies, setAnomalies] = useState<any[]>([]);
+  const [anomalies, setAnomalies] = useState<AnomalyPoint[]>([]);
   const [timeRange, setTimeRange] = useState<string>('24h');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -357,7 +374,7 @@ export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
     };
   }, [fetchTimeSeries, generateMockTimeSeries]);
 
-  const detectAnomalies = useCallback(async (data: TimeSeriesData[], sensitivity: number): Promise<any[]> => {
+  const detectAnomalies = useCallback(async (data: TimeSeriesData[], sensitivity: number): Promise<AnomalyPoint[]> => {
     // Simple anomaly detection using statistical methods
     const values = data.map(d => d.value);
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -366,7 +383,7 @@ export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
     const threshold = stdDev * (2 - sensitivity); // sensitivity affects threshold
     
     return data
-      .map((point, index) => ({
+      .map((point, index): AnomalyPoint => ({
         index,
         timestamp: point.timestamp,
         value: point.value,
@@ -453,7 +470,7 @@ export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
         content = JSON.stringify(data, null, 2);
         mimeType = 'application/json';
         break;
-      case 'csv':
+      case 'csv': {
         // Simple CSV export for metrics
         const csvRows = [
           'Name,Value,Unit,Trend,Change %,Timestamp',
@@ -464,6 +481,7 @@ export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
         content = csvRows.join('\n');
         mimeType = 'text/csv';
         break;
+      }
       default:
         content = JSON.stringify(data, null, 2);
         mimeType = 'application/json';
@@ -472,7 +490,7 @@ export const useAdvancedAnalytics = (): AdvancedAnalyticsHook => {
     return new Blob([content], { type: mimeType });
   }, [getFilteredMetrics, timeSeries, insights, filters]);
 
-  const generateReport = useCallback(async (template: string, parameters: Record<string, any>): Promise<string> => {
+  const generateReport = useCallback(async (template: string, parameters: ReportParameters): Promise<string> => {
     // Mock report generation
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -501,21 +519,28 @@ ${insights.slice(0, 3).map(i =>
 
   // Real-time updates using WebSocket
   const subscribeToMetric = useCallback((metricName: string, callback: (data: AnalyticsMetric) => void) => {
-    const { subscribe } = useWebSocket();
-    
     // Subscribe to WebSocket channel for this metric
-    const unsubscribe = subscribe(`metrics.${metricName}`, (data: any) => {
-      if (data && data.name === metricName) {
-        callback(data);
+    const unsubscribe = subscribe(`metrics.${metricName}`, (data: Record<string, unknown>) => {
+      // Type guard to ensure data is a valid AnalyticsMetric
+      if (data && 
+          typeof data.id === 'string' &&
+          typeof data.name === 'string' &&
+          typeof data.value === 'number' &&
+          typeof data.unit === 'string' &&
+          typeof data.trend === 'string' &&
+          typeof data.change_percent === 'number' &&
+          typeof data.timestamp === 'string' &&
+          typeof data.tags === 'object' &&
+          data.name === metricName) {
+        callback(data as unknown as AnalyticsMetric);
       }
     });
     
     return unsubscribe;
-  }, []);
+  }, [subscribe]);
 
   const startRealTimeUpdates = useCallback(async () => {
     try {
-      const { connect } = useWebSocket();
       await connect();
       console.log('Real-time updates started via WebSocket');
     } catch (error) {
@@ -526,17 +551,16 @@ ${insights.slice(0, 3).map(i =>
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [connect, toast]);
 
   const stopRealTimeUpdates = useCallback(() => {
     try {
-      const { disconnect } = useWebSocket();
       disconnect();
       console.log('Real-time updates stopped');
     } catch (error) {
       console.error('Failed to stop real-time updates:', error);
     }
-  }, []);
+  }, [disconnect]);
 
   // Initialize data on mount
   useEffect(() => {

@@ -54,7 +54,14 @@ interface WidgetConfig {
   refresh_interval: number;
   size: 'small' | 'medium' | 'large';
   position: { x: number; y: number; w: number; h: number };
-  config: Record<string, any>;
+  config: {
+    unit?: string;
+    threshold?: number;
+    color?: string;
+    chartType?: 'line' | 'bar' | 'area';
+    showLegend?: boolean;
+    [key: string]: unknown;
+  };
 }
 
 interface GridLayout {
@@ -573,7 +580,7 @@ const CustomDashboard: React.FC = () => {
                     value={newWidget.type}
                     onValueChange={(value) => setNewWidget(prev => ({
                       ...prev,
-                      type: value as any
+                      type: value as 'metric' | 'chart' | 'table' | 'gauge' | 'heatmap'
                     }))}
                   >
                     <SelectTrigger>
@@ -608,7 +615,7 @@ const CustomDashboard: React.FC = () => {
                     value={newWidget.size}
                     onValueChange={(value) => setNewWidget(prev => ({
                       ...prev,
-                      size: value as any
+                      size: value as 'small' | 'medium' | 'large'
                     }))}
                   >
                     <SelectTrigger>

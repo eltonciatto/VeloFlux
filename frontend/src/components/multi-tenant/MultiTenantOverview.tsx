@@ -128,12 +128,12 @@ const MultiTenantOverview: React.FC = () => {
 
   // Sort tenants
   const sortedTenants = [...filteredTenants].sort((a, b) => {
-    let aValue: any = a[sortBy as keyof Tenant];
-    let bValue: any = b[sortBy as keyof Tenant];
+    let aValue: string | number = a[sortBy as keyof Tenant] as string | number;
+    let bValue: string | number = b[sortBy as keyof Tenant] as string | number;
     
     if (typeof aValue === 'string') {
       aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
+      bValue = (bValue as string).toLowerCase();
     }
     
     if (sortOrder === 'asc') {

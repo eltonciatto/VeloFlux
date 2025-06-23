@@ -123,11 +123,15 @@ const mockOperations: BulkOperation[] = [
   }
 ];
 
+interface OperationParams {
+  [key: string]: unknown;
+}
+
 export const BulkOperations: React.FC = () => {
   const { t } = useTranslation();
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const [operationType, setOperationType] = useState<string>('');
-  const [operationParams, setOperationParams] = useState<any>({});
+  const [operationParams, setOperationParams] = useState<OperationParams>({});
   const [isExecuting, setIsExecuting] = useState(false);
   const [operations, setOperations] = useState<BulkOperation[]>(mockOperations);
 
@@ -190,7 +194,7 @@ export const BulkOperations: React.FC = () => {
     
     const newOperation: BulkOperation = {
       id: `op-${Date.now()}`,
-      type: operationType as any,
+      type: operationType as 'update' | 'delete' | 'create' | 'migrate',
       status: 'running',
       progress: 0,
       tenantCount: selectedTenants.size,

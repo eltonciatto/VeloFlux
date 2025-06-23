@@ -240,7 +240,7 @@ export const TenantHierarchy: React.FC = () => {
   };
 
   const getAllNodes = (node: TenantNode): TenantNode[] => {
-    let nodes = [node];
+    const nodes = [node];
     if (node.children) {
       node.children.forEach(child => {
         nodes.push(...getAllNodes(child));
@@ -268,7 +268,7 @@ export const TenantHierarchy: React.FC = () => {
             <PlusIcon className="w-4 h-4 mr-2" />
             Adicionar Tenant
           </Button>
-          <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+          <Select value={viewMode} onValueChange={(value: string) => setViewMode(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>

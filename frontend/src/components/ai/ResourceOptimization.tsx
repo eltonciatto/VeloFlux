@@ -754,7 +754,7 @@ const ResourceOptimization: React.FC = () => {
                   <XAxis dataKey="category" />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value: any, name: any) => [`$${value}`, name === 'current' ? 'Atual' : 'Otimizado']}
+                    formatter={(value: number, name: string) => [`$${value}`, name === 'current' ? 'Atual' : 'Otimizado']}
                   />
                   <Bar dataKey="current" fill="#ef4444" name="current" />
                   <Bar dataKey="optimized" fill="#10b981" name="optimized" />
@@ -802,7 +802,7 @@ const ResourceOptimization: React.FC = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: any) => [`$${value}`, 'Economia']}
+                      formatter={(value: number) => [`$${value}`, 'Economia']}
                     />
                     <Area 
                       type="monotone" 

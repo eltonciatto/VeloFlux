@@ -30,13 +30,13 @@ interface TouchState {
 
 interface UseTouchResult extends TouchState {
   bind: {
-    onTouchStart: (event: any) => void;
-    onTouchMove: (event: any) => void;
-    onTouchEnd: (event: any) => void;
-    onMouseDown: (event: any) => void;
-    onMouseMove: (event: any) => void;
-    onMouseUp: (event: any) => void;
-    onMouseLeave: (event: any) => void;
+    onTouchStart: (event: TouchEvent) => void;
+    onTouchMove: (event: TouchEvent) => void;
+    onTouchEnd: (event: TouchEvent) => void;
+    onMouseDown: (event: MouseEvent) => void;
+    onMouseMove: (event: MouseEvent) => void;
+    onMouseUp: (event: MouseEvent) => void;
+    onMouseLeave: (event: MouseEvent) => void;
   };
 }
 
@@ -56,20 +56,21 @@ export const useTouch = (handlers: TouchHandlers = {}): UseTouchResult => {
   const [longPressTimeout, setLongPressTimeout] = useState<NodeJS.Timeout | null>(null);
   const [initialDistance, setInitialDistance] = useState(0);
 
-  const getEventPosition = (event: any) => {
-    if (event.touches && event.touches.length > 0) {
+  const getEventPosition = (event: TouchEvent | MouseEvent) => {
+    if ('touches' in event && event.touches.length > 0) {
       return {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY
       };
     }
+    const mouseEvent = event as MouseEvent;
     return {
-      x: event.clientX || 0,
-      y: event.clientY || 0
+      x: mouseEvent.clientX || 0,
+      y: mouseEvent.clientY || 0
     };
   };
 
-  const getPinchDistance = (event: any) => {
+  const getPinchDistance = (event: TouchEvent) => {
     if (event.touches && event.touches.length === 2) {
       const touch1 = event.touches[0];
       const touch2 = event.touches[1];
@@ -94,7 +95,7 @@ export const useTouch = (handlers: TouchHandlers = {}): UseTouchResult => {
     };
   }, [lastMoveTime, lastPosition]);
 
-  const handleStart = useCallback((event: any) => {
+  const handleStart = useCallback((event: TouchEvent | MouseEvent) => {
     const position = getEventPosition(event);
     const currentTime = Date.now();
     
@@ -103,8 +104,8 @@ export const useTouch = (handlers: TouchHandlers = {}): UseTouchResult => {
     if (tapTimeout) clearTimeout(tapTimeout);
 
     // Check for pinch gesture
-    if (event.touches && event.touches.length === 2) {
-      setInitialDistance(getPinchDistance(event));
+    if ('touches' in event && event.touches && event.touches.length === 2) {
+      setInitialDistance(getPinchDistance(event as TouchEvent));
       return;
     }
 
@@ -132,13 +133,13 @@ export const useTouch = (handlers: TouchHandlers = {}): UseTouchResult => {
     event.preventDefault();
   }, [handlers, longPressTimeout, tapTimeout]);
 
-  const handleMove = useCallback((event: any) => {
+  const handleMove = useCallback((event: TouchEvent | MouseEvent) => {
     const position = getEventPosition(event);
     const currentTime = Date.now();
 
     // Handle pinch gesture
-    if (event.touches && event.touches.length === 2 && initialDistance > 0) {
-      const currentDistance = getPinchDistance(event);
+    if ('touches' in event && event.touches && event.touches.length === 2 && initialDistance > 0) {
+      const currentDistance = getPinchDistance(event as TouchEvent);
       const scale = currentDistance / initialDistance;
       handlers.onPinch?.(event, scale);
       return;
@@ -171,7 +172,7 @@ export const useTouch = (handlers: TouchHandlers = {}): UseTouchResult => {
     event.preventDefault();
   }, [touchState.isDragging, longPressTimeout, calculateVelocity, handlers, initialDistance]);
 
-  const handleEnd = useCallback((event: any) => {
+  const handleEnd = useCallback((event: TouchEvent | MouseEvent) => {
     // Clear timeouts
     if (longPressTimeout) {
       clearTimeout(longPressTimeout);

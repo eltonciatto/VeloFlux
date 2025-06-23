@@ -2,7 +2,7 @@
 // 📜 Licensed under VeloFlux Public Source License (VPSL) v1.0 — See LICENSE for details.
 // 💼 For commercial licensing, visit https://veloflux.io or contact contact@veloflux.io
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -212,11 +212,7 @@ export default function BillingOverviewCompatible() {
   const [usageData, setUsageData] = useState(null);
   const [billingInfo, setBillingInfo] = useState(null);
 
-  useEffect(() => {
-    loadBillingData();
-  }, [tenantId, token]);
-
-  const loadBillingData = async () => {
+  const loadBillingData = useCallback(async () => {
     if (!tenantId || !token) return;
     
     setLoading(true);
@@ -252,7 +248,11 @@ export default function BillingOverviewCompatible() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, token, toast]);
+
+  useEffect(() => {
+    loadBillingData();
+  }, [loadBillingData]);
 
   const generateReport = async () => {
     try {

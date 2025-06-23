@@ -18,12 +18,18 @@ export const useReducedMotion = () => {
   return prefersReducedMotion;
 };
 
+interface NavigatorConnection {
+  connection?: {
+    effectiveType?: string;
+  };
+}
+
 export const usePerformanceMode = () => {
   const [isLowPerformance, setIsLowPerformance] = useState(false);
 
   useEffect(() => {
     // Detectar dispositivos com performance limitada
-    const connection = (navigator as any).connection;
+    const connection = (navigator as NavigatorConnection).connection;
     const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
     const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
     const isOldDevice = /Android 4|iPhone OS [456]|Windows Phone/.test(navigator.userAgent);

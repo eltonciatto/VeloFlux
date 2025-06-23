@@ -372,7 +372,7 @@ export function AIInsights({ className }: AIInsightsProps) {
           <CardContent>
             <div className="space-y-4">
               {Object.entries(models).map(([modelName, modelData]) => {
-                const model = modelData as any;
+                const model = modelData as { accuracy?: number; status?: string; last_trained?: string };
                 return (
                   <div key={modelName} className="space-y-2">
                     <div className="flex items-center justify-between">

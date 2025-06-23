@@ -2,10 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface CachedData {
   [key: string]: {
-    data: any;
+    data: unknown;
     timestamp: number;
     expires: number;
   };
+}
+
+interface OfflineAction {
+  id: string;
+  type: string;
+  data: unknown;
+  timestamp: number;
 }
 
 interface OfflineSyncResult {
@@ -13,11 +20,11 @@ interface OfflineSyncResult {
   syncStatus: 'synced' | 'syncing' | 'error' | 'pending';
   lastSync: Date | null;
   pendingChanges: number;
-  cacheData: (key: string, data: any, ttl?: number) => void;
-  getCachedData: (key: string) => any | null;
+  cacheData: (key: string, data: unknown, ttl?: number) => void;
+  getCachedData: (key: string) => unknown | null;
   clearCache: () => void;
   syncPendingChanges: () => Promise<void>;
-  queueOfflineAction: (action: any) => void;
+  queueOfflineAction: (action: OfflineAction) => void;
 }
 
 const CACHE_KEY = 'veloflux_offline_cache';
@@ -39,6 +46,7 @@ export const useOfflineSync = (): OfflineSyncResult => {
 
     const pendingActions = getPendingActions();
     setPendingChanges(pendingActions.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Online/offline event handlers
@@ -60,10 +68,11 @@ export const useOfflineSync = (): OfflineSyncResult => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Cache management
-  const cacheData = useCallback((key: string, data: any, ttl: number = DEFAULT_TTL) => {
+  const cacheData = useCallback((key: string, data: unknown, ttl: number = DEFAULT_TTL) => {
     try {
       const cached: CachedData = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
       const now = Date.now();
@@ -120,7 +129,7 @@ export const useOfflineSync = (): OfflineSyncResult => {
     }
   }, []);
 
-  const queueOfflineAction = useCallback((action: any) => {
+  const queueOfflineAction = useCallback((action: OfflineAction) => {
     try {
       const actions = getPendingActions();
       actions.push({
@@ -167,7 +176,7 @@ export const useOfflineSync = (): OfflineSyncResult => {
     }
   }, [isOnline, getPendingActions]);
 
-  const processAction = async (action: any) => {
+  const processAction = async (action: OfflineAction) => {
     // Mock API call - replace with actual implementation
     return new Promise((resolve, reject) => {
       setTimeout(() => {

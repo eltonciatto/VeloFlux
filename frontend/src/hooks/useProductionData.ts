@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSystemMetrics, useSystemHealth, usePerformanceMetrics, useSystemLogs, useSystemAlerts, useRealTimeMetrics } from './use-api';
 import { getRefreshInterval, isFeatureEnabled } from '@/config/environment';
 
@@ -123,7 +123,7 @@ export function useProductionData() {
   }, [systemMetrics, healthData, performanceData]);
 
   // Transform and consolidate metrics
-  const metrics: ProductionMetrics | null = systemMetrics ? {
+  const metrics: ProductionMetrics | null = useMemo(() => systemMetrics ? {
     system: {
       cpu_usage: systemMetrics.cpu?.usage || 0,
       memory_usage: systemMetrics.memory?.usage_percentage || 0,
@@ -160,36 +160,36 @@ export function useProductionData() {
       models_active: systemMetrics.ai?.models_active || 0,
       last_training: systemMetrics.ai?.last_training || new Date().toISOString(),
     },
-  } : null;
+  } : null, [systemMetrics, realTimeData]);
 
   // Transform logs
-  const logs: ProductionLog[] = systemLogs?.map((log: any) => ({
-    id: log.id || Math.random().toString(36),
-    timestamp: log.timestamp || new Date().toISOString(),
-    level: log.level || 'info',
-    message: log.message || '',
-    source: log.source || 'system',
-    metadata: log.metadata,
-  })) || [];
+  const logs: ProductionLog[] = useMemo(() => systemLogs?.map((log: Record<string, unknown>) => ({
+    id: (log.id as string) || Math.random().toString(36),
+    timestamp: (log.timestamp as string) || new Date().toISOString(),
+    level: (log.level as string) || 'info',
+    message: (log.message as string) || '',
+    source: (log.source as string) || 'system',
+    metadata: log.metadata as Record<string, unknown>,
+  })) || [], [systemLogs]);
 
   // Transform alerts
-  const alerts: ProductionAlert[] = systemAlerts?.map((alert: any) => ({
-    id: alert.id || Math.random().toString(36),
-    title: alert.title || 'System Alert',
-    message: alert.message || '',
-    severity: alert.severity || 'medium',
-    timestamp: alert.timestamp || new Date().toISOString(),
-    resolved: alert.resolved || false,
-    source: alert.source || 'system',
-  })) || [];
+  const alerts: ProductionAlert[] = useMemo(() => systemAlerts?.map((alert: Record<string, unknown>) => ({
+    id: (alert.id as string) || Math.random().toString(36),
+    title: (alert.title as string) || 'System Alert',
+    message: (alert.message as string) || '',
+    severity: (alert.severity as 'low' | 'medium' | 'high' | 'critical') || 'medium',
+    timestamp: (alert.timestamp as string) || new Date().toISOString(),
+    resolved: (alert.resolved as boolean) || false,
+    source: (alert.source as string) || 'system',
+  })) || [], [systemAlerts]);
 
   // Transform performance data
-  const performance: ProductionPerformance | null = performanceData ? {
+  const performance: ProductionPerformance | null = useMemo(() => performanceData ? {
     response_times: performanceData.response_times || [],
     requests_timeline: performanceData.requests_timeline || [],
     latency_distribution: performanceData.latency_distribution || [],
     throughput: performanceData.throughput || [],
-  } : null;
+  } : null, [performanceData]);
 
   // Refresh all data
   const refreshAll = useCallback(() => {

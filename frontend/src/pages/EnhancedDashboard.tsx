@@ -86,11 +86,19 @@ import {
   Search
 } from 'lucide-react';
 
+interface Alert {
+  id: string;
+  type: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timestamp: string;
+}
+
 const EnhancedDashboard: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('overview');
   const [systemHealth, setSystemHealth] = useState<'healthy' | 'warning' | 'critical'>('healthy');
-  const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
+  const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -278,6 +286,17 @@ const EnhancedDashboard: React.FC = () => {
       </div>
     );
   };
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  unit?: string;
+  icon: React.ElementType;
+  trend?: 'up' | 'down' | 'stable';
+  trendValue?: string;
+  color?: string;
+  description?: string;
+  onClick?: () => void;
+}
 
   // Enhanced stat card component
   const EnhancedStatCard = ({ 
@@ -290,7 +309,7 @@ const EnhancedDashboard: React.FC = () => {
     color = 'blue',
     description,
     onClick 
-  }: any) => (
+  }: StatCardProps) => (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
@@ -331,9 +350,14 @@ const EnhancedDashboard: React.FC = () => {
       </Card>
     </motion.div>
   );
+interface QuickAction {
+  icon: React.ElementType;
+  label: string;
+  status: 'ready' | 'active' | 'attention';
+}
 
   // Quick action button component
-  const QuickActionButton = ({ action }: { action: any }) => {
+  const QuickActionButton = ({ action }: { action: QuickAction }) => {
     const statusColors = {
       ready: 'border-gray-600 text-gray-300',
       active: 'border-green-500 text-green-400 bg-green-500/10',

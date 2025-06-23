@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import useTouch from '../../hooks/useTouch';
 import './TouchGestures.css';
 
@@ -98,7 +98,7 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
     onPinchZoom?.(scale);
   };
 
-  const handleRotation = (event: TouchEvent) => {
+  const handleRotation = useCallback((event: TouchEvent) => {
     if (!enableRotate || !event.touches || event.touches.length !== 2) return;
 
     const touch1 = event.touches[0];
@@ -118,7 +118,7 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
     const normalizedAngle = ((angleDiff + 180) % 360) - 180;
     
     onRotate?.(normalizedAngle);
-  };
+  }, [enableRotate, onRotate]);
 
   const {
     bind,
@@ -148,14 +148,14 @@ const TouchGestures: React.FC<TouchGesturesProps> = ({
       currentAngleRef.current = 0;
     };
 
-    container.addEventListener('touchmove', handleTouchMove as any, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
     container.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      container.removeEventListener('touchmove', handleTouchMove as any);
+      container.removeEventListener('touchmove', handleTouchMove as EventListener);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [enableRotate]);
+  }, [enableRotate, handleRotation]);
 
   return (
     <div

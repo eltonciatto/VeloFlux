@@ -38,6 +38,29 @@ import { ResponsiveContainer, LineChart as RechartsLineChart, Line, BarChart as 
 import CustomDashboard from './CustomDashboard';
 import MetricWidget from './MetricWidget';
 
+interface KPI {
+  id: string;
+  title: string;
+  value: number | string;
+  unit?: string;
+  trend?: 'up' | 'down' | 'stable';
+  change?: number;
+  status?: 'success' | 'warning' | 'error';
+  gradient?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  label?: string;
+}
+
+interface Insight {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  confidence: number;
+  impact: 'low' | 'medium' | 'high';
+  timestamp: string;
+}
+
 const AdvancedAnalytics: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -106,7 +129,7 @@ const AdvancedAnalytics: React.FC = () => {
     }
   };
 
-  const renderKPICard = (kpi: any, index: number) => (
+  const renderKPICard = (kpi: KPI, index: number) => (
     <motion.div
       key={kpi.id}
       initial={{ opacity: 0, y: 20 }}
@@ -207,7 +230,7 @@ const AdvancedAnalytics: React.FC = () => {
     );
   };
 
-  const renderInsightsCard = (insight: any, index: number) => (
+  const renderInsightsCard = (insight: Insight, index: number) => (
     <motion.div
       key={insight.id}
       initial={{ opacity: 0, x: -20 }}

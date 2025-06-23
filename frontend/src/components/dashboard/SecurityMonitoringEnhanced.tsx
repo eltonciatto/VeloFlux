@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -102,7 +102,7 @@ export function SecurityMonitoringPanel() {
   };
 
   // Função para obter dados de localização baseados no país
-  const getLocationData = (countryCode: string) => {
+  const getLocationData = useCallback((countryCode: string) => {
     const city = worldCities.find(c => c.country === countryCode);
     if (city) {
       return {
@@ -116,7 +116,7 @@ export function SecurityMonitoringPanel() {
       flag: '🏳️',
       coordinates: { lat: 0, lng: 0 }
     };
-  };
+  }, [worldCities]);
 
   // Simular dados de segurança em tempo real baseados em localizações reais
   useEffect(() => {
@@ -135,7 +135,7 @@ export function SecurityMonitoringPanel() {
         const event: SecurityEvent = {
           id: `${Date.now()}-${i}`,
           type: Math.random() > 0.6 ? 'blocked' : Math.random() > 0.7 ? 'attack' : 'suspicious',
-          severity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
+          severity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as 'low' | 'medium' | 'high' | 'critical',
           source: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
           target: ['/api/admin', '/api/users', '/api/billing', '/api/login', '/wp-admin', '/api/auth'][Math.floor(Math.random() * 6)],
           description: [
@@ -193,7 +193,7 @@ export function SecurityMonitoringPanel() {
       totalRequests: 25420 + Math.floor(Math.random() * 1000),
       blockedRequests: 156 + Math.floor(Math.random() * 50),
       suspiciousActivity: 89 + Math.floor(Math.random() * 20),
-      threatLevel: ['medium', 'high', 'medium', 'high'][Math.floor(Math.random() * 4)] as any,
+      threatLevel: ['medium', 'high', 'medium', 'high'][Math.floor(Math.random() * 4)] as 'low' | 'medium' | 'high' | 'critical',
       topThreats: [
         { type: 'SQL Injection', count: 67, severity: 'high' },
         { type: 'XSS Attack', count: 54, severity: 'medium' },
@@ -223,7 +223,7 @@ export function SecurityMonitoringPanel() {
         const newEvent: SecurityEvent = {
           id: Date.now().toString(),
           type: Math.random() > 0.5 ? 'blocked' : 'suspicious',
-          severity: ['medium', 'high', 'critical'][Math.floor(Math.random() * 3)] as any,
+          severity: ['medium', 'high', 'critical'][Math.floor(Math.random() * 3)] as 'medium' | 'high' | 'critical',
           source: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
           target: ['/api/admin', '/wp-admin', '/api/users', '/login'][Math.floor(Math.random() * 4)],
           description: [
@@ -246,7 +246,7 @@ export function SecurityMonitoringPanel() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isLive, worldCities]);
+  }, [isLive, worldCities, getLocationData]);
 
   // Filtrar eventos por continente
   const filteredEvents = useMemo(() => {
@@ -325,7 +325,7 @@ export function SecurityMonitoringPanel() {
             </SelectContent>
           </Select>
 
-          <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+          <Select value={timeRange} onValueChange={(value: string) => setTimeRange(value)}>
             <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
               <SelectValue />
             </SelectTrigger>

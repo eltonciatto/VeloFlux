@@ -39,6 +39,14 @@ interface ModelPerformanceProps {
   className?: string;
 }
 
+interface ModelData {
+  accuracy?: number;
+  training_progress?: number;
+  training_status?: string;
+  last_trained?: string;
+  version?: string;
+}
+
 export default function ModelPerformance({ className = '' }: ModelPerformanceProps) {
   const { data: models, isLoading } = useModelStatus();
   const { data: history } = useAIHistory();
@@ -48,7 +56,7 @@ export default function ModelPerformance({ className = '' }: ModelPerformancePro
   const modelPerformanceData = React.useMemo(() => {
     if (!models) return [];
     
-    return Object.entries(models).map(([modelName, modelData]: [string, any]) => ({
+    return Object.entries(models).map(([modelName, modelData]: [string, ModelData]) => ({
       name: modelName,
       accuracy: (modelData.accuracy || 0) * 100,
       trainingProgress: modelData.training_progress || 0,

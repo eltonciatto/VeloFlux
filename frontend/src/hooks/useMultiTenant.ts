@@ -2,6 +2,52 @@ import { useState, useEffect, useCallback } from 'react';
 import { safeApiFetch } from '@/lib/csrfToken';
 
 // Types
+interface TenantMetrics {
+  requests: Array<{
+    hour: number;
+    count: number;
+  }>;
+  errors: Array<{
+    hour: number;
+    count: number;
+  }>;
+  latency: Array<{
+    hour: number;
+    avg: number;
+    p95: number;
+  }>;
+}
+
+interface TenantLog {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  source: 'api' | 'web' | 'worker';
+}
+
+interface TenantLogsResponse {
+  logs: TenantLog[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+interface LogFilters {
+  level?: string;
+  source?: string;
+  startTime?: string;
+  endTime?: string;
+  search?: string;
+}
+
+interface ScalingResources {
+  cpu?: number;
+  memory?: number;
+  storage?: number;
+  replicas?: number;
+}
+
 interface Tenant {
   id: string;
   name: string;
@@ -53,8 +99,8 @@ interface TenantFilters {
 }
 
 interface BulkActionData {
-  action: string;
-  parameters?: Record<string, any>;
+  action: 'activate' | 'suspend' | 'maintenance' | 'delete' | 'upgrade' | 'downgrade';
+  parameters?: Record<string, string | number | boolean>;
 }
 
 interface UseMultiTenantHook {
@@ -77,14 +123,14 @@ interface UseMultiTenantHook {
   deselectAllTenants: () => void;
   bulkUpdateTenants: (tenantIds: string[], data: BulkActionData) => Promise<void>;
   exportTenantsData: () => Promise<void>;
-  getTenantMetrics: (tenantId: string, timeRange?: string) => Promise<any>;
-  getTenantLogs: (tenantId: string, filters?: any) => Promise<any>;
+  getTenantMetrics: (tenantId: string, timeRange?: string) => Promise<TenantMetrics>;
+  getTenantLogs: (tenantId: string, filters?: LogFilters) => Promise<TenantLogsResponse>;
   createTenant: (tenantData: Partial<Tenant>) => Promise<Tenant>;
   updateTenant: (tenantId: string, updates: Partial<Tenant>) => Promise<Tenant>;
   deleteTenant: (tenantId: string) => Promise<void>;
   suspendTenant: (tenantId: string, reason?: string) => Promise<void>;
   activateTenant: (tenantId: string) => Promise<void>;
-  scaleTenantResources: (tenantId: string, resources: any) => Promise<void>;
+  scaleTenantResources: (tenantId: string, resources: ScalingResources) => Promise<void>;
 }
 
 // Mock data generator
@@ -180,8 +226,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       
       setTenants(mockData.tenants);
       setStats(mockData.stats);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load tenant data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load tenant data');
     } finally {
       setIsLoading(false);
     }
@@ -240,7 +286,7 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       // Update local state
       setTenants(prev => prev.map(tenant => {
         if (tenantIds.includes(tenant.id)) {
-          let updates: Partial<Tenant> = {};
+          const updates: Partial<Tenant> = {};
           
           switch (data.action) {
             case 'activate':
@@ -263,8 +309,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       
       // Clear selection
       setSelectedTenants([]);
-    } catch (err: any) {
-      throw new Error(err.message || 'Bulk operation failed');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Bulk operation failed');
     }
   }, []);
 
@@ -299,8 +345,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (err: any) {
-      throw new Error(err.message || 'Export failed');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Export failed');
     }
   }, [tenants]);
 
@@ -326,12 +372,12 @@ export const useMultiTenant = (): UseMultiTenantHook => {
           p95: Math.floor(Math.random() * 500) + 100
         }))
       };
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to fetch tenant metrics');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch tenant metrics');
     }
   }, []);
 
-  const getTenantLogs = useCallback(async (tenantId: string, filters: any = {}) => {
+  const getTenantLogs = useCallback(async (tenantId: string, filters: LogFilters = {}): Promise<TenantLogsResponse> => {
     try {
       // In a real implementation, this would call the API
       // const queryParams = new URLSearchParams(filters).toString();
@@ -339,20 +385,23 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       // return response;
       
       // Mock logs data
+      const levels: Array<'info' | 'warn' | 'error'> = ['info', 'warn', 'error'];
+      const sources: Array<'api' | 'web' | 'worker'> = ['api', 'web', 'worker'];
+      
       return {
         logs: Array.from({ length: 50 }, (_, i) => ({
           id: `log_${i}`,
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
-          level: ['info', 'warn', 'error'][Math.floor(Math.random() * 3)],
+          level: levels[Math.floor(Math.random() * 3)],
           message: `Sample log message ${i}`,
-          source: ['api', 'web', 'worker'][Math.floor(Math.random() * 3)]
+          source: sources[Math.floor(Math.random() * 3)]
         })),
         total: 1250,
         page: 1,
         per_page: 50
       };
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to fetch tenant logs');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch tenant logs');
     }
   }, []);
 
@@ -370,8 +419,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       
       setTenants(prev => [...prev, newTenant]);
       return newTenant;
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to create tenant');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to create tenant');
     }
   }, []);
 
@@ -392,8 +441,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       if (!updatedTenant) throw new Error('Tenant not found');
       
       return { ...updatedTenant, ...updates };
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to update tenant');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to update tenant');
     }
   }, [tenants]);
 
@@ -405,8 +454,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       // });
       
       setTenants(prev => prev.filter(tenant => tenant.id !== tenantId));
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to delete tenant');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete tenant');
     }
   }, []);
 
@@ -419,8 +468,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       // });
       
       await updateTenant(tenantId, { status: 'suspended' });
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to suspend tenant');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to suspend tenant');
     }
   }, [updateTenant]);
 
@@ -432,12 +481,12 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       // });
       
       await updateTenant(tenantId, { status: 'active' });
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to activate tenant');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to activate tenant');
     }
   }, [updateTenant]);
 
-  const scaleTenantResources = useCallback(async (tenantId: string, resources: any): Promise<void> => {
+  const scaleTenantResources = useCallback(async (tenantId: string, resources: ScalingResources): Promise<void> => {
     try {
       // In a real implementation, this would call the API
       // await safeApiFetch(`/api/admin/tenants/${tenantId}/scale`, {
@@ -447,8 +496,8 @@ export const useMultiTenant = (): UseMultiTenantHook => {
       
       // Mock scaling operation
       await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to scale tenant resources');
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to scale tenant resources');
     }
   }, []);
 

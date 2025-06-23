@@ -24,7 +24,7 @@ interface WidgetConfig {
   refresh_interval: number;
   size: 'small' | 'medium' | 'large';
   position: { x: number; y: number; w: number; h: number };
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 interface GridLayout {
@@ -63,12 +63,12 @@ interface CustomDashboardHook {
   toggleEditMode: () => void;
   
   // Import/Export
-  exportDashboard: (id: string) => Promise<any>;
-  importDashboard: (data: any) => Promise<DashboardLayout>;
+  exportDashboard: (id: string) => Promise<Record<string, unknown>>;
+  importDashboard: (data: Record<string, unknown>) => Promise<DashboardLayout>;
   
   // Sharing
   shareDashboard: (id: string, users: string[]) => Promise<void>;
-  getDashboardPermissions: (id: string) => Promise<any>;
+  getDashboardPermissions: (id: string) => Promise<Record<string, unknown>>;
 }
 
 const STORAGE_KEY = 'veloflux_dashboards';
@@ -155,7 +155,7 @@ export const useCustomDashboard = (): CustomDashboardHook => {
     };
 
     loadDashboards();
-  }, [user]);
+  }, [user, currentDashboard]);
 
   // Save dashboards to localStorage whenever they change
   const saveDashboards = useCallback((updatedDashboards: DashboardLayout[]) => {
@@ -398,7 +398,7 @@ export const useCustomDashboard = (): CustomDashboardHook => {
   }, []);
 
   // Import/Export functions
-  const exportDashboard = useCallback(async (id: string): Promise<any> => {
+  const exportDashboard = useCallback(async (id: string): Promise<Record<string, unknown>> => {
     const dashboard = dashboards.find(d => d.id === id);
     if (!dashboard) {
       throw new Error('Dashboard not found');
@@ -414,7 +414,7 @@ export const useCustomDashboard = (): CustomDashboardHook => {
     };
   }, [dashboards, user]);
 
-  const importDashboard = useCallback(async (data: any): Promise<DashboardLayout> => {
+  const importDashboard = useCallback(async (data: Record<string, unknown>): Promise<DashboardLayout> => {
     setIsLoading(true);
     setError(null);
     
@@ -430,7 +430,7 @@ export const useCustomDashboard = (): CustomDashboardHook => {
         user_id: user?.user_id || 'anonymous',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        widgets: data.dashboard.widgets.map((widget: any) => ({
+        widgets: ((data.dashboard as Record<string, unknown>).widgets as Record<string, unknown>[]).map((widget: Record<string, unknown>) => ({
           ...widget,
           id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }))
@@ -454,7 +454,7 @@ export const useCustomDashboard = (): CustomDashboardHook => {
     console.log(`Sharing dashboard ${id} with users:`, users);
   }, []);
 
-  const getDashboardPermissions = useCallback(async (id: string): Promise<any> => {
+  const getDashboardPermissions = useCallback(async (id: string): Promise<Record<string, unknown>> => {
     // TODO: Implement actual permissions functionality
     return {
       owner: user?.user_id,
