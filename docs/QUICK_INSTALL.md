@@ -162,13 +162,13 @@ Os scripts instalam automaticamente:
 ### Instalação Completa Automática
 ```bash
 # Docker (recomendado para teste)
-curl -fsSL https://get.veloflux.com/docker | bash
+curl -fsSL https://get.veloflux.io/docker | bash
 
 # Produção (requer domínio)
-curl -fsSL https://get.veloflux.com/production | bash
+curl -fsSL https://get.veloflux.io/production | bash
 
 # Desenvolvimento
-curl -fsSL https://get.veloflux.com/dev | bash
+curl -fsSL https://get.veloflux.io/dev | bash
 ```
 
 ### Instalação com Opções
@@ -425,7 +425,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/eltonciatto/VeloFlux/main/sc
 ### Canais de Suporte
 - 🐛 **Issues:** [GitHub Issues](https://github.com/eltonciatto/VeloFlux/issues)
 - 💬 **Discord:** [Comunidade VeloFlux](https://discord.gg/veloflux)
-- 📧 **Email:** support@veloflux.com
+- 📧 **Email:** support@veloflux.io
 - 📖 **Wiki:** [GitHub Wiki](https://github.com/eltonciatto/VeloFlux/wiki)
 
 ### Antes de Pedir Ajuda

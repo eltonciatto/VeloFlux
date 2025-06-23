@@ -9,7 +9,7 @@ const API_BASE_URL = 'http://localhost:9090';
 
 // Test data
 const TEST_USER = {
-  email: 'admin@veloflux.com',
+  email: 'admin@veloflux.io',
   password: 'admin123'
 };
 

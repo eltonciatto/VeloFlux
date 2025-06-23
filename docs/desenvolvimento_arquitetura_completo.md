@@ -256,7 +256,7 @@ tenants:
 cors:
   origins:
     - "http://localhost:3000"
-    - "https://app.veloflux.com"
+    - "https://app.veloflux.io"
 ```
 
 ### Tenant Isolation

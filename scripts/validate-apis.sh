@@ -116,7 +116,7 @@ echo "================================================="
 print_status "Tentando obter token JWT..."
 
 # Try default admin credentials
-LOGIN_DATA='{"email":"admin@veloflux.com","password":"admin123"}'
+LOGIN_DATA='{"email":"admin@veloflux.io","password":"admin123"}'
 login_response=$(curl -s -o /tmp/login_response.json -w '%{http_code}' \
     -X POST "$API_BASE/api/auth/login" \
     -H "Content-Type: application/json" \

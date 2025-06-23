@@ -517,7 +517,7 @@ export const DataDogIntegration: React.FC = () => {
                 <div className="flex gap-4">
                   <span className="text-gray-500">2024-06-19 12:30:41</span>
                   <span className="text-blue-400">[INFO]</span>
-                  <span>SSL certificate renewal completed - *.veloflux.com - Valid until 2025-06-19</span>
+                  <span>SSL certificate renewal completed - *.veloflux.io - Valid until 2025-06-19</span>
                 </div>
               </div>
             </CardContent>

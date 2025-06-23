@@ -10,7 +10,7 @@ Funcionalidade	Status	Resultado
 🧾 Listar Faturas	✅ Funcionando	3 faturas históricas geradas
 🔗 Webhook Stripe	✅ Funcionando	Webhook processa eventos
 🚀 FLUXO TESTADO:
-✅ Usuário registrado: test_simple@veloflux.com
+✅ Usuário registrado: test_simple@veloflux.io
 ✅ Token JWT obtido: Válido por 8 horas
 ✅ Assinatura Pro criada: sub_1750289768953820944
 ✅ Upgrade para Enterprise: Executado com sucesso

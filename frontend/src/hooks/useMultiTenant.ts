@@ -100,7 +100,7 @@ const generateMockTenant = (id: string): Tenant => {
   return {
     id,
     name: `Tenant ${id.slice(0, 8)}`,
-    domain: `tenant-${id.slice(0, 8)}.veloflux.com`,
+    domain: `tenant-${id.slice(0, 8)}.veloflux.io`,
     status,
     plan,
     created_at: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
